@@ -35,7 +35,7 @@ public:
         Wire.endTransmission(I2C_NOSTOP);
         bool responseIsNull = true;
         char *result;
-        for(int c=0;c<5 && responseIsNull; c++){
+        for(int c=0;c<10 && responseIsNull; c++){
             Wire.requestFrom(address, MEM_LENGTH, I2C_STOP);
             int d=0;
             for(; d<MEM_LENGTH-1 && Wire.available(); d++){
@@ -46,8 +46,9 @@ public:
                 result = (char*)calloc(strlen(receiveBuffer)+1, sizeof(char));
                 strcpy(result, receiveBuffer);
                 responseIsNull = strcmp(result, EMPTY_RESPONSE) == 0;
+            }else{
+                delay(1);
             }
-            delay(1);
         }
         return result;
     }
@@ -83,11 +84,7 @@ public:
             Wire.write(transmitBuffer, transmitBufferLength);
             transmitBufferLength = 0;
         }else{
-            // Wire.write(EMPTY_RESPONSE, EMPTY_RESPONSE_SIZE);
-            char tmp[MEM_LENGTH];
-            memset(tmp, '\0', MEM_LENGTH);
-            sprintf(tmp, "%s:%d", buffer, bufPos);
-            Wire.write(tmp, MEM_LENGTH);
+            Wire.write(EMPTY_RESPONSE, EMPTY_RESPONSE_SIZE);
         }
     }
 

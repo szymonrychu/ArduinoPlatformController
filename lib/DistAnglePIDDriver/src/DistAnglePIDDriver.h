@@ -28,7 +28,7 @@ public:
         PololuVNH3SP30Pins  distancePins = {config.distPWM, config.distA};
         PololuVNH3SP30Pins  anglePins = {config.anglPWM, config.anglA};
         InterruptEncoderSetup distanceEncoderSetup = {config.distENC1, config.distENC2, DIST_ENC2DIST};
-        InterruptEncoderSetup angleEncoderSetup = {config.anglENC1, config.anglENC2, DIST_ENC2DIST};
+        InterruptEncoderSetup angleEncoderSetup = {config.anglENC1, config.anglENC2, ANGL_ENC2DIST};
 
         distDriver = PIDDriver(distanceVPID, distanceDPID, distancePins, distanceEncoderSetup, config.distEncoderFunction);
         anglDriver = PIDDriver(angleVPID, angleDPID, anglePins, angleEncoderSetup, config.anglEncoderFunction);

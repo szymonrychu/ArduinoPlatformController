@@ -113,6 +113,7 @@ public:
         input = 0;
         previousError = 0;
         integralSteering = 0;
+        result = 0;
         if(integralSteering >  PID_MAX_INTEGRAL) integralSteering = PID_MAX_INTEGRAL;
         if(integralSteering < -PID_MAX_INTEGRAL) integralSteering = -PID_MAX_INTEGRAL;
     }

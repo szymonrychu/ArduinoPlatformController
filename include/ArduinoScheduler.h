@@ -99,17 +99,12 @@ void setup(){
     command.addCommand("G002", G002transmitTo0x02); // G002 GXX:YY:ZZ\n G002 G00:00:00
     command.addCommand("G003", G003transmitTo0x03); // G003 GXX:YY:ZZ\n G003 G00:00:00 
     command.addCommand("G004", G004transmitTo0x04); // G004 GXX:YY:ZZ\n G004 G01:00:00
-    command.addCommand("G100", G100multicastToAll); // G100 GXX:YY:ZZ\n G100 G00:00:00 G100 G03:50:0.5
+    command.addCommand("G100", G100multicastToAll); // G100 GXX:YY:ZZ\n G100 G00:00:00 G100 G02:5:0.5
     command.addCommand("G999", G999resetBus); // G999 (space at the end)
     delay(1000);
-    // postReset();
 }
 
 void loop(){
     command.parse();
     delay(LOOP_T);
 }
-
-//G004 G0asddsa00:00
-//G004 G03:20:0.5
-//G004 G04:20:0.5

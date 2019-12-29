@@ -8,10 +8,16 @@
 #define DIR_DIST 1
 #define DEADZONE 0.0f
 
-#define DIST_ENC1 14
-#define DIST_ENC2 15
+#if SLAVE_I2C_ID == 2
+#define DIST_ENC1 15
+#define DIST_ENC2 14
+#else
+#endif
 #define DIST_PWM  10 //ena
 #define DIST_P1   12 //in2
+
+
+
 
 #define ANGL_ENC1 16
 #define ANGL_ENC2 17

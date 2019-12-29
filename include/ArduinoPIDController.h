@@ -47,8 +47,12 @@ void G00FuncHandler(){
     double distanceVelocity = 0.0f; char* distanceVelocityCH = slaveWire.next();
     distance = atof(distanceCH);
     distanceVelocity = atof(distanceVelocityCH);
+    #if SLAVE_I2C_ID == 1 || SLAVE_I2C_ID == 4
+    driver.inputRelativeDistanceVelocity(-distance, distanceVelocity);
+    #else
     driver.inputRelativeDistanceVelocity(distance, distanceVelocity);
-    slaveWire.reportSuccess("G03:OK;\0");
+    #endif
+    slaveWire.reportSuccess("G00:OK;\0");
 }
 
 /* 
@@ -61,7 +65,7 @@ void G01FuncHandler(){
     angle = atof(angleCH);
     angleVelocity = atof(angleVelocityCH);
     driver.inputRelativeAngleVelocity(angle, angleVelocity);
-    slaveWire.reportSuccess("G03:OK;\0");
+    slaveWire.reportSuccess("G01:OK;\0");
 }
 
 /* 
@@ -72,7 +76,11 @@ void G02FuncHandler(){
     double distanceVelocity = 0.0f; char* distanceVelocityCH = slaveWire.next();
     distance = atof(distanceCH);
     distanceVelocity = atof(distanceVelocityCH);
-    driver.inputAbsoluteDistanceVelocity(distance + driver.getDistance(), distanceVelocity + driver.getDistanceVelocity());
+    #if SLAVE_I2C_ID == 1 || SLAVE_I2C_ID == 4
+    driver.inputAbsoluteDistanceVelocity(driver.getDistance()-distance, distanceVelocity);
+    #else
+    driver.inputAbsoluteDistanceVelocity(driver.getDistance()+distance, distanceVelocity);
+    #endif
     slaveWire.reportSuccess("G02:OK;\0");
 }
 
@@ -84,7 +92,7 @@ void G03FuncHandler(){
     double angleVelocity = 0.0f; char* angleVelocityCH = slaveWire.next();
     angle = atof(angleCH);
     angleVelocity = atof(angleVelocityCH);
-    driver.inputAbsoluteAngleVelocity(angle + driver.getAngle(), angleVelocity + driver.getAngleVelocity());
+    driver.inputAbsoluteAngleVelocity(angle + driver.getAngle(), angleVelocity);
     slaveWire.reportSuccess("G03:OK;\0");
 }
 
@@ -121,7 +129,6 @@ PIDConfig commandParserParsePID(){
         pidC.velocityD = atof(vDch);
         pidC.velocityDdefined = true;
     }
-    slaveWire.reportSuccess("G03:OK;\0");
     return pidC;
 }
 
@@ -131,6 +138,7 @@ G10FuncHandler - set distance PID
 void G10FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setDistancePID(pidC);
+    slaveWire.reportSuccess("G10:OK;\0");
 }
 
 /* 
@@ -139,6 +147,7 @@ G11FuncHandler - set distance velocity PID
 void G11FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setDistanceVelocityPID(pidC);
+    slaveWire.reportSuccess("G11:OK;\0");
 }
 
 /* 
@@ -147,6 +156,7 @@ G12FuncHandler - set angle PID
 void G12FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setAnglePID(pidC);
+    slaveWire.reportSuccess("G12:OK;\0");
 }
 
 /* 
@@ -155,26 +165,26 @@ G13FuncHandler - set angle velocity PID
 void G13FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setAngleVelocityPID(pidC);
+    slaveWire.reportSuccess("G13:OK;\0");
 }
 
 void resetAnglePosition(){
     calibrated = false;
-    if(SLAVE_I2C_ID == 2 || SLAVE_I2C_ID == 4){
-        digitalWrite(ANGL_P1, LOW);
-    }else {
-        digitalWrite(ANGL_P1, HIGH);
-    }
+    #if SLAVE_I2C_ID == 2 || SLAVE_I2C_ID == 4
+    digitalWrite(ANGL_P1, LOW);
+    #else
+    digitalWrite(ANGL_P1, HIGH);
+    #endif
     analogWrite(ANGL_PWM, 0.7f*pow(2, PWM_RESOLUTION));
     delay(LOOP_T*30);
     pinOptoSetup(optoInterrupt);
     driver.reset();
-    double angle = 0;
     double angleVelocity = 0.7;
-    if(SLAVE_I2C_ID == 2 || SLAVE_I2C_ID == 4){
-        angle = -10.0;
-    }else {
-        angle = 10.0;
-    }
+    #if SLAVE_I2C_ID == 2 || SLAVE_I2C_ID == 4
+    double angle = -10.0;
+    #else
+    double angle = 10.0;
+    #endif
     driver.inputAbsoluteAngleVelocity(angle + driver.getAngle(), angleVelocity + driver.getAngleVelocity());
 }
 
@@ -183,6 +193,7 @@ G99FuncHandler - resets driver
 */
 void G99FuncHandler(){
     resetAnglePosition();
+    slaveWire.reportSuccess("G99:OK;\0");
 }
 
 // void captureStatus(){
