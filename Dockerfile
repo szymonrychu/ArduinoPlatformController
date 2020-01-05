@@ -11,4 +11,4 @@ RUN set -xe; \
     pip install -r /requirements.txt;\
     rm /requirements.txt
 
-CMD [ "/usr/bin/env3", "python3", "/usr/bin/ds4controller" ]
+CMD [ "/usr/bin/env", "python3", "/usr/bin/ds4controller" ]
