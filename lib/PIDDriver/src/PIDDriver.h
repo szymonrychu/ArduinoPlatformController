@@ -90,6 +90,14 @@ public:
     }
 
     void reset(){
+        inputDistance = 0.0f;
+        inputVelocity = 0.0f;
+        encoder.reset();
+        distancePID.reset();
+        velocityPID.reset();
+    }
+
+    void resetInPos(){
         encoder.reset();
         distancePID.reset();
         velocityPID.reset();

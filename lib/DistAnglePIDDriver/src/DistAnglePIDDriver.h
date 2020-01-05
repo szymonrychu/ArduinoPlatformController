@@ -69,8 +69,17 @@ public:
     }
 
     void reset(){
+        inputDistance = 0.0f;
+        inputDistanceVelocity = 0.0f;
         distDriver.reset();
+        inputAngle = 0.0f;
+        inputAngleVelocity = 0.0f;
         anglDriver.reset();
+    }
+
+    void resetInPos(){
+        distDriver.resetInPos();
+        anglDriver.resetInPos();
     }
 
     void printDiagnostics(){

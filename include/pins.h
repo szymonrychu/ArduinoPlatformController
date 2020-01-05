@@ -12,6 +12,8 @@
 #define DIST_ENC1 15
 #define DIST_ENC2 14
 #else
+#define DIST_ENC1 14
+#define DIST_ENC2 15
 #endif
 #define DIST_PWM  10 //ena
 #define DIST_P1   12 //in2

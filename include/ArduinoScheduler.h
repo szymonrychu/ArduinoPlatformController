@@ -25,6 +25,7 @@ void serialEvent() {
         char ch = (char)Serial.read();
         command.inputChar(ch);
     }
+    digitalWrite(LED_BUILTIN, HIGH);
 }
 
 /* Triggered on i2c bus error */
@@ -87,7 +88,11 @@ void G999resetBus(){
 /* Sending to Serial once transmission to i2c slave was succesful */
 void transmitDone(void){ Serial.printf("%s\n", SERIAL_DETAILED_TRANSMIT_OK); }
 
+
+
+
 void setup(){
+    pinMode(LED_BUILTIN, OUTPUT);
     memset(databuf, 0, sizeof(databuf));
     Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_INT, I2C_RATE_400);
     Wire.setDefaultTimeout(50000);

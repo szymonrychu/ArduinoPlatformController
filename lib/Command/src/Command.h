@@ -63,7 +63,22 @@ public:
         }
     }
 
+	bool lastPinState = false;
+	int counter = 0;
+	void toggleLED(){
+		if(counter == 0){
+			lastPinState = ! lastPinState;
+			if(lastPinState){
+				digitalWrite(LED_BUILTIN, HIGH);
+			}else{
+				digitalWrite(LED_BUILTIN, LOW);
+			}
+		}
+		counter = (counter + 1)%10;
+	}
+
 	void parse(){
+		toggleLED();
 		char *tmp;
 		if(termFound){
 			termFound = false;
