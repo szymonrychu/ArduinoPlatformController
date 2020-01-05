@@ -250,7 +250,7 @@ class DS4PlatformController(DS4):
         self.angle = 0
         self.power = 0
         self.steer = 0
-        self.distance = 100.0
+        self.distance = 10000.0
 
     def start(self):
         self.__operate = True
