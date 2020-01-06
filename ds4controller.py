@@ -191,7 +191,7 @@ class DS4(threading.Thread):
 
 class SerialThread(ThreadWrapper, SerialWrapper):
 
-    def __init__(self, fpath, sbaudrate=115200, output_handler=None):
+    def __init__(self, fpath, sbaudrate=115200, output_handler=None, prefix=""):
         ThreadWrapper.__init__(self, loop_handler=self.handler)
         SerialWrapper.__init__(self, fpath, sbaudrate)
         self.__input_queue = queue.Queue()
@@ -199,13 +199,14 @@ class SerialThread(ThreadWrapper, SerialWrapper):
         self.send_receive_count = 0
         self.angle = 0
         self.steer = 0
+        self.prefix = prefix
 
     def parse_input(self, raw_request):
-        # self._log_warning('SerialThread:_parse_input: unhandled!')
+        self._log_warning('SerialThread:{}:_parse_input: unhandled!'.format(self.prefix))
         return raw_request
 
     def parse_response(self, raw_response):
-        # self._log_warning('SerialThread:_parse_response: unhandled!')
+        self._log_warning('SerialThread:{}:_parse_response: unhandled!'.format(self.prefix))
         return raw_response
 
     def put(self, raw_request):
@@ -242,8 +243,8 @@ class DS4PlatformController(DS4):
             serial1, serial2, serial3, serial4
         ]
         self.serial_threads = []
-        for serial in serials:
-            self.serial_threads.append(SerialThread(serial, output_handler=self.serial_output_handler))
+        for id, serial in enumerate(serials):
+            self.serial_threads.append(SerialThread(serial, output_handler=self.serial_output_handler, prefix='id:{}'.format(id)))
         self.last_states = {}
         self.__operate = True
 

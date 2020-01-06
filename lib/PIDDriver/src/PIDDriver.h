@@ -87,24 +87,20 @@ public:
         velocitySteering = velocityPID.computeNewSteering(LOOP_T, inputVelocity);
         power = (int)(((double)pow(2, PWM_RESOLUTION)) * velocitySteering * distanceSteering);
         driver.drive(power);
+        encoder.handleEncoder();
     }
 
-    void reset(){
+    void reset(double position=0.0f, double velocity=0.0f){
+        distancePID.reset();
+        velocityPID.reset();
+        encoder.reset(-position);
+        currentDistance = -position;
         inputDistance = 0.0f;
-        inputVelocity = 0.0f;
-        encoder.reset();
-        distancePID.reset();
-        velocityPID.reset();
-    }
-
-    void resetInPos(){
-        encoder.reset();
-        distancePID.reset();
-        velocityPID.reset();
+        inputVelocity = velocity;
     }
 
     void printDiagnostics(){
-        Serial.print("cP/cS/S/cV/V: ");
+        Serial.print("cP/cS/S/cV/V:");
         Serial.print(power);
         Serial.print("/");
         Serial.print(currentDistance);
@@ -201,6 +197,10 @@ public:
         pidC.velocityI = distancePID.getI();
         pidC.velocityD = distancePID.getD();
         return pidC;
+    }
+
+    void setCallbackFunction(void (interruptFunction(bool))){
+        encoder.setCallbackFunction(interruptFunction);
     }
 };
 #endif

@@ -69,17 +69,20 @@ public:
     }
 
     void reset(){
+
+        double angleVelocity = 0.7;
+        #if SLAVE_I2C_ID == 2 || SLAVE_I2C_ID == 4
+        double angle = -10.0;
+        #else
+        double angle = 10.0;
+        #endif
+
         inputDistance = 0.0f;
         inputDistanceVelocity = 0.0f;
         distDriver.reset();
         inputAngle = 0.0f;
         inputAngleVelocity = 0.0f;
-        anglDriver.reset();
-    }
-
-    void resetInPos(){
-        distDriver.resetInPos();
-        anglDriver.resetInPos();
+        anglDriver.reset(angle, angleVelocity);
     }
 
     void printDiagnostics(){
@@ -87,6 +90,7 @@ public:
         distDriver.printDiagnostics();
         Serial.print("angl:");
         anglDriver.printDiagnostics();
+        Serial.println("");
     }
 
     double getDistance(){
@@ -159,6 +163,14 @@ public:
 
     void setDistanceVelocityPID(PIDConfig pidC){
         distDriver.setVPID(pidC);
+    }
+
+    void setAngleCallbackFunction(void (interruptFunction(bool))){
+        anglDriver.setCallbackFunction(interruptFunction);
+    }
+
+    void setDistanceCallbackFunction(void (interruptFunction(bool))){
+        distDriver.setCallbackFunction(interruptFunction);
     }
     
 };

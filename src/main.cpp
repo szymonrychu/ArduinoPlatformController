@@ -33,22 +33,13 @@ void optoInterrupt(){
     bool prevState = digitalRead(ANGL_OPTO) != LOW;
     delay(2);
     if(!calibrated && digitalRead(ANGL_OPTO) != HIGH && prevState){
-        calibrated = true;
         digitalWrite(ANGL_P1, LOW);
         analogWrite(ANGL_PWM, 0);
         detachInterrupt(digitalPinToInterrupt(ANGL_OPTO));
         driver.reset();
+        Logger::info("Calibrated!");
+        calibrated = true;
     }
-    double angleVelocity = 0.7;
-    #if SLAVE_I2C_ID == 2 || SLAVE_I2C_ID == 4
-    double angle = -10.0;
-    #else
-    double angle = 10.0;
-    #endif
-    driver.inputAbsoluteAngleVelocity(angle + driver.getAngle(), angleVelocity + driver.getAngleVelocity());
-    delay(1000);
-    driver.resetInPos();
-    Logger::info("Calibrated!");
 }
 /* 
 G00FuncHandler - add distance value to what's already been requested
@@ -190,7 +181,6 @@ void resetAnglePosition(){
     analogWrite(ANGL_PWM, 0.7f*pow(2, PWM_RESOLUTION));
     delay(LOOP_T*30);
     pinOptoSetup(optoInterrupt);
-    driver.reset();
 }
 
 /*
@@ -246,12 +236,20 @@ void defaultFunc(char* data){
     Logger::error(data);
 }
 
+void angleReachedHandler(bool pass){
+    Logger::info("Angle reached!");
+}
+
+void distanceReachedHandler(bool pass){
+    Logger::info("Distance reached!");
+}
+
 void setup(){
     Serial.begin(115200);
 
     command.addDefaultHandler(defaultFunc);
     command.addCommand("G00", G00FuncHandler);
-    command.addCommand("G01", G01FuncHandler); // G03 5 0.5
+    command.addCommand("G01", G01FuncHandler); // G03 10 0.5 
     command.addCommand("G02", G02FuncHandler);
     command.addCommand("G03", G03FuncHandler);
 
@@ -263,15 +261,22 @@ void setup(){
 
     // command.addCommand("G98", G98FuncHandler);
     command.addCommand("G99", G99FuncHandler); // G99
+    driver.setAngleCallbackFunction(angleReachedHandler);
+    driver.setDistanceCallbackFunction(distanceReachedHandler);
     pinsSetup(distanceInterrupt, angleInterrupt);
     resetAnglePosition();
 }
 
+int loopCounter = 0;
 void loop(){
     command.parse();
     if(calibrated)driver.compute();
     delay(LOOP_T);
     if(calibrated)driver.setResults(LOOP_T);
+    if(loopCounter == 0){
+        driver.printDiagnostics();
+    }
+    loopCounter = (loopCounter+1)%100;
 }
 
-
+// G03 10 0.7

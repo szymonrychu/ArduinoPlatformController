@@ -4,6 +4,10 @@
 #ifndef INTERRUPT_ENCODER_h
 #define INTERRUPT_ENCODER_h
 
+#ifndef ENCODER_TOLERANCE
+#define ENCODER_TOLERANCE -0.1
+#endif
+
 struct InterruptEncoderSetup{
     int pinA, pinB;
     double stepToDistance;
@@ -99,30 +103,32 @@ public:
         bool decrDistance = distance < previousDistance; //checks if we are going backward
         if(corrIncrDistance && incrDistance){
             // we correctly go forward
-            bool incrReachedDistance = distance > distanceToReach; //checks if we reached target if going forward
+            bool incrReachedDistance = distance+ENCODER_TOLERANCE > distanceToReach; //checks if we reached target if going forward
             if(incrReachedDistance){
                 reached = true;
-                if(interruptFunction != NULL){
-                    interruptFunction(true);
-                }
             }
         }else if(corrDecrDistance && decrDistance){
             // we correctly go backward
-            bool decrReachedDistance = distance < distanceToReach; //checks if we reached target if going backward
+            bool decrReachedDistance = distance-ENCODER_TOLERANCE < distanceToReach; //checks if we reached target if going backward
             if(decrReachedDistance){
                 reached = true;
-                if(interruptFunction != NULL){
-                    interruptFunction(true);
-                }
             }
-        }else{
-            if(interruptFunction != NULL)
-                interruptFunction(false);
+        }
+    }
+
+    void handleEncoder(){
+        if(reached && interruptFunction != NULL){
+            interruptFunction(true);
+            reached = false;
         }
     }
 
     double getDistance(){
         return distance;
+    }
+
+    void setCallbackFunction(void (interruptFunction(bool))){
+        this->interruptFunction = interruptFunction;
     }
 
     double getVelocity(double timeDelta){
@@ -135,15 +141,14 @@ public:
         corrIncrDistance = distance > this->distance;
         corrDecrDistance = distance < this->distance;
         this->distanceToReach = distance;
-        reached = false;
     }
 
-    void reset(){
+    void reset(double distanceToReach=0.0f){
         corrIncrDistance = false;
         corrDecrDistance = false;
-        reached = true;
-        this->distanceToReach = 0;
-        distance = 0;
+        reached = false;
+        this->distanceToReach = distanceToReach;
+        distance = distanceToReach;
     }
 };
 #endif
