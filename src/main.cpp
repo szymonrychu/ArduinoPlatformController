@@ -11,6 +11,7 @@ uint32_t Logger::num = 0;
 
 bool calibrated = false;
 bool received = false;
+char* lastCommand = "";
 
 DistAnglePIDDriverConfig config = {
     DIST_PWM, DIST_P1, DIST_ENC1, DIST_ENC2, \
@@ -37,7 +38,8 @@ void optoInterrupt(){
         analogWrite(ANGL_PWM, 0);
         detachInterrupt(digitalPinToInterrupt(ANGL_OPTO));
         driver.reset();
-        Logger::info("Calibrated!");
+        Logger::info("Calibrated:", false);
+        Serial.println(lastCommand);
         calibrated = true;
     }
 }
@@ -55,7 +57,8 @@ void G00FuncHandler(){
     #else
     driver.inputAbsoluteDistanceVelocity(distance, distanceVelocity);
     #endif
-    Logger::info("G00 OK");
+    lastCommand = "G00";
+    Logger::info("G00 ACK");
 }
 
 /* 
@@ -68,7 +71,8 @@ void G01FuncHandler(){
     angle = atof(angleCH);
     angleVelocity = atof(angleVelocityCH);
     driver.inputAbsoluteAngleVelocity(angle, angleVelocity);
-    Logger::info("G01 OK");
+    lastCommand = "G01";
+    Logger::info("G01 ACK");
 }
 
 /* 
@@ -84,7 +88,8 @@ void G02FuncHandler(){
     #else
     driver.inputAbsoluteDistanceVelocity(driver.getDistance()+distance, distanceVelocity);
     #endif
-    Logger::info("G02 OK");
+    lastCommand = "G02";
+    Logger::info("G02 ACK");
 }
 
 /* 
@@ -96,7 +101,8 @@ void G03FuncHandler(){
     angle = atof(angleCH);
     angleVelocity = atof(angleVelocityCH);
     driver.inputAbsoluteAngleVelocity(angle + driver.getAngle(), angleVelocity);
-    Logger::info("G03 OK");
+    lastCommand = "G03";
+    Logger::info("G03 ACK");
 }
 
 PIDConfig commandParserParsePID(){
@@ -141,7 +147,8 @@ G10FuncHandler - set distance PID
 void G10FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setDistancePID(pidC);
-    Logger::info("G10 OK");
+    lastCommand = "G10";
+    Logger::info("G10 ACK");
 }
 
 /* 
@@ -150,7 +157,8 @@ G11FuncHandler - set distance velocity PID
 void G11FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setDistanceVelocityPID(pidC);
-    Logger::info("G11 OK");
+    lastCommand = "G11";
+    Logger::info("G11 ACK");
 }
 
 /* 
@@ -159,7 +167,8 @@ G12FuncHandler - set angle PID
 void G12FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setAnglePID(pidC);
-    Logger::info("G12 OK");
+    lastCommand = "G12";
+    Logger::info("G12 ACK");
 }
 
 /* 
@@ -168,7 +177,8 @@ G13FuncHandler - set angle velocity PID
 void G13FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setAngleVelocityPID(pidC);
-    Logger::info("G13 OK");
+    lastCommand = "G13";
+    Logger::info("G13 ACK");
 }
 
 void resetAnglePosition(){
@@ -188,7 +198,8 @@ G99FuncHandler - resets driver
 */
 void G99FuncHandler(){
     resetAnglePosition();
-    Logger::info("G99 OK");
+    lastCommand = "G99";
+    Logger::info("G99 ACK");
 }
 
 // void captureStatus(){
@@ -223,6 +234,9 @@ void G99FuncHandler(){
 //     operationOnQueuePending = false;
 // }
 
+void G98FuncHandler(){
+    driver.printDiagnostics();
+}
 
 void serialEvent() {
     while (Serial.available()) {
@@ -237,11 +251,17 @@ void defaultFunc(char* data){
 }
 
 void angleReachedHandler(bool pass){
-    Logger::info("Angle reached!");
+    Logger::info("a_reached:", false);
+    Serial.print(lastCommand);
+    Serial.print(":");
+    Serial.println(driver.getAngle());
 }
 
 void distanceReachedHandler(bool pass){
-    Logger::info("Distance reached!");
+    Logger::info("d_reached:", false);
+    Serial.print(lastCommand);
+    Serial.print(":");
+    Serial.println(driver.getDistance());
 }
 
 void setup(){
@@ -259,7 +279,7 @@ void setup(){
     command.addCommand("G12", G12FuncHandler);
     command.addCommand("G13", G13FuncHandler);
 
-    // command.addCommand("G98", G98FuncHandler);
+    command.addCommand("G98", G98FuncHandler);
     command.addCommand("G99", G99FuncHandler); // G99
     driver.setAngleCallbackFunction(angleReachedHandler);
     driver.setDistanceCallbackFunction(distanceReachedHandler);
