@@ -5,7 +5,7 @@ class Logger{
 private:
     static void log(char* level, char* data, bool endl){
         Serial.printf("%lu:%s:%s", num++, level, data);
-        if(endl) Serial.println("");
+        if(endl) Serial.print("\n");
     }
 public:
     static uint32_t num;

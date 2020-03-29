@@ -1,6 +1,7 @@
 #ifndef DistAnglePIDDriver_H
 #define DistAnglePIDDriver_H
 #include "PIDDriver.h"
+
 struct DistAnglePIDDriverConfig {
     int distPWM, distA, distENC1, distENC2; 
     int anglPWM, anglA, anglENC1, anglENC2;
@@ -32,6 +33,7 @@ public:
 
         distDriver = PIDDriver(distanceVPID, distanceDPID, distancePins, distanceEncoderSetup, config.distEncoderFunction);
         anglDriver = PIDDriver(angleVPID, angleDPID, anglePins, angleEncoderSetup, config.anglEncoderFunction);
+
     }
 
     void setResults(double timeDelta){
@@ -50,6 +52,13 @@ public:
     
     void handleAngleInterrupt(){
         anglDriver.handleInterrupt();
+    }
+
+    void inputRelativeDistanceAngleTime(double distance, double angle, long timeMS){
+        double distanceSpeed = distance / ((double)(timeMS)/1000.0f);
+        double angleSpeed = angle / ((double)(timeMS)/1000.0f);
+        distDriver.inputAbsoluteDistanceVelocity(distance, distanceSpeed);
+        anglDriver.inputAbsoluteDistanceVelocity(angle, angleSpeed);
     }
 
     void inputAbsoluteDistanceVelocity(double distance, double velocity){
@@ -90,7 +99,7 @@ public:
         distDriver.printDiagnostics();
         Serial.print("angl:");
         anglDriver.printDiagnostics();
-        Serial.println("");
+        Serial.print("\n");
     }
 
     double getDistance(){

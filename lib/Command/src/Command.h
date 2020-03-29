@@ -11,6 +11,7 @@
 class Command{
 private:
 	char *receiveCache;
+	char *errorCache;
 	int numCommand;
 	char *last;
 	char *token;
@@ -47,7 +48,9 @@ public:
 		if(inChar == term[0]) {
 			termFound = true;
 			receiveCache = (char*)calloc(strlen(&(buffer[0]))+1, sizeof(char));
+			errorCache = (char*)calloc(strlen(&(buffer[0]))+1, sizeof(char));
 			strcpy(receiveCache, &(buffer[0]));
+			strcpy(errorCache, &(buffer[0]));
 			bufPos = 0;
 			memset(buffer, 0, MEM_LEN);
 		}else{
@@ -84,14 +87,14 @@ public:
 			termFound = false;
             if(!integrityHandler(receiveCache) ){
                 if(defaultHandlerExists){
-                    (*defaultHandler)(receiveCache);
+                    (*defaultHandler)(errorCache);
                 }
                 return;
             }
 			token = strtok_r(receiveCache, delim, &last);
 			if (token == NULL){
                 if(defaultHandlerExists){
-                    (*defaultHandler)(receiveCache);
+                    (*defaultHandler)(errorCache);
                 }
 				return;
 			}
@@ -104,8 +107,7 @@ public:
 				}
 			}
 			if (!matched && defaultHandlerExists) {
-				Serial.println(receiveCache);
-				(*defaultHandler)(receiveCache); 
+				(*defaultHandler)(errorCache); 
 			}
 		}
 	}

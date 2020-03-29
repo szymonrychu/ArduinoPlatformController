@@ -29,8 +29,8 @@ void distanceInterrupt(){
 void angleInterrupt(){
     driver.handleAngleInterrupt();
 }
-
 void optoInterrupt(){
+
     bool prevState = digitalRead(ANGL_OPTO) != LOW;
     delay(2);
     if(!calibrated && digitalRead(ANGL_OPTO) != HIGH && prevState){
@@ -39,7 +39,8 @@ void optoInterrupt(){
         detachInterrupt(digitalPinToInterrupt(ANGL_OPTO));
         driver.reset();
         Logger::info("Calibrated:", false);
-        Serial.println(lastCommand);
+        Serial.print(lastCommand);
+        Serial.print('\n');
         calibrated = true;
     }
 }
@@ -254,14 +255,16 @@ void angleReachedHandler(bool pass){
     Logger::info("a_reached:", false);
     Serial.print(lastCommand);
     Serial.print(":");
-    Serial.println(driver.getAngle());
+    Serial.print(driver.getAngle());
+    Serial.print('\n');
 }
 
 void distanceReachedHandler(bool pass){
     Logger::info("d_reached:", false);
     Serial.print(lastCommand);
     Serial.print(":");
-    Serial.println(driver.getDistance());
+    Serial.print(driver.getDistance());
+    Serial.print('\n');
 }
 
 void setup(){
