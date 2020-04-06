@@ -44,6 +44,12 @@ private:
     double currentVelocity = 0.0f;
     double currentDistance = 0.0f;
     int power = 0;
+
+    unsigned long requestTicks;
+    double inputIncrement;
+
+
+    bool newInput;
 public:
 
     PIDDriver (){}
@@ -52,6 +58,7 @@ public:
         distancePID = PID(dPIDValues);
         driver = PololuVNH3SP30(driverPins);
         encoder = InterruptEncoder(setup);
+        newInput = false;
     }
 
     PIDDriver(PIDvalues vPIDValues, PIDvalues dPIDValues, PololuVNH3SP30Pins driverPins, InterruptEncoderSetup setup, void (encoderInterruptH(bool))){
@@ -59,16 +66,19 @@ public:
         distancePID = PID(dPIDValues);
         driver = PololuVNH3SP30(driverPins);
         encoder = InterruptEncoder(setup, encoderInterruptH);
+        newInput = false;
     }
 
-    void inputRelativeDistanceVelocity(double deltaDistance, double velocity){
-        inputDistance += deltaDistance;
+    void inputRelativeDistanceVelocity(double relativeDistance, double velocity){
+        requestTicks = (unsigned long)abs(relativeDistance/velocity);
+        inputIncrement = relativeDistance/(double)(requestTicks);
         inputVelocity = abs(velocity);
+        newInput = true;
     }
 
-    void inputAbsoluteDistanceVelocity(double deltaDistance, double velocity){
-        inputDistance = deltaDistance;
-        inputVelocity = abs(velocity);
+    void inputAbsoluteDistanceVelocity(double absoluteDistance, double velocity){
+        double relativeDistance = absoluteDistance - inputDistance;
+        inputRelativeDistanceVelocity(relativeDistance, velocity);
     }
 
     void handleInterrupt(){
@@ -83,6 +93,15 @@ public:
     }
 
     void compute(){
+        if(newInput){
+            if(requestTicks>0){
+                inputDistance += inputIncrement;
+                requestTicks--;
+            }else{
+                newInput = false;
+                inputVelocity = 0.0;
+            }
+        }
         distanceSteering = distancePID.computeNewSteering(LOOP_T, inputDistance);
         velocitySteering = velocityPID.computeNewSteering(LOOP_T, inputVelocity);
         power = (int)(((double)pow(2, PWM_RESOLUTION)) * velocitySteering * distanceSteering);
@@ -100,29 +119,27 @@ public:
     }
 
     void printDiagnostics(){
-        Serial.print("cP/cS/S/cV/V:");
         Serial.print(power);
-        Serial.print("/");
-        Serial.print(currentDistance);
-        Serial.print("/");
-        Serial.print(inputDistance);
-        Serial.print("/");
-        Serial.print(currentVelocity);
-        Serial.print("/");
-        Serial.print(velocitySteering);
-        Serial.print("; V:P/I/D:");
-        Serial.print(velocityPID.getP());
-        Serial.print("/");
-        Serial.print(velocityPID.getI());
-        Serial.print("/");
-        Serial.print(velocityPID.getD());
-        Serial.print("; S:P/I/D:");
-        Serial.print(distancePID.getP());
-        Serial.print("/");
-        Serial.print(distancePID.getI());
-        Serial.print("/");
-        Serial.print(distancePID.getD());
-        Serial.print(" ");
+        Serial.print(":");
+        Serial.print(currentDistance, 4);
+        Serial.print(":");
+        Serial.print(inputDistance, 4);
+        Serial.print(":");
+        Serial.print(currentVelocity, 4);
+        Serial.print(":");
+        Serial.print(velocitySteering, 4);
+        Serial.print(":");
+        Serial.print(velocityPID.getP(), 4);
+        Serial.print(":");
+        Serial.print(velocityPID.getI(), 4);
+        Serial.print(":");
+        Serial.print(velocityPID.getD(), 4);
+        Serial.print(":");
+        Serial.print(distancePID.getP(), 4);
+        Serial.print(":");
+        Serial.print(distancePID.getI(), 4);
+        Serial.print(":");
+        Serial.print(distancePID.getD(), 4);
     }
 
     double getDistance(){
@@ -197,6 +214,10 @@ public:
         pidC.velocityI = distancePID.getI();
         pidC.velocityD = distancePID.getD();
         return pidC;
+    }
+
+    bool checkBusy(){
+        return newInput;
     }
 
     void setCallbackFunction(void (interruptFunction(bool))){

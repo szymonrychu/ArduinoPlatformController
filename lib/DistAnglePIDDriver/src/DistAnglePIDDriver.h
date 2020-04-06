@@ -95,11 +95,14 @@ public:
     }
 
     void printDiagnostics(){
-        Serial.print("dist:");
         distDriver.printDiagnostics();
-        Serial.print("angl:");
+        Serial.print(":");
         anglDriver.printDiagnostics();
         Serial.print("\n");
+    }
+
+    bool checkBusy(){
+        return distDriver.checkBusy() || anglDriver.checkBusy();
     }
 
     double getDistance(){

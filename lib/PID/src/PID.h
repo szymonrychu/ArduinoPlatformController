@@ -75,6 +75,9 @@ public:
         this->input = input;
 
         double error = input - result;
+        if(abs(error) < PID_DELTA_TOLERANCE){
+            error = 0;
+        }
 
         integralSteering += kI*error*(double)timeDiff;
         double errorDelta = previousError - error;

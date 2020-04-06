@@ -18,9 +18,6 @@
 #define DIST_PWM  10 //ena
 #define DIST_P1   12 //in2
 
-
-
-
 #define ANGL_ENC1 16
 #define ANGL_ENC2 17
 #define ANGL_PWM  9 //enb
@@ -71,6 +68,8 @@ void pinOptoSetup(void (*optoInterrupt)()){
     #endif
 }
 
+#define PID_DELTA_TOLERANCE 0.05
+
 #define PID_DGAIN 0.01f
 #define PID_VGAIN 0.2f
 
@@ -84,7 +83,7 @@ void pinOptoSetup(void (*optoInterrupt)()){
 
 #define DIST_ENC2DIST 56.8f/3198.48530706f // encoder to cm
 
-#define ANGL_D_P PID_DGAIN*7.5f
+#define ANGL_D_P PID_DGAIN*9.5f
 #define ANGL_D_I PID_DGAIN*0.0f
 #define ANGL_D_D PID_DGAIN*1.8f
 

@@ -59,7 +59,7 @@ void G00FuncHandler(){
     driver.inputAbsoluteDistanceVelocity(distance, distanceVelocity);
     #endif
     lastCommand = "G00";
-    Logger::info("G00 ACK");
+    Logger::info("G00:ACK");
 }
 
 /* 
@@ -73,7 +73,7 @@ void G01FuncHandler(){
     angleVelocity = atof(angleVelocityCH);
     driver.inputAbsoluteAngleVelocity(angle, angleVelocity);
     lastCommand = "G01";
-    Logger::info("G01 ACK");
+    Logger::info("G01:ACK");
 }
 
 /* 
@@ -90,7 +90,7 @@ void G02FuncHandler(){
     driver.inputAbsoluteDistanceVelocity(driver.getDistance()+distance, distanceVelocity);
     #endif
     lastCommand = "G02";
-    Logger::info("G02 ACK");
+    Logger::info("G02:ACK");
 }
 
 /* 
@@ -103,7 +103,7 @@ void G03FuncHandler(){
     angleVelocity = atof(angleVelocityCH);
     driver.inputAbsoluteAngleVelocity(angle + driver.getAngle(), angleVelocity);
     lastCommand = "G03";
-    Logger::info("G03 ACK");
+    Logger::info("G03:ACK");
 }
 
 PIDConfig commandParserParsePID(){
@@ -149,7 +149,7 @@ void G10FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setDistancePID(pidC);
     lastCommand = "G10";
-    Logger::info("G10 ACK");
+    Logger::info("G10:ACK");
 }
 
 /* 
@@ -159,7 +159,7 @@ void G11FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setDistanceVelocityPID(pidC);
     lastCommand = "G11";
-    Logger::info("G11 ACK");
+    Logger::info("G11:ACK");
 }
 
 /* 
@@ -169,7 +169,7 @@ void G12FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setAnglePID(pidC);
     lastCommand = "G12";
-    Logger::info("G12 ACK");
+    Logger::info("G12:ACK");
 }
 
 /* 
@@ -179,7 +179,7 @@ void G13FuncHandler(){
     PIDConfig pidC = commandParserParsePID();
     driver.setAngleVelocityPID(pidC);
     lastCommand = "G13";
-    Logger::info("G13 ACK");
+    Logger::info("G13:ACK");
 }
 
 void resetAnglePosition(){
@@ -200,7 +200,7 @@ G99FuncHandler - resets driver
 void G99FuncHandler(){
     resetAnglePosition();
     lastCommand = "G99";
-    Logger::info("G99 ACK");
+    Logger::info("G99:ACK");
 }
 
 // void captureStatus(){
@@ -272,7 +272,7 @@ void setup(){
 
     command.addDefaultHandler(defaultFunc);
     command.addCommand("G00", G00FuncHandler);
-    command.addCommand("G01", G01FuncHandler); // G03 10 0.5 
+    command.addCommand("G01", G01FuncHandler); // G03 10 0.5
     command.addCommand("G02", G02FuncHandler);
     command.addCommand("G03", G03FuncHandler);
 
@@ -290,16 +290,23 @@ void setup(){
     resetAnglePosition();
 }
 
-int loopCounter = 0;
+bool latch = false;
 void loop(){
     command.parse();
     if(calibrated)driver.compute();
     delay(LOOP_T);
     if(calibrated)driver.setResults(LOOP_T);
-    if(loopCounter == 0){
+    if(latch && ! driver.checkBusy()){
+        Logger::info("DIAG:", false);
+        driver.printDiagnostics();
+        latch = false;
+        Logger::info("READY");
+    }
+    if(driver.checkBusy()){
+        latch = true;
+        Logger::info("", false);
         driver.printDiagnostics();
     }
-    loopCounter = (loopCounter+1)%100;
 }
 
 // G03 10 0.7
