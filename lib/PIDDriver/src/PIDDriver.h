@@ -110,8 +110,8 @@ public:
     }
 
     void reset(double position=0.0f, double velocity=0.0f){
-        distancePID.reset();
-        velocityPID.reset();
+        distancePID.reset(-position);
+        velocityPID.reset(-position);
         encoder.reset(-position);
         currentDistance = -position;
         inputDistance = 0.0f;

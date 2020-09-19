@@ -2,6 +2,10 @@
 
 #ifndef POLOLU_VNH3SP30_H
 #define POLOLU_VNH3SP30_H
+
+#ifndef DEADZONE
+#define DEADZONE 0.05f
+#endif
 struct PololuVNH3SP30Pins {
     int pwmPin, dir1Pin;
 };
@@ -29,10 +33,10 @@ public:
     }
 
     void drive(int power){
-        if(power > 0.05f*pow(2, PWM_RESOLUTION)){
+        if(power > (DEADZONE*(double)pow(2, PWM_RESOLUTION))){
             digitalWrite(dir1Pin, HIGH);
             analogWrite(pwmPin, power);
-        }else if(power < -0.05f*pow(2, PWM_RESOLUTION)){
+        }else if(power < -(DEADZONE*(double)pow(2, PWM_RESOLUTION))){
             digitalWrite(dir1Pin, LOW);
             analogWrite(pwmPin, -power);
         }else{

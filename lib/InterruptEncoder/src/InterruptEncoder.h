@@ -15,6 +15,7 @@ struct InterruptEncoderSetup{
 };
 
 class InterruptEncoder {
+
 private:
     int pinA = 0;
     int pinB = 0;
@@ -26,12 +27,12 @@ private:
     double distance = 0.0f;
     double previousDistance = 0.0f;
     double distanceToReach = 0.0f;
-    bool initialized = false;
-    bool reached = true;
-    bool corrIncrDistance = false;
-    bool corrDecrDistance = false;
     double velocityPreviousDistance = 0.0f;
+    int state = STATE_NOT_INITIALIZED;
 public:
+    static const int STATE_NOT_INITIALIZED = 0;
+    static const int STATE_INITIALIZED     = 1;
+
     InterruptEncoder(){}
 
     InterruptEncoder(InterruptEncoderSetup setup){
@@ -57,10 +58,11 @@ public:
     void attachDebugSerial(void (*debugFunction)(int, int, int, int)){
         this->debugFunction = debugFunction;
     }
+
     void handleInterrupt(){
         int pinAState = digitalRead(pinA);
         int pinBState = digitalRead(pinB);
-        if(initialized) {
+        if(this->state == InterruptEncoder::STATE_INITIALIZED) {
             /*
             pinA | pinB | prevA | prevB
             HIGH | LOW  | LOW   | LOW
@@ -98,30 +100,9 @@ public:
         }
         previousPinAState = pinAState;
         previousPinBState = pinBState;
-        if(!initialized) initialized = true;
-        bool incrDistance = distance > previousDistance; //checks if we are going forward
-        bool decrDistance = distance < previousDistance; //checks if we are going backward
-        if(corrIncrDistance && incrDistance){
-            // we correctly go forward
-            bool incrReachedDistance = distance+ENCODER_TOLERANCE > distanceToReach; //checks if we reached target if going forward
-            if(incrReachedDistance){
-                reached = true;
-            }
-        }else if(corrDecrDistance && decrDistance){
-            // we correctly go backward
-            bool decrReachedDistance = distance-ENCODER_TOLERANCE < distanceToReach; //checks if we reached target if going backward
-            if(decrReachedDistance){
-                reached = true;
-            }
-        }
+        if(this->state == InterruptEncoder::STATE_NOT_INITIALIZED) state = InterruptEncoder::STATE_INITIALIZED;
     }
 
-    void handleEncoder(){
-        if(reached && interruptFunction != NULL){
-            interruptFunction(true);
-            reached = false;
-        }
-    }
 
     double getDistance(){
         return distance;
@@ -138,17 +119,20 @@ public:
     }
 
     void setDistanceToReach(double distance){
-        corrIncrDistance = distance > this->distance;
-        corrDecrDistance = distance < this->distance;
         this->distanceToReach = distance;
     }
 
-    void reset(double distanceToReach=0.0f){
-        corrIncrDistance = false;
-        corrDecrDistance = false;
-        reached = false;
-        this->distanceToReach = distanceToReach;
-        distance = distanceToReach;
+    int getState(){
+        return state;
+    }
+
+    void reset(double currentDistance=0.0f){
+        state = InterruptEncoder::STATE_NOT_INITIALIZED;
+        this->distanceToReach = currentDistance;
+        distance = currentDistance;
+        previousDistance = currentDistance;
+        previousPinAState = false;
+        previousPinBState = false;
     }
 };
 #endif

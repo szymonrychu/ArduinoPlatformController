@@ -112,13 +112,11 @@ public:
         }
     }
 
-    void reset(){
-        input = 0;
+    void reset(double currentDistance=0.0f){
+        input = currentDistance;
         previousError = 0;
         integralSteering = 0;
         result = 0;
-        if(integralSteering >  PID_MAX_INTEGRAL) integralSteering = PID_MAX_INTEGRAL;
-        if(integralSteering < -PID_MAX_INTEGRAL) integralSteering = -PID_MAX_INTEGRAL;
     }
 
 };
