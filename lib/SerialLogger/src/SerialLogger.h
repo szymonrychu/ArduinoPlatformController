@@ -23,4 +23,7 @@ public:
     }
 
 };
+
+uint32_t Logger::num = 0;
+
 #endif

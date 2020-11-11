@@ -150,7 +150,9 @@ template <int N>    // Valid values are 1 or 2 to set up as FTM1 or FTM2
 class HardwareEncoder{
     private:
 	float steps2Dist;
-	float latestSteps2Dist;
+	float latestVelocity;
+	float latestPosition;
+	unsigned long latestTimestampMicros;
 	// Compare positions for 16 bit (64K) counter
 	static const int NUM_64K=0x10000;	// Value of 16 bit counter
 	static const uint16_t COMP1_4=NUM_64K/4;
@@ -260,8 +262,11 @@ class HardwareEncoder{
 	};
 
 	
-	void setup(float stepsToDist){
+	void setup(float steps2Dist){
 		this->steps2Dist = steps2Dist;
+		this->latestTimestampMicros = micros();
+		this->latestVelocity = 0.0;
+		this->latestPosition = 0.0;
 		// Set up input pins
 		if (N<2){	//FTM1
 		// K20 pin 28,29
@@ -367,6 +372,68 @@ class HardwareEncoder{
 
 	}
 
+
+	void ftm_isr(){
+		
+		//First determine which interrupt enabled
+		if(FTM_SC == (TOF|TOIE)){	// TOIE and TOF set, TOF interrupt
+			v_intStatus=1;
+
+			v_initZeroTOF=false;	// TOF occured, TOFDIR valid
+
+			// If previous direction and current same add or subtract 64K
+			//   from base position
+			// Otherwise reversed in mid-count, base position stays same
+			FTM_SC = 0;	    // Clear TOIE, TOF don't care 
+			FTM_C0SC= 0x50;	    // Set CHIE Channel Interrupt Enable
+			if (v_prevInt==prevIntCompHigh){	// Counting up
+				v_intStatus=110;
+				FTM_C0V=COMP_LOW;	    // Set compare to closest value
+				// SYNCEN in FTM1_COMBINE 0, update on next counter edge 
+				if (v_prevTOFUp){
+				v_intStatus=111;
+				v_basePosn+=NUM_64K;    // Up for one counter cycle
+				}
+			} else {    // prevIntCompLow, counting down
+				v_intStatus=100;
+				FTM_C0V=COMP_HIGH;	// First expected compare counting down
+				if (!v_prevTOFUp){
+				v_intStatus=101;
+				v_basePosn-=NUM_64K;
+				}
+			}   // Previous and current direction not the same
+			//   indicate reversal, basePosn remains same
+		}else { // Channel Compare Int
+			v_intStatus=2;
+			if (v_initZeroTOF){	// No TOF since zero
+				if (FTM_SC & TOF){  //TOF Set
+				v_initZeroTOF=false;	// TOF occured, TOFDIR valid
+				} else {
+				v_prevTOFUp = true;	// Reversal will cause TOF
+							//   so counting up
+				}
+			}
+			if (!v_initZeroTOF){	// TOFDIR valid
+				v_prevTOFUp=FTM_QDCTRL & TOFDIR;	// Dir last crossed TOF
+			}
+
+			FTM_SC = TOIE;	// Should have been read in if statement
+					// Can clear TOF, set TOIE 
+			v_read=FTM_C0SC;   // Read to clear CHF Channel Flag
+			FTM_C0SC= 0x50;    // Clear Channel Flag, leave CHIE set
+			if (FTM_C0V==COMP_LOW){
+				v_intStatus=30;
+				v_prevInt=prevIntCompLow;
+				FTM_C0V=COMP_HIGH;	// Set to other compare value
+			} else {    // Compare at high value
+				v_intStatus=40;
+				v_prevInt=prevIntCompHigh;
+				FTM_C0V=COMP_LOW;
+			}
+
+		}
+	}
+
 	int32_t calcPosn(void){
 		uint16_t count16;	// 16 bit position counter
 		uint32_t count32;
@@ -434,76 +501,27 @@ class HardwareEncoder{
 		return v_basePosn;  // Position is new basePosition, no addtl counts
 		}
 	}
-	float calcPosnF(void){
-		return this->steps2Dist * (float)(calcPosn());
-	}
-	float calcSpeedF(long timeDelta){
-		float distance = calcPosnF();
-		float result = abs((distance-latestSteps2Dist)/timeDelta);
-		latestSteps2Dist = distance;
-		return result;
-	}
-	void ftm_isr(){
-		
-		//First determine which interrupt enabled
-		if(FTM_SC == (TOF|TOIE)){	// TOIE and TOF set, TOF interrupt
-		v_intStatus=1;
 
-		v_initZeroTOF=false;	// TOF occured, TOFDIR valid
+	void compute(float timeDelta){
+		float currentPos = this->steps2Dist * (float)(calcPosn());
+		float positionDelta = currentPos - this->latestPosition;
+		this->latestPosition = currentPos;
+		this->latestVelocity = abs(positionDelta/timeDelta);
 
-		// If previous direction and current same add or subtract 64K
-		//   from base position
-		// Otherwise reversed in mid-count, base position stays same
-		FTM_SC = 0;	    // Clear TOIE, TOF don't care 
-		FTM_C0SC= 0x50;	    // Set CHIE Channel Interrupt Enable
-		if (v_prevInt==prevIntCompHigh){	// Counting up
-			v_intStatus=110;
-			FTM_C0V=COMP_LOW;	    // Set compare to closest value
-			// SYNCEN in FTM1_COMBINE 0, update on next counter edge 
-			if (v_prevTOFUp){
-			v_intStatus=111;
-			v_basePosn+=NUM_64K;    // Up for one counter cycle
-			}
-		} else {    // prevIntCompLow, counting down
-			v_intStatus=100;
-			FTM_C0V=COMP_HIGH;	// First expected compare counting down
-			if (!v_prevTOFUp){
-			v_intStatus=101;
-			v_basePosn-=NUM_64K;
-			}
-		}   // Previous and current direction not the same
-			//   indicate reversal, basePosn remains same
-		}else { // Channel Compare Int
-		v_intStatus=2;
-		if (v_initZeroTOF){	// No TOF since zero
-			if (FTM_SC & TOF){  //TOF Set
-			v_initZeroTOF=false;	// TOF occured, TOFDIR valid
-			} else {
-			v_prevTOFUp = true;	// Reversal will cause TOF
-						//   so counting up
-			}
-		}
-		if (!v_initZeroTOF){	// TOFDIR valid
-			v_prevTOFUp=FTM_QDCTRL & TOFDIR;	// Dir last crossed TOF
-		}
-
-		FTM_SC = TOIE;	// Should have been read in if statement
-				// Can clear TOF, set TOIE 
-		v_read=FTM_C0SC;   // Read to clear CHF Channel Flag
-		FTM_C0SC= 0x50;    // Clear Channel Flag, leave CHIE set
-		if (FTM_C0V==COMP_LOW){
-			v_intStatus=30;
-			v_prevInt=prevIntCompLow;
-			FTM_C0V=COMP_HIGH;	// Set to other compare value
-		} else {    // Compare at high value
-			v_intStatus=40;
-			v_prevInt=prevIntCompHigh;
-			FTM_C0V=COMP_LOW;
-		}	
-
-		}
 	}
 
+	void compute(){
+        float timeDelta = (float)(latestTimestampMicros - micros())/1000000.0;
+		compute(timeDelta);
+	}
+
+	float getLastPosition(void){
+		return this->latestPosition;
+	}
+
+	float getLastVelocity(void){
+		return this->latestVelocity;
+	}
 };
 
 

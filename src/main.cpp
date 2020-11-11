@@ -1,287 +1,137 @@
 #include "Arduino.h"
-#include "DistAnglePIDDriver.h"
-#include <queue>
-#include "Command.h"
 #include "pins.h"
+#include "HardwareEncoder.h"
+#include "Command.h"
+#include "DistanceVelocityPID.h"
 #include "SerialLogger.h"
-uint32_t Logger::num = 0;
+#include "Hbridge.h"
+#include "PID.h"
 
+#ifndef MEM_LEN
 #define MEM_LEN 256
-#define STATUS_MS 250
+#endif
 
-static const int STATE_FRESH      = 0;
-static const int STATE_READY      = 1;
-static const int STATE_ANGLE_INIT = 2;
-static const int STATE_PROCESSING = 4;
+char buffer[MEM_LEN];
+long loopCounter = 0;
+unsigned long lastLoopTime = 0;
 
-int state = STATE_FRESH;
-char* getStateString(){
-    char stateStr[] = {
-        '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'
-    };
-    char *stateStrPTR = &(stateStr[0]);
-    switch(state){
-        case STATE_FRESH:
-            stateStrPTR = "FRESH";
-            return stateStrPTR;
-        case STATE_READY:
-            stateStrPTR = "READY";
-            return stateStrPTR;
-        case STATE_ANGLE_INIT:
-            stateStrPTR = "ANGLE_INIT";
-            return stateStrPTR;
-        case STATE_PROCESSING:
-            stateStrPTR = "PROCESSING";
-            return stateStrPTR;
-    }
-}
+HardwareEncoder<1> angleEncoder;
+DistanceVelocityPID anglePIDs;
+Hbridge angle(22, 23);
 
-char* lastCommand = "";
+HardwareEncoder<2> distanceEncoder;
+DistanceVelocityPID distancePIDs;
+Hbridge distance(20, 21);
 
-DistAnglePIDDriverConfig config = {
-    DIST_PWM, DIST_P1, \
-    ANGL_PWM, ANGL_P1
-};
+float timeDelta = 0;
+float angleDelta = 0;
+float distanceDelta = 0;
+float angleVelocity = 0;
+float distanceVelocity = 0;
+float angleCurrentTarget = 0;
+float distanceCurrentTarget = 0;
+unsigned long targetLoops = 0;
+long distancePower = 0;
+long anglePower = 0;
+bool optoPrevState = false;
+bool optoResetSuccessfull = false;
 
-DistAnglePIDDriver driver = DistAnglePIDDriver(config);
-Command command = Command(" ", "\n");
-
-void optoInterrupt(){
-
-    bool prevState = digitalRead(ANGL_OPTO) != LOW;
-    delay(2);
-    if(digitalRead(ANGL_OPTO) != HIGH && prevState){
-        digitalWrite(ANGL_P1, LOW);
-        analogWrite(ANGL_PWM, 0);
-        detachInterrupt(digitalPinToInterrupt(ANGL_OPTO));
-        state = STATE_ANGLE_INIT;
-    }
-}
-
-/* 
-G00FuncHandler - add distance value to what's already been requested
-  relative from the end of last requested position
-*/
-void G00FuncHandler(){
-    double distance = 0.0f; char* distanceCH = command.next();
-    unsigned long timeMS = 0; char* timeMSCH = command.next();
-    distance = atof(distanceCH);
-    timeMS = atol(timeMSCH);
-    #if SLAVE_I2C_ID == 1 || SLAVE_I2C_ID == 4
-    driver.inputAbsoluteDistanceTime(-distance, timeMS);
-    #else
-    driver.inputAbsoluteDistanceTime(distance, timeMS);
-    #endif
-    lastCommand = "G00";
-    Logger::info("ACK:G00");
-}
-
-/* 
-G01FuncHandler - add angle value to what's already been requested
-  relative from the end of last requested position
-*/
-void G01FuncHandler(){
-    double angle = 0.0f; char* angleCH = command.next();
-    unsigned long timeMS = 0; char* timeMSCH = command.next();
-    angle = atof(angleCH);
-    timeMS = atol(timeMSCH);
-    driver.inputAbsoluteAngleTime(angle, timeMS);
-    lastCommand = "G01";
-    Logger::info("ACK:G01");
-}
-
-/* 
-G02FuncHandler - add distance value to what's been currently reached
-G02 50.0 300
-*/
-void G02FuncHandler(){
-    double distance = 0.0f; char* distanceCH = command.next();
-    unsigned long timeMS = 0; char* timeMSCH = command.next();
-    distance = atof(distanceCH);
-    timeMS = atol(timeMSCH);
-    driver.inputRelativeDistanceTime(distance, timeMS);
-    lastCommand = "G02";
-    Logger::info("ACK:G02");
-}
-
-/* 
-G03FuncHandler - add angle value to what's been currently reached
-G03 10.0 200
-G03 -10.0 200
-*/
-void G03FuncHandler(){
-    double angle = 0.0f; char* angleCH = command.next();
-    unsigned long timeMS = 0; char* timeMSCH = command.next();
-    angle = atof(angleCH);
-    timeMS = atol(timeMSCH);
-    driver.inputRelativeAngleTime(angle, timeMS);
-    lastCommand = "G03";
-    Logger::info("ACK:G03");
-}
-
-/* 
-G09FuncHandler - relative distance and absolute angle
-*/
-void G09FuncHandler(){
-    double distance = 0.0f; char* distanceCH = command.next();
-    double angle = 0.0f; char* angleCH = command.next();
-    unsigned long timeMS = 0; char* timeMSCH = command.next();
-    angle = atof(angleCH);
-    distance = atof(distanceCH);
-    timeMS = atol(timeMSCH);
-    driver.inputRelativeDistanceAngleTime(distance, angle, timeMS);
-    lastCommand = "G09";
-    Logger::info("ACK:G09");
-}
-
-/*
-G99FuncHandler - resets driver
-*/
-void G99FuncHandler(){
-    state = STATE_FRESH;
-    driver.reset(optoInterrupt);
-    lastCommand = "G99";
-    Logger::info("ACK:G99");
-}
-
-// void captureStatus(){
-//     RawStatusStructure status;
-//     unsigned long currentTime = millis();
-//     status.timestamp = currentTime - time;
-//     time = currentTime;
-//     //TODO add more data to RawStatusStructure
-//     while(operationOnQueuePending) delayMicroseconds(10);
-//     operationOnQueuePending = true;
-//     statusQueue.push(status);
-//     if(statusQueue.size() > maxStatusVectorSize){
-//         statusQueue.pop();
-//     }
-//     operationOnQueuePending = false;
-// }
-
-// void G98FuncHandler(){
-//     while(operationOnQueuePending) delayMicroseconds(10);
-//     operationOnQueuePending = true;
-//     if(!statusQueue.empty()){
-//         RawStatusStructure tmpStatus = statusQueue.front();
-//         int remaingSize = statusQueue.size();
-//         //TODO handle more data from RawStatusStructure
-//         sprintf(outputDataBuffer, "%lu:%d", tmpStatus.timestamp, remaingSize);
-//         newDataToTransmit = true;
-//         statusQueue.pop();
-//     }else{
-//         strcpy(outputDataBuffer, "0:0");
-//         newDataToTransmit = true;
-//     }
-//     operationOnQueuePending = false;
-// }
-
-void G98FuncHandler(){
-    driver.printDiagnostics();
-}
+#include "commands.h"
 
 void serialEvent() {
     while (Serial.available()) {
         char ch = (char)Serial.read();
         command.inputChar(ch);
     }
-    digitalWrite(LED_BUILTIN, HIGH);
 }
 
-void defaultFunc(char* data){
-    Logger::error(data);
+void reset(){
+    angleEncoder.setup(ENCODER_TO_ANGLE);
+    distanceEncoder.setup(ENCODER_TO_DISTANCE);
+    angleEncoder.start();
+    distanceEncoder.start();
+    angleEncoder.zeroFTM();
+    distanceEncoder.zeroFTM();
+    anglePIDs.setup(ANGLE_DPID_P, ANGLE_DPID_I, ANGLE_DPID_D, ANGLE_VPID_P, ANGLE_VPID_I, ANGLE_VPID_D);
+    distancePIDs.setup(DISTANCE_DPID_P, DISTANCE_DPID_I, DISTANCE_DPID_D, DISTANCE_VPID_P, DISTANCE_VPID_I, DISTANCE_VPID_D);
+    optoResetSuccessfull = true;
 }
 
-void angleReachedHandler(bool pass){
-    Logger::info("a_reached:", false);
-    Serial.print(lastCommand);
-    Serial.print(":");
-    Serial.print(driver.getAngle());
-    Serial.print('\n');
+void optoInterruptHandler(){
+    if(optoPrevState && digitalRead(13) == LOW){
+        angle.drive(0);
+        detachInterrupt(digitalPinToInterrupt(13));
+        reset();
+        optoPrevState = false;
+    }else if(!optoPrevState && digitalRead(13) == HIGH){
+        optoPrevState = true;
+    }
 }
 
-void distanceReachedHandler(bool pass){
-    Logger::info("d_reached:", false);
-    Serial.print(lastCommand);
-    Serial.print(":");
-    Serial.print(driver.getDistance());
-    Serial.print('\n');
+void requestAngleZeroing(){
+    angle.drive(pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER);
+    delay(100);
+    optoResetSuccessfull = false;
+    attachInterrupt(digitalPinToInterrupt(13), optoInterruptHandler, CHANGE);
 }
 
 void setup(){
+    memset(buffer, 0, MEM_LEN);
     Serial.begin(115200);
-
-    command.addDefaultHandler(defaultFunc);
-    command.addCommand("G00", G00FuncHandler);
-    command.addCommand("G01", G01FuncHandler); // G03 10 0.5
-    command.addCommand("G02", G02FuncHandler);
-    command.addCommand("G03", G03FuncHandler);
-    command.addCommand("G09", G09FuncHandler);
-
-    command.addCommand("G98", G98FuncHandler);
-    command.addCommand("G99", G99FuncHandler); // G99
-    driver.reset(optoInterrupt);
+    setupCommands();
+    angle.setup();
+    distance.setup();
+    while(Serial){;} // Wait for someone to open Serial port
+    requestAngleZeroing();
 }
-/*
-G09 -50.0 -50.0 1000
-G09 50.0 50.0 1000
-G09 10.0 20.0 200
-G09 10.0 30.0 200
 
-G09 0.0 -50.0 1000
-G09 0.0 50.0 1000
+void printDiagnostics(){
+    sprintf(buffer, "%.5f:%.5f:%.5f:%d %.5f:%.5f:%.5f:%d %.3f", 
+        angleEncoder.getLastPosition(), angleEncoder.getLastVelocity(), anglePIDs.getError(), anglePower,
+        distanceEncoder.getLastPosition(), distanceEncoder.getLastVelocity(), distancePIDs.getError(), distancePower,
+        timeDelta*1000.0);
+    Logger::info(buffer);
+}
 
-G09 -50.0 0.0 1000
-G09 50.0 0.0 1000
-
-G09 0.0 -50.0 400
-G09 0.0 50.0 400
-
-G09 0.0 -50.0 500
-G09 0.0 50.0 500
-*/
-
-short counter = 0;
 void loop(){
-    if(state != STATE_READY){
-        Logger::info(getStateString(), false);
-        Serial.print(":");
-        driver.printDiagnostics();
-    }else if(counter == 0){
-        Logger::info(getStateString(), false);
-        Serial.print(":");
-        driver.printDiagnostics();
-    }
-    command.parse();
-    switch(state){
-        case STATE_READY:
-        case STATE_PROCESSING:
-            driver.compute();
-            delay(LOOP_T);
-            driver.setResults(LOOP_T);
-            if(driver.checkBusy()){
-                state = STATE_PROCESSING;
-            }else{
-                state = STATE_READY;
+    if(optoResetSuccessfull){
+        unsigned long currentTime = micros();
+        timeDelta = (float)(currentTime - lastLoopTime)/1000000.0;
+        lastLoopTime = currentTime;
+        loopCounter = (loopCounter+1)%(LOOPS_TO_SECONDS*10); // longest loop will take up to 10s
+        command.parse();
+
+        angleEncoder.compute();
+        distanceEncoder.compute();
+
+        distancePower = distancePIDs.computeSteering(distanceCurrentTarget, distanceVelocity, timeDelta);
+        anglePower = anglePIDs.computeSteering(angleCurrentTarget, angleVelocity, timeDelta);
+        
+        distance.drive(distancePower);
+        angle.drive(anglePower);
+
+        if(targetLoops>0){
+            angleCurrentTarget += angleDelta;
+            distanceCurrentTarget += distanceDelta;
+            targetLoops--;
+        }else{
+            if(abs(angleCurrentTarget - angleEncoder.getLastPosition()) < angleDelta){
+                angleVelocity = 0.0;
             }
-            break;
-        case STATE_ANGLE_INIT:
-            // #if SLAVE_I2C_ID == 2 || SLAVE_I2C_ID == 4
-            // digitalWrite(ANGL_P1, LOW);
-            // #else
-            // digitalWrite(ANGL_P1, HIGH);
-            // #endif
-            // analogWrite(ANGL_PWM, 0.7f*pow(2, PWM_RESOLUTION));
-            // delay(LOOP_T*30);
-            // analogWrite(ANGL_PWM, 0);
-            #if SLAVE_I2C_ID == 2 || SLAVE_I2C_ID == 4
-            double angle = -10.0;
-            #else
-            double angle = 10.0;
-            #endif
-            driver.initialize(angle, 100);
-            state = STATE_READY;
-            break;
+            if(abs(distanceCurrentTarget - distanceEncoder.getLastPosition()) < distanceDelta){
+                distanceVelocity = 0.0;
+            }
+        }
+
+        if(targetLoops>0){
+            printDiagnostics();
+        }else if(millis()  % 1000 == 0){
+            printDiagnostics();
+        }
+
+        distancePIDs.setResults(distanceEncoder.getLastPosition(), distanceEncoder.getLastVelocity());
+        anglePIDs.setResults(angleEncoder.getLastPosition(), angleEncoder.getLastVelocity());
+    }else{
+        delay(1);
     }
-    counter = (counter+1)%100;
 }

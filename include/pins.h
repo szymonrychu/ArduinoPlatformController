@@ -1,73 +1,51 @@
 #ifndef PINS_h
 #define PINS_h
 
-#include "Arduino.h"
+#define PI 3.1415926535897932384626433832795
+#define HALF_PI 1.5707963267948966192313216916398
+#define TWO_PI 6.283185307179586476925286766559
+#define DEG_TO_RAD 0.017453292519943295769236907684886
+#define RAD_TO_DEG 57.295779513082320876798154814105
 
-#define LOOP_T 1
-#define TICKS2SEC 100
-#define DIR_DIST 1
-#define LOG_ACCURACY 2
+#define ENCODER_STEPS_PER_REV 4741.0
 
-#define DIST_PWM  22 //ena
-#define DIST_P1   21 //in2
+#define ENCODER_TO_DISTANCE -(TWO_PI*0.115) / ENCODER_STEPS_PER_REV
+#define ENCODER_TO_ANGLE     TWO_PI         / ENCODER_STEPS_PER_REV
 
-#define ANGL_PWM  22 //enb
-#define ANGL_P1   23 //in4
 
-#define ANGL_OPTO 13
+// PIDS
+#define DISTANCE_DPID_GAIN 1.0
+#define DISTANCE_DPID_P DISTANCE_DPID_GAIN * 2.0
+#define DISTANCE_DPID_I DISTANCE_DPID_GAIN * 0.8
+#define DISTANCE_DPID_D DISTANCE_DPID_GAIN * 1.2
+
+#define DISTANCE_VPID_GAIN 1.0
+#define DISTANCE_VPID_P DISTANCE_VPID_GAIN * 1.0
+#define DISTANCE_VPID_I DISTANCE_VPID_GAIN * 0.0
+#define DISTANCE_VPID_D DISTANCE_VPID_GAIN * 1.0
+
+
+#define ANGLE_DPID_GAIN 2.0
+#define ANGLE_DPID_P ANGLE_DPID_GAIN * 1.0
+#define ANGLE_DPID_I ANGLE_DPID_GAIN * 0.0
+#define ANGLE_DPID_D ANGLE_DPID_GAIN * 0.0
+
+#define ANGLE_VPID_GAIN 2.0
+#define ANGLE_VPID_P ANGLE_VPID_GAIN * 1.0
+#define ANGLE_VPID_I ANGLE_VPID_GAIN * 0.0
+#define ANGLE_VPID_D ANGLE_VPID_GAIN * 1.0
+
+
+
+#define LOOP_DELAY 1
+#define LOOPS_TO_SECONDS 1000/LOOP_DELAY
 
 #define PWM_RESOLUTION 11
 #define PWM_FREQUENCY 20000
+#define MAX_RELATIVE_POWER 0.5 //1.0
 
-void pinsSetup(void (*distanceInterruptHandler)(), void (*angleInterruptHandler)()){
-    int pwmPinArray[] = {
-        DIST_PWM, ANGL_PWM
-    };
-    int outputPinArray[] = {
-        DIST_P1, ANGL_P1
-    };
-    analogWriteResolution(PWM_RESOLUTION);
-    for(int c=0; c<2; c++){
-        pinMode(pwmPinArray[c], OUTPUT);
-        analogWriteFrequency(pwmPinArray[c], PWM_FREQUENCY);
-        analogWrite(pwmPinArray[c], 0);
-    }
-    for(int c=0; c<2; c++){
-        pinMode(outputPinArray[c], OUTPUT);
-        digitalWrite(outputPinArray[c], LOW);
-    }
-}
-
-#define DEADZONE 0.0f
+#define DEADZONE 0.03f
 #define PID_DELTA_TOLERANCE 0.0f
-
-#define PID_DGAIN 1.0f
-#define PID_VGAIN 1.0f
-
-#define DIST_D_P PID_DGAIN*0.000001 //25f
-#define DIST_D_I PID_DGAIN*0.0 //0001f
-#define DIST_D_D PID_DGAIN*0.0 //002f
-
-#define DIST_V_P PID_VGAIN*0.00001 //15f
-#define DIST_V_I PID_VGAIN*0.0f
-#define DIST_V_D PID_VGAIN*0.0 //04f
-#define DIST_IDLE_VELOCITY 5.0f
-
-#define DIST_ENC2DIST 56.8f/3198.48530706f // encoder to cm
-
-#define ANGL_D_P PID_DGAIN*0.035f
-#define ANGL_D_I PID_DGAIN*0.0002f
-#define ANGL_D_D PID_DGAIN*0.004f
-
-#define ANGL_V_P PID_VGAIN*0.015f
-#define ANGL_V_I PID_VGAIN*0.0f
-#define ANGL_V_D PID_VGAIN*0.004f
-#define ANGL_IDLE_VELOCITY 5.0f
-
-#define ANGL_ENC2DIST (8.9f/10.0f)*(90.0f/55.0f)*56.8f/3198.48530706f // encoder to angle
-
-#define MAX_PID     1.0f
-#define MIN_DPID   -1.0f
-#define MIN_VPID    0.0f
+#define PID_DELTA_TOLERANCE 0.0f
 
 #endif

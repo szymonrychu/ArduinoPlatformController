@@ -11,26 +11,34 @@
 #define AUTOMATIC 1
 
 struct PIDvalues {
-    double kP, kI, kD, lowLimit, highLimit;
+    float kP, kI, kD, lowLimit, highLimit;
 };
 class PID{
 private:
-    double kP = 1.0f;
-    double kI = 0.0f;
-    double kD = 0.0f;
-    double minDeadSpace = -DEADZONE;
-    double maxDeadSpace = DEADZONE;
-    double lowLimit = -1.0f;
-    double highLimit = 1.0f;
-    double previousError;
-    double proportionalSteering;
-    double integralSteering;
-    double deriverativeSteering;
-    double result, input, pidSteering;
+    float kP = 1.0f;
+    float kI = 0.0f;
+    float kD = 0.0f;
+    float minDeadSpace = -DEADZONE;
+    float maxDeadSpace = DEADZONE;
+    float lowLimit = -1.0f;
+    float highLimit = 1.0f;
+    float previousError;
+    float proportionalSteering;
+    float integralSteering;
+    float deriverativeSteering;
+    float result, input, pidSteering;
+    float error = 0.0f;
     bool automaticMode = true;
 public:
     PID(){}
-    PID(double kP, double kI, double kD){
+    PID(float kP, float kI, float kD, float lowLimit, float highLimit){
+        this->kP = kP;
+        this->kI = kI;
+        this->kD = kD;
+        this->lowLimit = lowLimit;
+        this->highLimit = highLimit;
+    }
+    PID(float kP, float kI, float kD){
         this->kP = kP;
         this->kI = kI;
         this->kD = kD;
@@ -43,44 +51,36 @@ public:
         this->lowLimit = values.lowLimit;
         this->highLimit = values.highLimit;
     }
-
-    void setP(double kP){
-        this->kP = kP;
+    float getError(){
+        return this->error;
     }
 
-    void setI(double kI){
-        this->kI = kI;
+    PIDvalues getPIDValues(){
+        PIDvalues data = {this->kP, this->kI, this->kD, this->lowLimit, this->highLimit};
+        return data;
     }
 
-    void setD(double kD){
-        this->kD = kD;
+    void setPIDValues(PIDvalues data){
+        this->kP = data.kP;
+        this->kI = data.kI;
+        this->kD = data.kD;
+        this->lowLimit = data.lowLimit;
+        this->highLimit = data.highLimit;
     }
 
-    double getP(){
-        return proportionalSteering;
-    }
-
-    double getI(){
-        return integralSteering;
-    }
-
-    double getD(){
-        return deriverativeSteering;
-    }
-
-    double computeNewSteering(unsigned int timeDiff, double input){
+    float computeNewSteering(float timeDiff, float input){
         if(this->kP == 0.0f && this->kI == 0.0f && this->kD == 0.0f){
             return 1.0f;
         }
         this->input = input;
 
-        double error = input - result;
+        error = input - result;
         if(abs(error) < PID_DELTA_TOLERANCE){
             error = 0;
         }
 
-        integralSteering += kI*error*(double)timeDiff;
-        double errorDelta = previousError - error;
+        integralSteering += kI*error*timeDiff;
+        float errorDelta = previousError - error;
 
         proportionalSteering = kP*error;
         deriverativeSteering = kD*errorDelta;
@@ -99,7 +99,7 @@ public:
         return pidSteering;
     }
 
-    void setResult(double result){
+    void setResult(float result){
         this->result = result;
     }
 
@@ -112,7 +112,7 @@ public:
         }
     }
 
-    void reset(double currentDistance=0.0f){
+    void reset(float currentDistance=0.0f){
         input = currentDistance;
         previousError = 0;
         integralSteering = 0;

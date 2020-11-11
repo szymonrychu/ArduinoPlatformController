@@ -1,4 +1,5 @@
 #include "Arduino.h"
+#include "pins.h"
 
 #ifndef POLOLU_VNH3SP30_H
 #define POLOLU_VNH3SP30_H
@@ -6,23 +7,23 @@
 #ifndef DEADZONE
 #define DEADZONE 0.05f
 #endif
-struct PololuVNH3SP30Pins {
+struct HbridgePins {
     int pwmPin, dir1Pin;
 };
-class PololuVNH3SP30 {
+class Hbridge {
 private:
     int pwmPin = 0;
     int dir1Pin = 0;
 public:
 
-    PololuVNH3SP30(){}
+    Hbridge(){}
 
-    PololuVNH3SP30(PololuVNH3SP30Pins pins){
+    Hbridge(HbridgePins pins){
         this->pwmPin = pins.pwmPin;
         this->dir1Pin = pins.dir1Pin;
     }
 
-    PololuVNH3SP30(int pwmPin, int dir1Pin, int dir2Pin, int csPin){
+    Hbridge(int pwmPin, int dir1Pin){
         this->pwmPin = pwmPin;
         this->dir1Pin = dir1Pin;
     }
