@@ -24,13 +24,12 @@ DistanceVelocityPID distancePIDs;
 Hbridge distance(20, 21);
 
 float timeDelta = 0;
-float angleDelta = 0;
-float distanceDelta = 0;
-float angleVelocity = 0;
-float distanceVelocity = 0;
-float angleCurrentTarget = 0;
-float distanceCurrentTarget = 0;
-unsigned long targetLoops = 0;
+
+float angleTarget = 0;
+float distanceTarget = 0;
+float angleVelocityTarget = 0;
+float distanceVelocityTarget = 0;
+
 long distancePower = 0;
 long anglePower = 0;
 bool optoPrevState = false;
@@ -69,7 +68,7 @@ void optoInterruptHandler(){
 }
 
 void requestAngleZeroing(){
-    angle.drive(pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER);
+    angle.drive(pow(2, PWM_RESOLUTION)*ZEROING_RELATIVE_POWER);
     delay(100);
     optoResetSuccessfull = false;
     attachInterrupt(digitalPinToInterrupt(13), optoInterruptHandler, CHANGE);
@@ -86,9 +85,9 @@ void setup(){
 }
 
 void printDiagnostics(){
-    sprintf(buffer, "%.5f:%.5f:%.5f:%d %.5f:%.5f:%.5f:%d %.3f", 
-        angleEncoder.getLastPosition(), angleEncoder.getLastVelocity(), anglePIDs.getError(), anglePower,
-        distanceEncoder.getLastPosition(), distanceEncoder.getLastVelocity(), distancePIDs.getError(), distancePower,
+    sprintf(buffer, "%.4f:%.4f:%.4f:%d %.4f:%.4f:%.4f:%d %.3f", 
+        angleEncoder.getLastPosition(), anglePIDs.getError(), angleEncoder.getLastVelocity()*1000.0*1000.0, anglePower,
+        distanceEncoder.getLastPosition(), distancePIDs.getError(), distanceEncoder.getLastVelocity()*1000.0*1000.0, distancePower,
         timeDelta*1000.0);
     Logger::info(buffer);
 }
@@ -98,34 +97,19 @@ void loop(){
         unsigned long currentTime = micros();
         timeDelta = (float)(currentTime - lastLoopTime)/1000000.0;
         lastLoopTime = currentTime;
-        loopCounter = (loopCounter+1)%(LOOPS_TO_SECONDS*10); // longest loop will take up to 10s
+
         command.parse();
 
         angleEncoder.compute();
         distanceEncoder.compute();
 
-        distancePower = distancePIDs.computeSteering(distanceCurrentTarget, distanceVelocity, timeDelta);
-        anglePower = anglePIDs.computeSteering(angleCurrentTarget, angleVelocity, timeDelta);
+        distancePower = distancePIDs.computeSteering(distanceTarget, distanceVelocityTarget, (timeDelta/1000.0));
+        anglePower = anglePIDs.computeSteering(angleTarget, angleVelocityTarget, (timeDelta/1000.0));
         
         distance.drive(distancePower);
         angle.drive(anglePower);
 
-        if(targetLoops>0){
-            angleCurrentTarget += angleDelta;
-            distanceCurrentTarget += distanceDelta;
-            targetLoops--;
-        }else{
-            if(abs(angleCurrentTarget - angleEncoder.getLastPosition()) < angleDelta){
-                angleVelocity = 0.0;
-            }
-            if(abs(distanceCurrentTarget - distanceEncoder.getLastPosition()) < distanceDelta){
-                distanceVelocity = 0.0;
-            }
-        }
-
-        if(targetLoops>0){
-            printDiagnostics();
-        }else if(millis()  % 1000 == 0){
+        if(millis()  % 500 == 0){
             printDiagnostics();
         }
 

@@ -1,17 +1,4 @@
 
-/*
-G11 1 1 10000
-
-G11 0 0.5235987756 5000
-G11 0 0.7853981634 5000
-G11 0 1.5707963268 5000
-G11 0 -1.5707963268 5000
-
-G11 1 0 10000
-G11 2 0 10000
-G11 3 0 10000
-G11 -3 0 10000
-*/
 
 Command command = Command(" ", "\n");
 
@@ -20,15 +7,15 @@ void defaultFunc(char* data){
 }
 
 void G11HandleDistanceAngleTime(){
-    double distance = 0.0f; char* distanceCH = command.next(); distance = atof(distanceCH);
-    double angle = 0.0f; char* angleCH = command.next(); angle = atof(angleCH);
+    float distanceParsed = 0.0f; char* distanceCH = command.next(); distanceParsed = atof(distanceCH);
+    char* angleCH = command.next(); angleTarget = atof(angleCH);
     unsigned long timeMS = 0; char* timeMSCH = command.next(); timeMS = atol(timeMSCH);
-    targetLoops = timeMS/LOOP_DELAY;
-    angleVelocity = abs(angle/((float)timeMS/1000.0));
-    distanceVelocity = abs(distance/((float)timeMS/1000.0));
-    angleDelta = angle/(float)targetLoops;
-    distanceDelta = distance/(float)targetLoops;
-    Logger::info("G11:RECEIVED_OK;");
+    distanceTarget += distanceParsed;
+    angleVelocityTarget = abs((angleTarget - angleEncoder.getLastPosition()) / ((float)timeMS));       // change miliseconds to microseconds
+    distanceVelocityTarget = abs(distanceParsed / ((float)timeMS)); // change miliseconds to microseconds
+    sprintf(buffer, "G11:%.5f:%.5f:%.5f:%.5f", 
+        distanceTarget, distanceVelocityTarget, angleTarget, angleVelocityTarget);
+    Logger::info(buffer);
 }
 
 void G50HandleAnglePIDPrint(){
