@@ -38,9 +38,10 @@ class PlatformController(PlatformMath, PlatformCommands):
             angles.append(wheel_angle)
             distances.append(wheel_distance)
         
-        for wheel_id, wheel_angle in enumerate(angles):
-            self.__threads[wheel_id].write_data(self.move_command(wheel_angle, 0, turning_time))
-        time.sleep(turning_time/1000.0)
+        if turning_time > 0:
+            for wheel_id, wheel_angle in enumerate(angles):
+                self.__threads[wheel_id].write_data(self.move_command(wheel_angle, 0, turning_time))
+            time.sleep(turning_time/1000.0)
 
         for wheel_id, (wheel_angle, wheel_distance) in enumerate(zip(angles, distances)):
             self.__threads[wheel_id].write_data(self.move_command(wheel_angle, wheel_distance, moving_time))

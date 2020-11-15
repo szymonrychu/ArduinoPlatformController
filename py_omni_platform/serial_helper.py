@@ -44,7 +44,6 @@ class SerialWrapper():
 
     def write_data(self, raw_data):
         try:
-            print(raw_data)
             self.serial.write('{}\n'.format(raw_data).encode())
         except TypeError:
             tb = traceback.format_exc()
