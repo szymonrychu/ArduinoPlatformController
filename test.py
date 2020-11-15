@@ -11,9 +11,11 @@ moves = [
 
 if __name__ == '__main__':
     controller = PlatformController()
+    controller.start()
     controller.turn_and_move(0, 0, 0, 1000)
     while True:
         for move in moves:
             controller.turn_and_move(*move)
         print("All the moves ended, will wait for 10s")
         time.sleep(10)
+    controller.join()
