@@ -33,20 +33,15 @@ class PlatformController(PlatformMath, PlatformCommands):
     def turn_and_move(self, distance, moving_time, angle, turning_time):
         distances = []
         angles = []
-        if angle != 0 or turning_time != 0:
-            for angle, wheel_distance in self.compute_angles_distances():
-                angles.append(angle)
-                distances.append(wheel_distance)
-            for wheel_id, angle in enumerate(angles):
-                self.__threads[wheel_id].write_data(self.move_command(angle, 0, turning_time))
-            time.sleep(turning_time/1000.0)
+        for angle, wheel_distance in self.compute_angles_distances():
+            angles.append(angle)
+            distances.append(wheel_distance)
+        for wheel_id, angle in enumerate(angles):
+            self.__threads[wheel_id].write_data(self.move_command(angle, 0, turning_time))
+        time.sleep(turning_time/1000.0)
 
-        if len(distances) == PlatformController.WHEEL_NUM:
-            for wheel_id, wheel_distance in enumerate(distances):
-                self.__threads[wheel_id].write_data(self.move_command(angle, wheel_distance, moving_time))
-        else:
-            for wheel_id in range(PlatformController.WHEEL_NUM):
-                self.__threads[wheel_id].write_data(self.move_command(0, distance, moving_time))
+        for wheel_id, wheel_distance in enumerate(distances):
+            self.__threads[wheel_id].write_data(self.move_command(angle, wheel_distance, moving_time))
         time.sleep(moving_time/1000.0)
 
     def turn_in_place(self, distance, moving_time):
