@@ -1,6 +1,6 @@
-from serial_helper import ThreadedSerialWrapper
-from platform_math import PlatformMath
-from platform_parser import PlatformParser
+from .serial_helper import ThreadedSerialWrapper
+from .platform_math import PlatformMath
+from .platform_parser import PlatformParser
 
 try:
     import queue
@@ -19,8 +19,8 @@ class PlatformController(PlatformMath, PlatformCommands):
         receive_queue = queue.Queue()
         self.__threads = []
         for _id, wheel_serial_id in enumerate(PlatformController.WHEELS):
-            threads.append(ThreadedSerialWrapper(wheel_serial_id, _id, receive_queue))
-        threads.append(PlatformParser(receive_queue))
+            self.__threads.append(ThreadedSerialWrapper(wheel_serial_id, _id, receive_queue))
+        self.__threads.append(PlatformParser(receive_queue))
 
     def start(self):
         for th in self.__threads:
@@ -38,15 +38,15 @@ class PlatformController(PlatformMath, PlatformCommands):
                 angles.append(angle)
                 distances.append(wheel_distance)
             for wheel_id, angle in enumerate(angles):
-                threads[wheel_id].write_data(self.move_command(angle, 0, turning_time))
+                self.__threads[wheel_id].write_data(self.move_command(angle, 0, turning_time))
             time.sleep(turning_time/1000.0)
 
         if len(distances) == PlatformController.WHEEL_NUM:
             for wheel_id, wheel_distance in enumerate(distances):
-                threads[wheel_id].write_data(self.move_command(angle, wheel_distance, moving_time))
+                self.__threads[wheel_id].write_data(self.move_command(angle, wheel_distance, moving_time))
         else:
             for wheel_id in range(PlatformController.WHEEL_NUM):
-                threads[wheel_id].write_data(self.move_command(0, distance, moving_time))
+                self.__threads[wheel_id].write_data(self.move_command(0, distance, moving_time))
         time.sleep(moving_time/1000.0)
 
     def turn_in_place(self, distance, moving_time):

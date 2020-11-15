@@ -1,4 +1,4 @@
-from serial_helper import ThreadedSerialOutputHandler
+from .serial_helper import ThreadedSerialOutputHandler
 
 class PlatformParser(ThreadedSerialOutputHandler):
 

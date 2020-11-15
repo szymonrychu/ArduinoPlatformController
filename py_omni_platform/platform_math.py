@@ -1,5 +1,5 @@
-from serial_helper import ThreadedSerialWrapper
-from platform_statics import PlatformStatics
+from .serial_helper import ThreadedSerialWrapper
+from .platform_statics import PlatformStatics
 import math
 
 class PlatformMath(PlatformStatics):
