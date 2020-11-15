@@ -40,11 +40,15 @@ class PlatformController(PlatformMath, PlatformCommands):
         
         if turning_time > 0:
             for wheel_id, wheel_angle in enumerate(angles):
-                self.__threads[wheel_id].write_data(self.move_command(wheel_angle, 0, turning_time))
+                move_command = self.move_command(wheel_angle, 0, turning_time)
+                print(f"{wheel_id+1}: {move_command}")
+                self.__threads[wheel_id].write_data(move_command)
             time.sleep(turning_time/1000.0)
 
         for wheel_id, (wheel_angle, wheel_distance) in enumerate(zip(angles, distances)):
-            self.__threads[wheel_id].write_data(self.move_command(wheel_angle, wheel_distance, moving_time))
+            move_command = self.move_command(wheel_angle, wheel_distance, moving_time)
+            print(f"{wheel_id+1}: {move_command}")
+            self.__threads[wheel_id].write_data(move_command)
         time.sleep(moving_time/1000.0)
 
     def turn_in_place(self, distance, moving_time):
