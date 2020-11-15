@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import time
+import math
 from py_omni_platform.controller import PlatformController
 
 moves = [
     (1, 3000, 0, 0),
-    # (1,  45, 1000, 3000),
-    # (1, -45, 2000, 3000),
+    (1, 3000, math.radians( 45), 1000),
+    (1, 3000, math.radians(-45), 2000),
 ]
 
 if __name__ == '__main__':

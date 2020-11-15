@@ -13,21 +13,21 @@ class PlatformMath(PlatformStatics):
         ]
 
 
-    def __get_closer_angle(angl_radians):
+    def __get_closer_angle(self, angl_radians):
         return math.atan(PlatformMath.ROBOT_LENGTH/((PlatformMath.ROBOT_LENGTH/math.tan(angl_radians/2))-PlatformMath.ROBOT_WIDTH))
 
-    def __get_farther_angle(angl_radians):
+    def __get_farther_angle(self, angl_radians):
         return math.atan(PlatformMath.ROBOT_LENGTH/(PlatformMath.ROBOT_WIDTH-(PlatformMath.ROBOT_LENGTH/math.tan(angl_radians/2))))
 
-    def __get_turn_radius(angl_radians):
+    def __get_turn_radius(self, angl_radians):
         return PlatformMath.ROBOT_LENGTH/(2*math.cos(math.pi/2 - angl_radians))
 
-    def _get_turn_scaler(main_angle, angl_radians):
-        center_radius = __get_turn_radius(main_angle)
-        wheel_radius =  __get_turn_radius(angl_radians)
+    def _get_turn_scaler(self, main_angle, angl_radians):
+        center_radius = self.__get_turn_radius(main_angle)
+        wheel_radius =  self.__get_turn_radius(angl_radians)
         return abs(wheel_radius/center_radius)
 
-    def _get_fl1_angle(angl_radians):
+    def _get_fl1_angle(self, angl_radians):
         if angl_radians < 0:
             return PlatformMath.ANGLE_OFFSETS[0] + self.__get_closer_angle(-angl_radians)
         elif angl_radians > 0:
@@ -36,7 +36,7 @@ class PlatformMath(PlatformStatics):
             return PlatformMath.ANGLE_OFFSETS[0]
 
 
-    def _get_fr2_angle(angl_radians):
+    def _get_fr2_angle(self, angl_radians):
         if angl_radians < 0:
             return PlatformMath.ANGLE_OFFSETS[1] + self.__get_farther_angle(angl_radians)
         elif angl_radians > 0:
@@ -44,7 +44,7 @@ class PlatformMath(PlatformStatics):
         else:
             return PlatformMath.ANGLE_OFFSETS[1]
 
-    def _get_bl3_angle(angl_radians):
+    def _get_bl3_angle(self, angl_radians):
         if angl_radians < 0:
             return PlatformMath.ANGLE_OFFSETS[2] - self.__get_closer_angle(-angl_radians)
         elif angl_radians > 0:
@@ -52,7 +52,7 @@ class PlatformMath(PlatformStatics):
         else:
             return PlatformMath.ANGLE_OFFSETS[2]
 
-    def _get_br4_angle(angl_radians):
+    def _get_br4_angle(self, angl_radians):
         if angl_radians < 0:
             return PlatformMath.ANGLE_OFFSETS[3] - self.__get_farther_angle(angl_radians)
         elif angl_radians > 0:
@@ -68,18 +68,18 @@ class PlatformMath(PlatformStatics):
         distances = []
         max_diff = 0
         for c in range(PlatformMath.WHEEL_NUM):
-            angle = self._angle_functions[c](math.radians(a))
-            difference = self._get_turn_scaler(a, angle-ANGLE_OFFSETS[c])
-            angles.append(angle)
+            wheel_angle = self._angle_functions[c](angle)
+            difference = self._get_turn_scaler(angle, wheel_angle-PlatformMath.ANGLE_OFFSETS[c])
+            angles.append(wheel_angle)
             differences.append(difference)
         max_diff = max(differences)
-        for c, (angle, difference) in enumerate(zip(angles, differences)):
+        for c, difference in enumerate(differences):
             normalized_difference = difference/max_diff
             wheel_distance = distance * normalized_difference
             distances.append(wheel_distance)
         result = []
-        for angle, distance in zip(angles, distances):
-            result.append((angle, distance,))
+        for wheel_angle, wheel_distance in zip(angles, distances):
+            result.append((wheel_angle, wheel_distance,))
         return result
         
 
