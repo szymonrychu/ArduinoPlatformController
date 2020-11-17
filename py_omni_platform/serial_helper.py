@@ -23,6 +23,8 @@ class SerialMock():
 class SerialWrapper():
 
     def __init__(self, fpath, baudrate=115200):
+        self.__fpath = fpath
+        self.__baudrate = baudrate
         try:
             self.serial = serial.Serial(fpath, baudrate)
         except Exception:
@@ -40,14 +42,27 @@ class SerialWrapper():
                         raw_data = raw_data[:-1]
         except UnicodeDecodeError:
             print('cannot parse "{}"'.format(raw_data))
+            self._repair_serial()
         return raw_data
 
     def write_data(self, raw_data):
         try:
             self.serial.write('{}\n'.format(raw_data).encode())
+            return True
         except TypeError:
             tb = traceback.format_exc()
             print(str(tb))
+            self._repair_serial()
+
+    def _repair_serial(self):
+        try:
+            self.serial.close()
+            self.serial = None
+        except Exception:
+            tb = traceback.format_exc()
+            print(str(tb))
+        SerialWrapper.__init__(self, self.__fpath, self.__baudrate)
+
 
 class ThreadedSerialWrapper(Thread, SerialWrapper):
 

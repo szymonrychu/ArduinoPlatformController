@@ -4,9 +4,9 @@ import math
 from py_omni_platform.controller import PlatformController
 
 moves = [
-    (100/22.5, (100/22.5)*3000, 0, 100),
-    # (1, 3000, math.radians( 45), 1000),
-    # (1, 3000, math.radians(-45), 2000),
+    (0.1, 500, 0, 1000),
+    (0.1, 500, math.radians( 45), 1000),
+    (0.1, 500, math.radians(-45), 2000),
 ]
 
 if __name__ == '__main__':

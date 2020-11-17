@@ -13,8 +13,7 @@ void G11HandleDistanceAngleTime(){
     distanceTarget += distanceParsed;
     angleVelocityTarget = abs((angleTarget - angleEncoder.getLastPosition()) / ((float)timeMS));       // change miliseconds to microseconds
     distanceVelocityTarget = abs(distanceParsed / ((float)timeMS)); // change miliseconds to microseconds
-    sprintf(buffer, "G11:%.5f:%.5f:%.5f:%.5f", 
-        distanceTarget, distanceVelocityTarget, angleTarget, angleVelocityTarget);
+    sprintf(buffer, "G11:%.5f:%.5f:%d", distanceTarget, angleTarget, timeMS);
     Logger::info(buffer);
 }
 
