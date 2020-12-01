@@ -5,20 +5,27 @@ except ImportError:
     import Queue as queue
 import traceback
 from threading import Thread
+import time
 
 class SerialMock():
     def __init__(self, *args, **kwargs):
-        print(f"SerialMock.__init__:args:{str(args)} kwargs:{str(kwargs)}")
+        self.__last_timestamp = 0
+        print("SerialMock.__init__:args:{} kwargs:{}".format(str(args), str(kwargs)))
+
+    def __get_time_ms(self):
+        return int(round(time.time() * 1000))
 
     def inWaiting(self):
         return True
 
     def readline(self):
-        return "".encode('ascii')
+        current_timestamp = self.__get_time_ms()
+        if current_timestamp - self.__last_timestamp > 1:
+            self.__last_timestamp = current_timestamp
+            return "".encode('ascii')
 
     def write(self, *args, **kwargs):
-        pass
-        print(f"SerialMock.write:args:{str(args)} kwargs:{str(kwargs)}")
+        print("SerialMock.write:args:{} kwargs:{}".format(str(args), str(kwargs)))
         
 class SerialWrapper():
 
@@ -36,10 +43,12 @@ class SerialWrapper():
         raw_data = None
         try:
             if self.serial.inWaiting():
-                raw_data = self.serial.readline().decode('ascii')
-                if raw_data != '':
-                    if raw_data[-1] == '\n':
-                        raw_data = raw_data[:-1]
+                raw_line = self.serial.readline()
+                if raw_line is not None:
+                    raw_data = raw_line.decode('ascii')
+                    if raw_data != '':
+                        if raw_data[-1] == '\n':
+                            raw_data = raw_data[:-1]
         except UnicodeDecodeError:
             print('cannot parse "{}"'.format(raw_data))
             self._repair_serial()

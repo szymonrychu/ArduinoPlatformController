@@ -11,7 +11,7 @@ import time
 class PlatformCommands():
 
     def move_command(self, angle, distance, time):
-        return f"G11 {distance} {angle} {time}"
+        return "G11 {} {} {}".format(distance, angle, time)
 
 class PlatformController(PlatformMath, PlatformCommands):
 
@@ -41,13 +41,13 @@ class PlatformController(PlatformMath, PlatformCommands):
         if turning_time > 0:
             for wheel_id, wheel_angle in enumerate(angles):
                 move_command = self.move_command(wheel_angle, 0, turning_time)
-                print(f"{wheel_id+1}: {move_command}")
+                print("{}: {}".format(str(wheel_id+1), move_command))
                 self.__threads[wheel_id].write_data(move_command)
             time.sleep(turning_time/1000.0)
 
         for wheel_id, (wheel_angle, wheel_distance) in enumerate(zip(angles, distances)):
             move_command = self.move_command(wheel_angle, wheel_distance, moving_time)
-            print(f"{wheel_id+1}: {move_command}")
+            print("{}: {}".format(str(wheel_id+1), move_command))
             self.__threads[wheel_id].write_data(move_command)
         time.sleep(moving_time/1000.0)
 

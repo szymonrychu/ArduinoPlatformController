@@ -3,11 +3,6 @@ import time
 import math
 from py_omni_platform.controller import PlatformController
 
-moves = [
-    (0.1, 500, 0, 1000),
-    (0.1, 500, math.radians( 45), 1000),
-    (0.1, 500, math.radians(-45), 2000),
-]
 
 if __name__ == '__main__':
     controller = PlatformController()

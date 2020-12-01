@@ -62,7 +62,7 @@ class PlatformMath(PlatformStatics):
 
     def compute_angles_distances(self, angle, distance):
         if abs(angle) > PlatformMath.TURNING_LIMIT:
-            raise ValueError(f"Angle {angle} is exceeding limit +/-{PlatformMath.TURNING_LIMIT}!")
+            raise ValueError("Angle {} is exceeding limit +/-{}!".format(angle, PlatformMath.TURNING_LIMIT))
         angles = []
         differences = []
         distances = []
