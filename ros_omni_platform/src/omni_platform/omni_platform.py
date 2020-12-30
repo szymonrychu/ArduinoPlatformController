@@ -8,26 +8,37 @@ import traceback
 import time
 import re
 import math
+import signal
 
-from controller import PlatformController
+from .controller import PlatformController
 
 import rospy
 from geometry_msgs.msg import Twist, Vector3
 from std_msgs.msg import String
 
 moves = [
+    # (0.1, 500, math.radians( 45), 1000),
+    # (0.1, 500, math.radians(-45), 2000),
     (0.1, 500, 0, 1000),
-    (0.1, 500, math.radians( 45), 1000),
-    (0.1, 500, math.radians(-45), 2000),
+    (-0.1, 500, 0, 1000),
+    (0, 500, math.radians( 45), 1000),
+    (0, 500, math.radians(-45), 2000),
 ]
 
+do_stuff = True
+
+def exit_gracefully(signum, frame):
+    do_stuff = False
+    controller.join()
+
+signal.signal(signal.SIGINT, exit_gracefully)
+signal.signal(signal.SIGTERM, exit_gracefully)
 
 def main():
     controller = PlatformController()
     controller.start()
-    while True:
-        for move in moves:
-            controller.turn_and_move(*move)
-        rospy.loginfo("All the moves ended, will wait for 10s")
-        time.sleep(10)
-    controller.join()
+    move_num = 0
+    while do_stuff:
+        controller.turn_and_move(*moves[move_num])
+        time.sleep(5)
+        move_num = (move_num+1)%len(moves)

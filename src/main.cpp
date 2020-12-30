@@ -14,6 +14,7 @@
 char buffer[MEM_LEN];
 long loopCounter = 0;
 unsigned long lastLoopTime = 0;
+unsigned long lastPrintTime = 0;
 
 HardwareEncoder<1> angleEncoder;
 DistanceVelocityPID anglePIDs;
@@ -109,8 +110,9 @@ void loop(){
         distance.drive(distancePower);
         angle.drive(anglePower);
 
-        if(millis()  % 500 == 0){
+        if(currentTime - lastPrintTime > 20.0*1000.0){
             printDiagnostics();
+            lastPrintTime = currentTime;
         }
 
         distancePIDs.setResults(distanceEncoder.getLastPosition(), distanceEncoder.getLastVelocity());

@@ -1,12 +1,14 @@
 from .serial_helper import ThreadedSerialWrapper
 from .platform_math import PlatformMath
-from .platform_parser import PlatformParser
+from .platform_parser import PlatformStateTransformPublisher
 
 try:
     import queue
 except ImportError:
     import Queue as queue
 import time
+
+import rospy
 
 class PlatformCommands():
 
@@ -17,11 +19,12 @@ class PlatformController(PlatformMath, PlatformCommands):
 
     def __init__(self):
         PlatformMath.__init__(self)
+        rospy.init_node('robot_node')
         receive_queue = queue.Queue()
         self.__threads = []
         for _id, wheel_serial_id in enumerate(PlatformController.WHEELS):
             self.__threads.append(ThreadedSerialWrapper(wheel_serial_id, _id, receive_queue))
-        self.__threads.append(PlatformParser(receive_queue))
+        self.__threads.append(PlatformStateTransformPublisher(receive_queue))
 
     def start(self):
         for th in self.__threads:
