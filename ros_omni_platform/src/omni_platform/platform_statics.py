@@ -41,8 +41,8 @@ class PlatformStatics():
 
 
     WHEEL_RPY_CONVERTER = [
-        wheel0_RPY,
-        wheel1_RPY,
-        wheel2_RPY,
-        wheel3_RPY
+        wheel0_RPY.__func__,
+        wheel1_RPY.__func__,
+        wheel2_RPY.__func__,
+        wheel3_RPY.__func__
     ]
