@@ -16,7 +16,7 @@ class TF2BaseLink():
         self.__part_name = part_name
 
     @property
-    def name(self):
+    def link_name(self):
         return self.__part_name
 
     def update(self, x, y, z, R, P, Y):
@@ -41,8 +41,8 @@ class TF2Link(TF2BaseLink):
     def update(self, x, y, z, R, P, Y, increment=True):
         t = geometry_msgs.msg.TransformStamped()
         t.header.stamp = rospy.Time.now()
-        t.header.frame_id = self.__root_part.name
-        t.child_frame_id = self.name
+        t.header.frame_id = self.__root_part.link_name
+        t.child_frame_id = self.link_name
         t.transform.translation.x = self.__prevX + x
         t.transform.translation.y = self.__prevY + y
         t.transform.translation.z = self.__prevZ + z
