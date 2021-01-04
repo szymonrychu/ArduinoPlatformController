@@ -31,9 +31,9 @@ controller = PlatformController()
 def exit_gracefully(signum, frame):
     do_stuff = False
     controller.join()
+    exit()
 
 signal.signal(signal.SIGINT, exit_gracefully)
-signal.signal(signal.SIGTERM, exit_gracefully)
 
 def main():
     controller.start()

@@ -111,10 +111,12 @@ class TF2Platform(TF2Link):
 
     def parse_serial(self, wheel_id, raw_data):
         pivot_t, wheel_t = self.wheels[wheel_id].parse_wheel(raw_data)
+        rospy.loginfo(f"Publishing wheel_{wheel_id} tf2")
         self._tf_broadcaster.sendTransform(pivot_t)
         self._tf_broadcaster.sendTransform(wheel_t)
         self.__platform_tf2_state[wheel_id] = True
         if all(self.__platform_tf2_state):
+            rospy.loginfo(f"Publishing platform tf2")
             sum_x, sum_y, sum_z = 0, 0, 0
             xyz_s = []
             for c in range(PlatformStatics.WHEEL_NUM):
