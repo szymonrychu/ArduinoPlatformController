@@ -25,10 +25,10 @@ class PlatformStatics():
     WHEEL_RADIUS = 200
 
     WHEEL_RPY_CONVERTER = [
-        PlatformStatics.wheel0_RPY,
-        PlatformStatics.wheel1_RPY,
-        PlatformStatics.wheel2_RPY,
-        PlatformStatics.wheel3_RPY
+        wheel0_RPY,
+        wheel1_RPY,
+        wheel2_RPY,
+        wheel3_RPY
     ]
 
 

@@ -91,4 +91,5 @@ ssh ubuntu@${REMOTE_IP} 'bash -ec "\
     cd ~/catkin_ws;\
     pip3 install -r ./src/ArduinoPlatformController/requirements.txt;\
     catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/noetic install;\
-    sudo systemctl restart ros_platform"'
+    sudo systemctl restart ros_platform;\
+    sudo journalctl -fu ros_platform"'
