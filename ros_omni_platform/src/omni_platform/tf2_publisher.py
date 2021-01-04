@@ -86,7 +86,7 @@ class TF2WheelWithPivot(TF2BaseLink):
             msg_id, msg_level, ang_last_pos, ang_err, ang_last_vel, ang_p = data1.split(':')
             dst_last_pos, dst_err, dst_last_vel, dst_p = data2.split(':')
             lastY = float(ang_last_pos)
-            R, P, Y = WHEEL_RPY_CONVERTER[self.__wheel_id](0, 0, lastY)
+            R, P, Y = PlatformStatics.WHEEL_RPY_CONVERTER[self.__wheel_id](0, 0, lastY)
             current_distance = float(dst_last_pos)
             distance_delta = current_distance - self.__prev_distance
             x += distance_delta * math.cos(lastY)
