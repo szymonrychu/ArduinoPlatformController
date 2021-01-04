@@ -70,12 +70,17 @@ class TF2WheelWithPivot(TF2BaseLink):
         self.__prev_distance = 0
         self.__last_msg_id = 0
         self.__x, self.__y, self.__z = 0, 0, 0
+        self.__dx, self.__dy, self.__dz = 0, 0, 0
         self.__wheel_pivot = TF2Link(f"{base_wheel_prefix}{wheel_id}", base_link, x=x, y=y, z=z)
         self.__wheel = TF2Link(f"{wheel_prefix}{wheel_id}", self.__wheel_pivot)
 
     @property
     def xyz(self):
         return self.__x, self.__y, self.__z
+
+    @property
+    def delta_xyz(self):
+        return self.__dx, self.__dy, self.__dz
 
     def update_base_wheel(self):
         return self.__wheel_pivot.update(0, 0, 0, 0, 0, 0)
@@ -92,8 +97,10 @@ class TF2WheelWithPivot(TF2BaseLink):
             R, P, Y = PlatformStatics.WHEEL_RPY_CONVERTER[self.__wheel_id](0, 0, lastY)
             current_distance = float(dst_last_pos)
             distance_delta = current_distance - self.__prev_distance
-            self.__x += distance_delta * math.cos(lastY)
-            self.__y += distance_delta * math.sin(lastY)
+            self.__dx = distance_delta * math.cos(lastY)
+            self.__dy = distance_delta * math.sin(lastY)
+            self.__x += self.__dx
+            self.__y += self.__dy
             self.__last_msg_id = int(msg_id)
             rospy.loginfo(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
             return self.update(0, 0, 0, R, P, Y)
@@ -120,12 +127,11 @@ class TF2Platform(TF2Link):
             self._tf_broadcaster.sendTransform(wheel_t)
             self.__platform_tf2_state[wheel_id] = True
             if all(self.__platform_tf2_state):
-                rospy.loginfo(f"Publishing platform [{self.link_name}] tf2")
                 sum_x, sum_y, sum_z = 0, 0, 0
                 xyz_s = []
                 for c in range(PlatformStatics.WHEEL_NUM):
                     self.__platform_tf2_state[c] = False
-                    x, y, z = self.__wheels[c].xyz
+                    x, y, z = self.__wheels[c].delta_xyz
                     xyz_s.append((x, y, z))
                     sum_x += x
                     sum_y += y
@@ -143,6 +149,7 @@ class TF2Platform(TF2Link):
                     xyz_s[2][1] + xyz_s[3][1]/2  # average of Y coords between w2 and w3
                 )
                 Y = math.atan2(fm_point[1]-bm_point[1], fm_point[0]-bm_point[0])
+                rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{x}, {y}, {z}, 0, 0, {Y}]")
                 self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, Y, increment=False))
 
 
