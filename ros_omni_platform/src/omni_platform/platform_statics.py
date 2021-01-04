@@ -14,5 +14,33 @@ class PlatformStatics():
     WHEELS = [
         FL_WHEEL1, FR_WHEEL2, BL_WHEEL3, BR_WHEEL4
     ]
+    WHEELS_TRANSLATIONS_XYZ = [
+        (0.2436, 0.161267, 0),
+        (-0.2436, 0.161267, 0),
+        (0.2436, -0.161267, 0),
+        (-0.2436, -0.161267, 0),
+    ]
     TURNING_LIMIT = math.radians(60)
     SPEED_LIMIT = 10
+    WHEEL_RADIUS = 200
+
+    WHEEL_RPY_CONVERTER = [
+        PlatformStatics.wheel0_RPY,
+        PlatformStatics.wheel1_RPY,
+        PlatformStatics.wheel2_RPY,
+        PlatformStatics.wheel3_RPY
+    ]
+
+
+    @staticmethod
+    def wheel0_RPY(R, P, Y):
+        return 0, P, math.pi + math.pi/2 + Y
+    @staticmethod
+    def wheel1_RPY(R, P, Y):
+        return 0, P, math.pi + math.pi/2 - Y
+    @staticmethod
+    def wheel2_RPY(R, P, Y):
+        return 0, P, math.pi + math.pi/2 - Y
+    @staticmethod
+    def wheel3_RPY(R, P, Y):
+        return 0, P, math.pi + math.pi/2 + Y

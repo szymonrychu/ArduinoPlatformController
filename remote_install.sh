@@ -83,8 +83,7 @@ fi
 
 if ! ssh ubuntu@${REMOTE_IP} 'ls /etc/systemd/system/ros_platform.service' > /dev/null; then
     ssh ubuntu@${REMOTE_IP} 'bash -ec "\
-        sudo cp ~/catkin_ws/src/ArduinoPlatformController/ros_platform.service /etc/systemd/system/ros_platform.service;\
-        sudo systemctl enable ros_platform"'
+        sudo cp ~/catkin_ws/src/ArduinoPlatformController/ros_platform.service /etc/systemd/system/ros_platform.service"'
 fi
 
 ssh ubuntu@${REMOTE_IP} 'bash -ec "\

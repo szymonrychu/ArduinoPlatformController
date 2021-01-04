@@ -1,6 +1,6 @@
 from .serial_helper import ThreadedSerialWrapper
 from .platform_math import PlatformMath
-from .platform_parser import PlatformStateTransformPublisher
+from .tf2_publisher import TF2PlatformPublisher
 
 try:
     import queue
@@ -24,7 +24,7 @@ class PlatformController(PlatformMath, PlatformCommands):
         self.__threads = []
         for _id, wheel_serial_id in enumerate(PlatformController.WHEELS):
             self.__threads.append(ThreadedSerialWrapper(wheel_serial_id, _id, receive_queue))
-        self.__threads.append(PlatformStateTransformPublisher(receive_queue))
+        self.__threads.append(TF2PlatformPublisher(receive_queue))
 
     def start(self):
         for th in self.__threads:

@@ -10,10 +10,10 @@
   <include file="$(find wheel_bridge)/launch/wheel4.launch">
   </include> -->
 
-  <node pkg="tf" type="static_transform_publisher" name="wheel0_translation" args="0.2436 0.161267 0 0 0 0 /platform /wheel0_axis 10"/>
+  <!-- <node pkg="tf" type="static_transform_publisher" name="wheel0_translation" args="0.2436 0.161267 0 0 0 0 /platform /wheel0_axis 10"/>
   <node pkg="tf" type="static_transform_publisher" name="wheel1_translation" args="-0.2436 0.161267 0 0 0 0 /platform /wheel1_axis 10"/>
   <node pkg="tf" type="static_transform_publisher" name="wheel2_translation" args="0.2436 -0.161267 0 0 0 0 /platform /wheel2_axis 10"/>
-  <node pkg="tf" type="static_transform_publisher" name="wheel3_translation" args="-0.2436 -0.161267 0 0 0 0 /platform /wheel3_axis 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="wheel3_translation" args="-0.2436 -0.161267 0 0 0 0 /platform /wheel3_axis 10"/> -->
   <node pkg="omni_platform" type="omni_platform" name="omni_platform" output="screen" respawn="true">
     <!-- <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_6075600-if00" />
     <param name="baudrate" type="int" value="115200"/>
