@@ -63,7 +63,7 @@ class TF2Link(TF2BaseLink):
 class TF2WheelWithPivot(TF2BaseLink):
 
     def __init__(self, wheel_id, base_link, x, y, z, base_wheel_prefix='/base_wheel_', wheel_prefix='/wheel_'):
-        TF2BaseLink.__init__(self, wheel_prefix+wheel_id)
+        TF2BaseLink.__init__(self, f"{wheel_prefix}{wheel_id}")
         self.__wheel_id = wheel_id
         self.__prev_distance = 0
         self.__last_msg_id = 0
