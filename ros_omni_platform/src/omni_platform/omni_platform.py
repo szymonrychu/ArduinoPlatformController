@@ -16,28 +16,30 @@ import rospy
 from geometry_msgs.msg import Twist, Vector3
 from std_msgs.msg import String
 
-moves = [
-    # (0.1, 500, math.radians( 45), 1000),
-    # (0.1, 500, math.radians(-45), 2000),
-    (0.1, 500, 0, 1000),
-    (-0.1, 500, 0, 1000),
-    (0, 500, math.radians( 45), 1000),
-    (0, 500, math.radians(-45), 2000),
-]
+
 
 class OmniPlatform():
+    MOVES = [
+        # (0.1, 500, math.radians( 45), 1000),
+        # (0.1, 500, math.radians(-45), 2000),
+        (0.1, 500, 0, 1000),
+        (-0.1, 500, 0, 1000),
+        (0, 500, math.radians( 45), 1000),
+        (0, 500, math.radians(-45), 2000),
+    ]
 
     def __init__(self):
         self._controller = PlatformController()
+        self._move_num = 0
 
     def start(self):
         self._controller.start()
         while self._controller.running:
-            controller.turn_and_move(*moves[move_num])
+            self._controller.turn_and_move(*MOVES[self._move_num])
             time.sleep(5)
-            move_num = (move_num+1)%len(moves)
+            self._move_num = (self._move_num+1)%len(MOVES)
 
-    def stop(self):
+    def stop(self, *args, **kwargs):
         controller.join()
 
 op = OmniPlatform()
