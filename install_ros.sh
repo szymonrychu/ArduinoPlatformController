@@ -7,7 +7,7 @@ sudo apt-get install ros-noetic-ros-base -y
 sudo chown -R ubuntu. /opt/ros/noetic
 echo "source /opt/ros/noetic/setup.zsh" >> ~/.zshrc
 echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-source ~/.bashrc
+source /opt/ros/noetic/setup.bash
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws
 catkin_make
