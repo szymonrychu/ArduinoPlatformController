@@ -42,7 +42,7 @@ class TF2Link(TF2BaseLink):
         t = geometry_msgs.msg.TransformStamped()
         t.header.stamp = rospy.Time.now()
         t.header.frame_id = self.__root_part.name
-        t.child_frame_id = self.__part_name
+        t.child_frame_id = self.name
         t.transform.translation.x = self.__prevX + x
         t.transform.translation.y = self.__prevY + y
         t.transform.translation.z = self.__prevZ + z
