@@ -76,10 +76,12 @@ class TF2WheelWithPivot(TF2BaseLink):
     @property
     def xyz(self):
         return self.__x, self.__y, self.__z
+
+    def update_base_wheel(self):
+        return self.__wheel_pivot.update(0, 0, 0, 0, 0, 0)
     
     def update(self, x, y, z, R, P, Y):
-        wheel_t = self.__wheel.update(0, 0, 0, R, P, Y)
-        return wheel_t
+        return self.__wheel.update(0, 0, 0, R, P, Y)
 
     def parse_wheel(self, raw_data):
         try:
@@ -107,7 +109,9 @@ class TF2Platform(TF2Link):
         self.__platform_tf2_state = []
         for c in range(PlatformStatics.WHEEL_NUM):
             x, y, z = PlatformStatics.WHEELS_TRANSLATIONS_XYZ[c]
-            self.__wheels.append(TF2WheelWithPivot(c, self, x, y, z, base_wheel_prefix, wheel_prefix))
+            wheel = TF2WheelWithPivot(c, self, x, y, z, base_wheel_prefix, wheel_prefix)
+            self._tf_broadcaster.sendTransform(wheel.update_base_wheel())
+            self.__wheels.append(wheel)
             self.__platform_tf2_state.append(False)
 
     def parse_serial(self, wheel_id, raw_data):
