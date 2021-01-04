@@ -112,34 +112,35 @@ class TF2Platform(TF2Link):
 
     def parse_serial(self, wheel_id, raw_data):
         wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
-        rospy.loginfo(f"Publishing wheel_{wheel_id} tf2")
-        self._tf_broadcaster.sendTransform(wheel_t)
-        self.__platform_tf2_state[wheel_id] = True
-        if all(self.__platform_tf2_state):
-            rospy.loginfo(f"Publishing platform tf2")
-            sum_x, sum_y, sum_z = 0, 0, 0
-            xyz_s = []
-            for c in range(PlatformStatics.WHEEL_NUM):
-                self.__platform_tf2_state[c] = False
-                x, y, z = self.__wheels[c].xyz
-                xyz_s.append((x, y, z))
-                sum_x += x
-                sum_y += y
-                sum_z += z
-            x = sum_x / PlatformStatics.WHEEL_NUM
-            y = sum_y / PlatformStatics.WHEEL_NUM
-            z = sum_z / PlatformStatics.WHEEL_NUM
+        if wheel_t:
+            rospy.loginfo(f"Publishing wheel_{wheel_id} tf2")
+            self._tf_broadcaster.sendTransform(wheel_t)
+            self.__platform_tf2_state[wheel_id] = True
+            if all(self.__platform_tf2_state):
+                rospy.loginfo(f"Publishing platform tf2")
+                sum_x, sum_y, sum_z = 0, 0, 0
+                xyz_s = []
+                for c in range(PlatformStatics.WHEEL_NUM):
+                    self.__platform_tf2_state[c] = False
+                    x, y, z = self.__wheels[c].xyz
+                    xyz_s.append((x, y, z))
+                    sum_x += x
+                    sum_y += y
+                    sum_z += z
+                x = sum_x / PlatformStatics.WHEEL_NUM
+                y = sum_y / PlatformStatics.WHEEL_NUM
+                z = sum_z / PlatformStatics.WHEEL_NUM
 
-            fm_point = (
-                xyz_s[0][0] + xyz_s[1][0]/2, # average of X coords between w0 and w1
-                xyz_s[0][1] + xyz_s[1][1]/2  # average of Y coords between w0 and w1
-            )
-            bm_point = (
-                xyz_s[2][0] + xyz_s[3][0]/2, # average of X coords between w2 and w3
-                xyz_s[2][1] + xyz_s[3][1]/2  # average of Y coords between w2 and w3
-            )
-            Y = math.atan2(fm_point[1]-bm_point[1], fm_point[0]-bm_point[0])
-            self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, Y, increment=False))
+                fm_point = (
+                    xyz_s[0][0] + xyz_s[1][0]/2, # average of X coords between w0 and w1
+                    xyz_s[0][1] + xyz_s[1][1]/2  # average of Y coords between w0 and w1
+                )
+                bm_point = (
+                    xyz_s[2][0] + xyz_s[3][0]/2, # average of X coords between w2 and w3
+                    xyz_s[2][1] + xyz_s[3][1]/2  # average of Y coords between w2 and w3
+                )
+                Y = math.atan2(fm_point[1]-bm_point[1], fm_point[0]-bm_point[0])
+                self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, Y, increment=False))
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
