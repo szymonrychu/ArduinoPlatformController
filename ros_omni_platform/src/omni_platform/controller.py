@@ -26,6 +26,13 @@ class PlatformController(PlatformMath, PlatformCommands):
             self.__threads.append(ThreadedSerialWrapper(wheel_serial_id, _id, receive_queue))
         self.__threads.append(TF2PlatformPublisher(receive_queue))
 
+    @property
+    def running(self):
+        running = []
+        for t in self.__threads:
+            running.append(t.running)
+        return all(running)
+
     def start(self):
         for th in self.__threads:
             th.start()

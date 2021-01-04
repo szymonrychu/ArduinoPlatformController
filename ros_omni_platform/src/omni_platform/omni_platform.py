@@ -25,20 +25,21 @@ moves = [
     (0, 500, math.radians(-45), 2000),
 ]
 
-do_stuff = True
-controller = PlatformController()
+class OmniPlatform():
 
-def exit_gracefully(signum, frame):
-    do_stuff = False
-    controller.join()
-    exit()
+    def __init__(self):
+        self._controller = PlatformController()
 
-signal.signal(signal.SIGINT, exit_gracefully)
+    def start(self):
+        self._controller.start()
+        while self._controller.running:
+            controller.turn_and_move(*moves[move_num])
+            time.sleep(5)
+            move_num = (move_num+1)%len(moves)
 
-def main():
-    controller.start()
-    move_num = 0
-    while do_stuff:
-        controller.turn_and_move(*moves[move_num])
-        time.sleep(5)
-        move_num = (move_num+1)%len(moves)
+    def stop(self):
+        controller.join()
+
+op = OmniPlatform()
+signal.signal(signal.SIGINT, op.stop)
+op.start()
