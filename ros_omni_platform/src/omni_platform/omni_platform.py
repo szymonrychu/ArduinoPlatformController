@@ -26,6 +26,7 @@ moves = [
 ]
 
 do_stuff = True
+controller = PlatformController()
 
 def exit_gracefully(signum, frame):
     do_stuff = False
@@ -35,7 +36,6 @@ signal.signal(signal.SIGINT, exit_gracefully)
 signal.signal(signal.SIGTERM, exit_gracefully)
 
 def main():
-    controller = PlatformController()
     controller.start()
     move_num = 0
     while do_stuff:
