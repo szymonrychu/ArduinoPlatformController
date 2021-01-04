@@ -115,7 +115,6 @@ class TF2Platform(TF2Link):
 
     def parse_serial(self, wheel_id, raw_data):
         wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
-        self._tf_broadcaster.sendTransform(self.__wheels[wheel_id].update_base_wheel())
         if wheel_t:
             rospy.loginfo(f"Publishing wheel_{wheel_id} [{self.__wheels[wheel_id].link_name}] tf2")
             self._tf_broadcaster.sendTransform(wheel_t)
