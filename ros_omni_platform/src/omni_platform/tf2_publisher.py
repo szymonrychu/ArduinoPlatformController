@@ -103,15 +103,15 @@ class TF2Platform(TF2Link):
     def __init__(self, base_link_name='base_link', map_name='map', base_wheel_prefix='base_wheel_', wheel_prefix='wheel_'):
         TF2Link.__init__(self, base_link_name, TF2BaseLink(map_name))
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
-        self.wheels = []
+        self.__wheels = []
         self.__platform_tf2_state = []
         for c in range(PlatformStatics.WHEEL_NUM):
             x, y, z = PlatformStatics.WHEELS_TRANSLATIONS_XYZ[c]
-            self.wheels.append(TF2WheelWithPivot(c, self, x, y, z, base_wheel_prefix, wheel_prefix))
+            self.__wheels.append(TF2WheelWithPivot(c, self, x, y, z, base_wheel_prefix, wheel_prefix))
             self.__platform_tf2_state.append(False)
 
     def parse_serial(self, wheel_id, raw_data):
-        wheel_t = self.wheels[wheel_id].parse_wheel(raw_data)
+        wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
         rospy.loginfo(f"Publishing wheel_{wheel_id} tf2")
         self._tf_broadcaster.sendTransform(wheel_t)
         self.__platform_tf2_state[wheel_id] = True
