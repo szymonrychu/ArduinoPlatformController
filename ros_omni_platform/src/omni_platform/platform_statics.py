@@ -25,16 +25,16 @@ class PlatformStatics():
     WHEEL_RADIUS = 200
 
 
-    @classmethod
+    @staticmethod
     def wheel0_RPY(R, P, Y):
         return 0, P, math.pi + math.pi/2 + Y
-    @classmethod
+    @staticmethod
     def wheel1_RPY(R, P, Y):
         return 0, P, math.pi + math.pi/2 - Y
-    @classmethod
+    @staticmethod
     def wheel2_RPY(R, P, Y):
         return 0, P, math.pi + math.pi/2 - Y
-    @classmethod
+    @staticmethod
     def wheel3_RPY(R, P, Y):
         return 0, P, math.pi + math.pi/2 + Y
     
