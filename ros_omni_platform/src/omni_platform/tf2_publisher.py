@@ -81,7 +81,7 @@ class TF2WheelWithPivot(TF2BaseLink):
         return self.__wheel_pivot.update(0, 0, 0, 0, 0, 0)
     
     def update(self, x, y, z, R, P, Y):
-        return self.__wheel.update(0, 0, 0, R, P, Y)
+        return self.__wheel.update(0, 0, 0, R, P, Y, increment=False)
 
     def parse_wheel(self, raw_data):
         try:
