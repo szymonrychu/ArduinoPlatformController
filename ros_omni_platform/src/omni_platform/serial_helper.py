@@ -7,6 +7,8 @@ import traceback
 from threading import Thread
 import time
 
+import rospy
+
 class SerialMock():
     def __init__(self, *args, **kwargs):
         self.__last_timestamp = 0
@@ -84,6 +86,7 @@ class ThreadedSerialWrapper(Thread, SerialWrapper):
 
     def start(self):
         self.__running = True
+        rospy.loginfo(f"ThreadedSerialWrapper starting!")
         Thread.start(self)
     
     @property
@@ -109,6 +112,7 @@ class ThreadedSerialOutputHandler(Thread):
 
     def start(self):
         self.__running = True
+        rospy.loginfo(f"ThreadedSerialOutputHandler starting!")
         Thread.start(self)
     
     @property
