@@ -92,7 +92,7 @@ class TF2WheelWithPivot(TF2BaseLink):
             x += distance_delta * math.cos(lastY)
             y += distance_delta * math.sin(lastY)
             self.__last_msg_id = int(msg_id)
-            rospy.logdebug(f"Parsed: {raw_data}")
+            rospy.loginfo(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
             return self.update(x, y, 0, R, P, Y)
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
