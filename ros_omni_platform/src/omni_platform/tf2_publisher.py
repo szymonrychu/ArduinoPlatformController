@@ -5,6 +5,8 @@ import tf2_ros
 import geometry_msgs.msg
 import tf_conversions
 
+import math
+
 from .platform_statics import PlatformStatics
 from .serial_helper import ThreadedSerialOutputHandler
 
