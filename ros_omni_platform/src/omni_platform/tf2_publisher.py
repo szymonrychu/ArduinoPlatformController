@@ -64,7 +64,7 @@ class TF2Link(TF2BaseLink):
         
 class TF2WheelWithPivot(TF2BaseLink):
 
-    def __init__(self, wheel_id, base_link, x, y, z, base_wheel_prefix='base_wheel_', wheel_prefix='wheel_'):
+    def __init__(self, wheel_id, base_link, x, y, z, base_wheel_prefix='/base_wheel_', wheel_prefix='/wheel_'):
         TF2BaseLink.__init__(self, f"{wheel_prefix}{wheel_id}")
         self.__wheel_id = wheel_id
         self.__prev_distance = 0
@@ -102,7 +102,7 @@ class TF2WheelWithPivot(TF2BaseLink):
 
 class TF2Platform(TF2Link):
 
-    def __init__(self, base_link_name='base_link', map_name='map', base_wheel_prefix='base_wheel_', wheel_prefix='wheel_'):
+    def __init__(self, base_link_name='/base_link', map_name='/map', base_wheel_prefix='/base_wheel_', wheel_prefix='/wheel_'):
         TF2Link.__init__(self, base_link_name, TF2BaseLink(map_name))
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.__wheels = []
