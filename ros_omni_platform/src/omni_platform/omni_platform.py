@@ -40,7 +40,7 @@ class OmniPlatform():
             self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
 
     def stop(self, *args, **kwargs):
-        controller.join()
+        self._controller.join()
 
 op = OmniPlatform()
 signal.signal(signal.SIGINT, op.stop)
