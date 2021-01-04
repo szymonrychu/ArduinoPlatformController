@@ -71,7 +71,7 @@ class TF2WheelWithPivot(TF2BaseLink):
         self.__last_msg_id = 0
         self.__x, self.__y, self.__z = 0, 0, 0
         self.__wheel_pivot = TF2Link(f"{base_wheel_prefix}{wheel_id}", base_link, x=x, y=y, z=z)
-        self.__wheel = TF2Link(f"{base_wheel_prefix}{wheel_id}", self.__wheel_pivot)
+        self.__wheel = TF2Link(f"{wheel_prefix}{wheel_id}", self.__wheel_pivot)
 
     @property
     def xyz(self):
