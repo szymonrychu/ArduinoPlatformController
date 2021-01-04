@@ -38,6 +38,7 @@ class OmniPlatform():
             self._controller.turn_and_move(*OmniPlatform.MOVES[self._move_num])
             time.sleep(5)
             self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
+        self.stop()
 
     def stop(self, *args, **kwargs):
         self._controller.join()

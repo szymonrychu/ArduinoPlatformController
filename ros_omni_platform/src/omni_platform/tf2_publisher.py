@@ -147,3 +147,6 @@ class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
     def __init__(self, data_queue, *args, **kwargs):
         ThreadedSerialOutputHandler.__init__(self, data_queue)
         TF2Platform.__init__(self, *args, **kwargs)
+
+    def parse_serial(self, wheel_id, raw_data):
+        TF2Platform.parse_serial(self, wheel_id, raw_data)
