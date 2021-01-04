@@ -76,9 +76,8 @@ class TF2WheelWithPivot(TF2BaseLink):
         return self.__x, self.__y, self.__z
     
     def update(self, x, y, z, R, P, Y):
-        self.__x, self.__y, self.__z = x, y, z
         wheel_t = self.__wheel.update(0, 0, 0, R, P, Y)
-        return (pivot_t, wheel_t)
+        return wheel_t
 
     def parse_wheel(self, raw_data):
         try:
@@ -89,11 +88,11 @@ class TF2WheelWithPivot(TF2BaseLink):
             R, P, Y = PlatformStatics.WHEEL_RPY_CONVERTER[self.__wheel_id](0, 0, lastY)
             current_distance = float(dst_last_pos)
             distance_delta = current_distance - self.__prev_distance
-            x += distance_delta * math.cos(lastY)
-            y += distance_delta * math.sin(lastY)
+            self.__x += distance_delta * math.cos(lastY)
+            self.__y += distance_delta * math.sin(lastY)
             self.__last_msg_id = int(msg_id)
             rospy.loginfo(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
-            return self.update(x, y, 0, R, P, Y)
+            return self.update(0, 0, 0, R, P, Y)
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
 
@@ -110,9 +109,8 @@ class TF2Platform(TF2Link):
             self.__platform_tf2_state.append(False)
 
     def parse_serial(self, wheel_id, raw_data):
-        pivot_t, wheel_t = self.wheels[wheel_id].parse_wheel(raw_data)
+        wheel_t = self.wheels[wheel_id].parse_wheel(raw_data)
         rospy.loginfo(f"Publishing wheel_{wheel_id} tf2")
-        self._tf_broadcaster.sendTransform(pivot_t)
         self._tf_broadcaster.sendTransform(wheel_t)
         self.__platform_tf2_state[wheel_id] = True
         if all(self.__platform_tf2_state):
