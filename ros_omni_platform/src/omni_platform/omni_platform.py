@@ -42,6 +42,8 @@ class OmniPlatform():
     def stop(self, *args, **kwargs):
         self._controller.join()
 
-op = OmniPlatform()
-signal.signal(signal.SIGINT, op.stop)
-op.start()
+
+def main():
+    op = OmniPlatform()
+    signal.signal(signal.SIGINT, op.stop)
+    op.start()
