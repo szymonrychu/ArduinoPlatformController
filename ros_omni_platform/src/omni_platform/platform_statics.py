@@ -24,23 +24,25 @@ class PlatformStatics():
     SPEED_LIMIT = 10
     WHEEL_RADIUS = 200
 
+
+    @classmethod
+    def wheel0_RPY(R, P, Y):
+        return 0, P, math.pi + math.pi/2 + Y
+    @classmethod
+    def wheel1_RPY(R, P, Y):
+        return 0, P, math.pi + math.pi/2 - Y
+    @classmethod
+    def wheel2_RPY(R, P, Y):
+        return 0, P, math.pi + math.pi/2 - Y
+    @classmethod
+    def wheel3_RPY(R, P, Y):
+        return 0, P, math.pi + math.pi/2 + Y
+    
+
+
     WHEEL_RPY_CONVERTER = [
         wheel0_RPY,
         wheel1_RPY,
         wheel2_RPY,
         wheel3_RPY
     ]
-
-
-    @staticmethod
-    def wheel0_RPY(R, P, Y):
-        return 0, P, math.pi + math.pi/2 + Y
-    @staticmethod
-    def wheel1_RPY(R, P, Y):
-        return 0, P, math.pi + math.pi/2 - Y
-    @staticmethod
-    def wheel2_RPY(R, P, Y):
-        return 0, P, math.pi + math.pi/2 - Y
-    @staticmethod
-    def wheel3_RPY(R, P, Y):
-        return 0, P, math.pi + math.pi/2 + Y
