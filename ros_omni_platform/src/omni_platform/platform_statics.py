@@ -39,7 +39,8 @@ class PlatformStatics():
         if Y > PlatformStatics.ANGLE_OFFSETS[1]:
             return R, P, -math.pi/2 + Y - PlatformStatics.ANGLE_OFFSETS[1]
         elif Y < PlatformStatics.ANGLE_OFFSETS[1]:
-            return R, P, -(-math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[1])
+            # return R, P, -(-math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[1])
+            return R, P, -math.pi/2 + Y - PlatformStatics.ANGLE_OFFSETS[1]
         else:
             return -math.pi/2 - PlatformStatics.ANGLE_OFFSETS[1]
     @staticmethod
@@ -48,7 +49,8 @@ class PlatformStatics():
         if Y < PlatformStatics.ANGLE_OFFSETS[2]:
             return R, P, -math.pi/2 + Y - PlatformStatics.ANGLE_OFFSETS[2]
         elif Y > PlatformStatics.ANGLE_OFFSETS[2]:
-            return R, P, -(-math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[2])
+            # return R, P, -(-math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[2])
+            return R, P, -math.pi/2 + Y - PlatformStatics.ANGLE_OFFSETS[2]
         else:
             return -math.pi/2 - PlatformStatics.ANGLE_OFFSETS[2]
     @staticmethod
