@@ -11,7 +11,7 @@
   <include file="$(find rplidar_ros)/launch/rplidar.launch">
   </include>
 
-  <node pkg="tf" type="static_transform_publisher" name="laser_translation" args="0 0.1 0, 0, 1, 0.0001963 /base_link /laser 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="laser_translation" args="0 0.1 0, 0, -1, 0.0001963 /base_link /laser 10"/>
   
   <node pkg="tf" type="static_transform_publisher" name="wheel0_translation" args="0.2436 0.161267 0 0 0 0 /base_link /base_wheel_0 10"/>
   <node pkg="tf" type="static_transform_publisher" name="wheel1_translation" args="0.2436 -0.161267 0 0 0 0 /base_link /base_wheel_1 10"/>
