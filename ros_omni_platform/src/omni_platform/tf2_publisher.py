@@ -134,9 +134,9 @@ class TF2Platform(TF2Link):
                 sum_x, sum_y, sum_z = 0, 0, 0
                 xyz_s = []
                 for c in range(PlatformStatics.WHEEL_NUM):
-                    rospy.loginfo(f"Publishing wheel_{wheel_id} [{self.__wheels[wheel_id].link_name}] tf2")
-                    self._tf_broadcaster.sendTransform(self.__platform_tf2[wheel_id])
-                    self.__platform_tf2_state[wheel_id] = False
+                    rospy.loginfo(f"Publishing wheel_{c} [{self.__wheels[c].link_name}] tf2")
+                    self._tf_broadcaster.sendTransform(self.__platform_tf2[c])
+                    self.__platform_tf2_state[c] = False
                     x, y, z = self.__wheels[c].delta_xyz
                     xyz_s.append((x, y, z))
                     sum_x += x
