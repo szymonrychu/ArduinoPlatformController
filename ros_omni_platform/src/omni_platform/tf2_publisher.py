@@ -77,11 +77,11 @@ class TF2WheelWithPivot(TF2BaseLink):
 
     @property
     def xyz(self):
-        return -self.__y, self.__x, self.__z
+        return self.__x, self.__y, self.__z
 
     @property
     def delta_xyz(self):
-        return -self.__dy, self.__dx, self.__dz
+        return self.__dx, self.__dy, self.__dz
 
     def update_base_wheel(self):
         return self.__wheel_pivot.update(0, 0, 0, 0, 0, 0)
