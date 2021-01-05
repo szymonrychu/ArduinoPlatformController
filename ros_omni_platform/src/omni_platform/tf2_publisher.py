@@ -121,6 +121,7 @@ class TF2Platform(TF2Link):
             x, y, z = PlatformStatics.WHEELS_TRANSLATIONS_XYZ[c]
             wheel = TF2WheelWithPivot(c, self, x, y, z, base_wheel_prefix, wheel_prefix)
             self.__wheels.append(wheel)
+            self.__platform_tf2.append(None)
             self.__platform_tf2_state.append(False)
 
     def parse_serial(self, wheel_id, raw_data):
