@@ -81,7 +81,7 @@ class TF2WheelWithPivot(TF2BaseLink):
 
     @property
     def delta_xyz(self):
-        return self.__dx, self.__dy, self.__dz
+        return self.__dy, self.__dx, self.__dz
 
     def update_base_wheel(self):
         return self.__wheel_pivot.update(0, 0, 0, 0, 0, 0)
@@ -98,8 +98,8 @@ class TF2WheelWithPivot(TF2BaseLink):
             R, P, Y = PlatformStatics.WHEEL_RPY_CONVERTER[self.__wheel_id](0, 0, lastY)
             current_distance = float(dst_last_pos)
             distance_delta = current_distance - self.__prev_distance
-            self.__dx = distance_delta * math.sin(lastY)
-            self.__dy = distance_delta * math.cos(lastY)
+            self.__dx = distance_delta * math.cos(lastY)
+            self.__dy = distance_delta * math.sin(lastY)
             self.__x += self.__dx
             self.__y += self.__dy
             self.__last_msg_id = int(msg_id)
