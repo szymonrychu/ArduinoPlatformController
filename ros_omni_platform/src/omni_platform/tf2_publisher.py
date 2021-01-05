@@ -125,7 +125,7 @@ class TF2Platform(TF2Link):
     def parse_serial(self, wheel_id, raw_data):
         wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
         with self.__lock:
-            if wheel_t:
+            if wheel_t is not None:
                 self.__platform_tf2_state[wheel_id] = wheel_t
             publish = True
             for wheel_t in self.__platform_tf2_state:
