@@ -127,11 +127,16 @@ class TF2Platform(TF2Link):
         if wheel_t:
             self.__platform_tf2_state[wheel_id] = wheel_t
             with self.__lock:
-                rospy.loginfo(f"Publishing wheel_{wheel_id} [{self.__wheels[wheel_id].link_name}] tf2")
-                if all(self.__platform_tf2_state):
+                publish = True
+                for wheel_t in self.__platform_tf2_state:
+                    if not wheel_t:
+                        publish = False
+                        break
+                if publish:
                     sum_x, sum_y, sum_z = 0, 0, 0
                     xyz_s = []
                     for c in range(PlatformStatics.WHEEL_NUM):
+                        rospy.loginfo(f"Publishing wheel_{wheel_id} [{self.__wheels[wheel_id].link_name}] tf2")
                         self._tf_broadcaster.sendTransform(self.__platform_tf2_state[wheel_id])
                         self.__platform_tf2_state[wheel_id] = None
                         x, y, z = self.__wheels[c].delta_xyz
