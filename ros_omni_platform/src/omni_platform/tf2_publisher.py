@@ -154,7 +154,7 @@ class TF2Platform(TF2Link):
                     xyz_s[2][0] + xyz_s[3][0]/2, # average of X coords between w2 and w3
                     xyz_s[2][1] + xyz_s[3][1]/2  # average of Y coords between w2 and w3
                 )
-                Y = math.atan2(fm_point[1]-bm_point[1], fm_point[0]-bm_point[0])
+                Y = math.atan2(abs(fm_point[1]-bm_point[1]), abs(fm_point[0]-bm_point[0]))
                 rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{x}, {y}, {z}, 0, 0, {Y}]")
                 self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, Y, increment=False))
 
