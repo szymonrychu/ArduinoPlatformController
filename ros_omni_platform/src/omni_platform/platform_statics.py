@@ -36,11 +36,11 @@ class PlatformStatics():
     @staticmethod
     def wheel2_RPY(R, P, Y):
         # return 0, P, math.pi + math.pi/2 - Y
-        return 0, P, -Y - PlatformStatics.ANGLE_OFFSETS[2]
+        return 0, P, -Y + PlatformStatics.ANGLE_OFFSETS[2]
     @staticmethod
     def wheel3_RPY(R, P, Y):
         # return 0, P, math.pi + math.pi/2 + Y
-        return 0, P, Y - PlatformStatics.ANGLE_OFFSETS[3]
+        return 0, P, Y + PlatformStatics.ANGLE_OFFSETS[3]
     
 
 
