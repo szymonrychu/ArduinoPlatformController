@@ -129,7 +129,7 @@ class TF2Platform(TF2Link):
             with self.__lock:
                 publish = True
                 for wheel_t in self.__platform_tf2_state:
-                    if not wheel_t:
+                    if wheel_t is None:
                         publish = False
                         break
                 if publish:
