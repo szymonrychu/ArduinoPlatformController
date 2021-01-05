@@ -62,6 +62,12 @@ else
         git pull"'
 fi
 
+if ! ssh ubuntu@${REMOTE_IP} 'ls ~/catkin_ws/src/rplidar_ros > /dev/null'; then
+    ssh ubuntu@${REMOTE_IP} 'bash -ec "\
+        cd catkin_ws/src;\
+        https://github.com/Slamtec/rplidar_ros.git"'
+fi
+
 if ssh ubuntu@${REMOTE_IP} "cat /etc/hosts | grep ' robot'" > /dev/null; then
     ssh ubuntu@${REMOTE_IP} "sudo sed -i \"s/.*robot/${REMOTE_IP} robot/\" /etc/hosts" > /dev/null
 else
