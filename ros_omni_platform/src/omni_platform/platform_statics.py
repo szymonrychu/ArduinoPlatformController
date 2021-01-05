@@ -37,18 +37,18 @@ class PlatformStatics():
     def wheel1_RPY(R, P, Y):
         # return R, P, -math.pi/2 + Y - PlatformStatics.ANGLE_OFFSETS[1]
         if Y > PlatformStatics.ANGLE_OFFSETS[1]:
-            return R, P, -(-math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[1])
-        elif Y < PlatformStatics.ANGLE_OFFSETS[1]:
             return R, P, -math.pi/2 + Y - PlatformStatics.ANGLE_OFFSETS[1]
+        elif Y < PlatformStatics.ANGLE_OFFSETS[1]:
+            return R, P, -(-math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[1])
         else:
             return -math.pi/2 - PlatformStatics.ANGLE_OFFSETS[1]
     @staticmethod
     def wheel2_RPY(R, P, Y):
         # return R, P, -math.pi/2 + Y - PlatformStatics.ANGLE_OFFSETS[2]
         if Y < PlatformStatics.ANGLE_OFFSETS[2]:
-            return R, P, -(-math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[2])
-        elif Y > PlatformStatics.ANGLE_OFFSETS[2]:
             return R, P, -math.pi/2 + Y - PlatformStatics.ANGLE_OFFSETS[2]
+        elif Y > PlatformStatics.ANGLE_OFFSETS[2]:
+            return R, P, -(-math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[2])
         else:
             return -math.pi/2 - PlatformStatics.ANGLE_OFFSETS[2]
     @staticmethod
