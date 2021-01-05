@@ -30,7 +30,7 @@ class PlatformStatics():
         if Y < PlatformStatics.ANGLE_OFFSETS[0]:
             return R, P, -math.pi/2 + Y - PlatformStatics.ANGLE_OFFSETS[0]
         elif Y > PlatformStatics.ANGLE_OFFSETS[0]:
-            return R, P, -(math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[0])
+            return R, P, -(-math.pi/2 + -Y - PlatformStatics.ANGLE_OFFSETS[0])
         else:
             return -math.pi/2 - PlatformStatics.ANGLE_OFFSETS[0]
     @staticmethod
