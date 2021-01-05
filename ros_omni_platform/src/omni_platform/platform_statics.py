@@ -28,19 +28,19 @@ class PlatformStatics():
     @staticmethod
     def wheel0_RPY(R, P, Y):
         # return 0, P, math.pi + math.pi/2 + Y
-        return 0, P, math.pi + Y
+        return 0, P, math.pi - Y
     @staticmethod
     def wheel1_RPY(R, P, Y):
         # return 0, P, math.pi + math.pi/2 - Y
-        return 0, P, math.pi + Y
+        return 0, P, math.pi - Y
     @staticmethod
     def wheel2_RPY(R, P, Y):
         # return 0, P, math.pi + math.pi/2 - Y
-        return 0, P, math.pi - Y
+        return 0, P, math.pi + Y
     @staticmethod
     def wheel3_RPY(R, P, Y):
         # return 0, P, math.pi + math.pi/2 + Y
-        return 0, P, math.pi - Y
+        return 0, P, math.pi + Y
     
 
 
