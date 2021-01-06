@@ -62,6 +62,22 @@ else
         git pull"'
 fi
 
+if ! ssh ubuntu@${REMOTE_IP} 'ls ~/catkin_ws/src/ArduinoPlatformMonitor > /dev/null'; then
+    echo "Ensuring ROS noetic is present on remote."
+    ssh ubuntu@${REMOTE_IP} 'bash -ec "\
+        cd ~/catkin_ws/src/;\
+        git clone git@github.com:szymonrychu/ArduinoPlatformMonitor.git"'
+else
+    ssh ubuntu@${REMOTE_IP} 'bash -ec "\
+        cd ~/catkin_ws/src/ArduinoPlatformMonitor;\
+        git stash;\
+        git stash clear;\
+        git checkout master;\
+        git reset --hard;\
+        git clean -xfd;\
+        git pull"'
+fi
+
 if ! ssh ubuntu@${REMOTE_IP} 'ls ~/catkin_ws/src/rplidar_ros > /dev/null'; then
     ssh ubuntu@${REMOTE_IP} 'bash -ec "\
         cd catkin_ws/src;\
