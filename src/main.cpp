@@ -110,7 +110,7 @@ void loop(){
         distance.drive(distancePower);
         angle.drive(anglePower);
 
-        if(currentTime - lastPrintTime > 20.0*1000.0){
+        if(currentTime - lastPrintTime > 100.0*1000.0){
             printDiagnostics();
             lastPrintTime = currentTime;
         }
