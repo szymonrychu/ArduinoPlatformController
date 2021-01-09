@@ -22,14 +22,14 @@ class OmniPlatform():
     MOVES = [
         # (0.1, 500, math.radians( 45), 1000),
         # (0.1, 500, math.radians(-45), 2000),
-        (0.3, 1500, 0, 1000),
-        (-0.3, 1500, 0, 1000),
-        (0.2, 1000, math.radians( 45), 1000),
-        (-0.2, 1000, math.radians( -45), 1000),
-        (0, 500, 0, 1000),
-        (0, 500, 0, 2000),
-        (-0.2, 1000, math.radians( 45), 1000),
-        (0.2, 1000, math.radians( -45), 1000),
+        # (0.3, 1500, 0, 1000),
+        # (-0.3, 1500, 0, 1000),
+        # (0.2, 1000, math.radians( 45), 1000),
+        # (-0.2, 1000, math.radians( -45), 1000),
+        # (0, 500, 0, 1000),
+        # (0, 500, 0, 2000),
+        # (-0.2, 1000, math.radians( 45), 1000),
+        # (0.2, 1000, math.radians( -45), 1000),
     ]
 
     def __init__(self):
@@ -41,6 +41,7 @@ class OmniPlatform():
         while self._controller.running:
             self._controller.turn_and_move(*OmniPlatform.MOVES[self._move_num])
             self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
+            time.sleep(1)
         self.stop()
 
     def stop(self, *args, **kwargs):
