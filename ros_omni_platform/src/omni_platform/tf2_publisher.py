@@ -186,7 +186,7 @@ class TF2Platform(TF2Link, threading.Thread):
                 
                 centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
                 centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
-                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, 0, q=(self.qx, self.qy, self.qz, self.qw) increment=False)) # self.update_Y(Y)
+                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, 0, q=(self.qx, self.qy, self.qz, self.qw), increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
