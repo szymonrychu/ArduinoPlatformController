@@ -123,8 +123,11 @@ class TF2Platform(TF2Link):
         self.__wheels = []
         self.__platform_tf2 = []
         self.__platform_tf2_state = []
-        self.sum_x, self.sum_y, self.sum_z = 0, 0, 0
-        self.last_x, self.last_y, self.last_z = 0, 0, 0
+
+        self.last_c_x, self.last_c_y = 0, 0
+        self.last_f_x, self.last_f_y = 0, 0
+        self.last_b_x, self.last_b_y = 0, 0
+
         for c in range(PlatformStatics.WHEEL_NUM):
             x, y, z = PlatformStatics.WHEELS_TRANSLATIONS_XYZ[c]
             wheel = TF2WheelWithPivot(c, self, x, y, z, base_wheel_prefix, wheel_prefix)
@@ -166,20 +169,35 @@ class TF2Platform(TF2Link):
                 
                 centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
                 centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
+                delta_c_x = centre_x - self.last_c_x
+                delta_c_y = centre_y - self.last_c_y
+                self.last_c_x = centre_x
+                self.last_c_y = centre_y
 
                 front_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0])
                 front_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1])
+                delta_f_x = front_x - self.last_f_x
+                delta_f_y = front_y - self.last_f_y
+                self.last_f_x = front_x
+                self.last_f_y = front_y
 
                 back_x = (abs_xyz_s[2][0] + abs_xyz_s[3][0])
                 back_y = (abs_xyz_s[2][1] + abs_xyz_s[3][1])
+                delta_b_x = back_x - self.last_b_x
+                delta_b_y = back_y - self.last_b_y
+                self.last_b_x = back_x
+                self.last_b_y = back_y
 
-                Y = -math.pi/2 + math.atan2((front_y - back_y), -(front_x - back_x))
+                distance = math.sqrt(delta_c_x*delta_c_x + delta_c_y*delta_c_y)
+                Y = -math.pi/2 + math.atan2((delta_f_y - delta_b_y), -(delta_f_x - delta_b_x))
+                x = distance * math.sin(Y)
+                y = distance * math.cos(Y)
 
                 # Y = (abs_yaw_s[0] + abs_yaw_s[1])/2
                 # Y = sum(abs_xyz_s)/4
 
                 rospy.loginfo(f"centre/yaw [{front_x - front_y}, {front_y - back_y}] {Y} {math.degrees(Y)}")
-                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
+                self._tf_broadcaster.sendTransform(self.update(x, y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
