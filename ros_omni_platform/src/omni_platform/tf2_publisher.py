@@ -167,18 +167,18 @@ class TF2Platform(TF2Link):
                 centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
                 centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
 
-                front_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0])/2
-                front_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1])/2
+                front_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0])
+                front_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1])
 
-                back_x = (abs_xyz_s[2][0] + abs_xyz_s[3][0])/2
-                back_y = (abs_xyz_s[2][1] + abs_xyz_s[3][1])/2
+                back_x = (abs_xyz_s[2][0] + abs_xyz_s[3][0])
+                back_y = (abs_xyz_s[2][1] + abs_xyz_s[3][1])
 
                 Y = math.atan2((front_y - back_y), (front_x - front_y))
 
                 # Y = (abs_yaw_s[0] + abs_yaw_s[1])/2
                 # Y = sum(abs_xyz_s)/4
 
-                rospy.loginfo(f"centre/yaw [{front_x - front_y}, {front_y - back_y}] {math.degrees(Y)}")
+                rospy.loginfo(f"centre/yaw [{front_x - front_y}, {front_y - back_y}] {Y} {math.degrees(Y)}")
                 self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
 
 
