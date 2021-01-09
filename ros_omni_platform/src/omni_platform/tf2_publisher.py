@@ -123,6 +123,13 @@ class TF2Platform(TF2Link):
             self.__wheels.append(wheel)
             self.__platform_tf2.append(None)
             self.__platform_tf2_state.append(False)
+        self._Y = []
+
+    def update_Y(self, Y):
+        self._Y.append(Y)
+        if len(self._Y)> 10:
+            self._Y.pop()
+        return sum(self._Y)/len(self._Y)
 
 
     def parse_serial(self, wheel_id, raw_data):
@@ -157,7 +164,7 @@ class TF2Platform(TF2Link):
                 )
                 Y = math.atan2(abs(fm_point[0]-bm_point[0]), abs(fm_point[1]-bm_point[1]))
                 rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{x}, {y}, {z}, 0, 0, {Y}]")
-                self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, Y, increment=False))
+                self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, self.update_Y(Y), increment=False))
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
