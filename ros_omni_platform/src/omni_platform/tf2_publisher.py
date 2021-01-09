@@ -70,14 +70,9 @@ class TF2WheelWithPivot(TF2BaseLink):
         self.__wheel_id = wheel_id
         self.__prev_distance = 0
         self.__last_msg_id = 0
-        self.__x, self.__y, self.__z = 0, 0, 0
         self.__dx, self.__dy, self.__dz = 0, 0, 0
         self.__wheel_pivot = TF2Link(f"{base_wheel_prefix}{wheel_id}", base_link, x=x, y=y, z=z)
         self.__wheel = TF2Link(f"{wheel_prefix}{wheel_id}", self.__wheel_pivot)
-
-    @property
-    def xyz(self):
-        return self.__x, self.__y, self.__z
 
     @property
     def delta_xyz(self):
@@ -97,13 +92,13 @@ class TF2WheelWithPivot(TF2BaseLink):
             lastY = float(ang_last_pos)
             R, P, Y = PlatformStatics.WHEEL_RPY_CONVERTER[self.__wheel_id](0, 0, lastY)
             current_distance = float(dst_last_pos)
+
             distance_delta = current_distance - self.__prev_distance
             if self.__wheel_id in [2, 3]:
                 distance_delta = -distance_delta
             self.__dx = distance_delta * math.cos(lastY)
             self.__dy = distance_delta * math.sin(lastY)
-            self.__x += self.__dx
-            self.__y += self.__dy
+            
             rospy.loginfo(f"{self.__wheel_id}: {self.__dx}, {self.__dy} {Y}")
             self.__last_msg_id = int(msg_id)
             rospy.logdebug(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
