@@ -103,7 +103,7 @@ class TF2WheelWithPivot(TF2BaseLink):
             self.__x += self.__dx
             self.__y += self.__dy
             self.__last_msg_id = int(msg_id)
-            rospy.loginfo(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
+            rospy.logdebug(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
             return self.update(0, 0, 0, R, P, Y)
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
@@ -146,7 +146,7 @@ class TF2Platform(TF2Link):
                 sum_x, sum_y, sum_z = 0, 0, 0
                 xyz_s = []
                 for c in range(PlatformStatics.WHEEL_NUM):
-                    rospy.loginfo(f"Publishing wheel_{c} [{self.__wheels[c].link_name}] tf2")
+                    rospy.logdebug(f"Publishing wheel_{c} [{self.__wheels[c].link_name}] tf2")
                     self._tf_broadcaster.sendTransform(self.__platform_tf2[c])
                     self.__platform_tf2_state[c] = False
                     x, y, z = self.__wheels[c].delta_xyz
@@ -166,7 +166,7 @@ class TF2Platform(TF2Link):
                     (xyz_s[2][0] + xyz_s[3][0])/2, # average of X coords between w2 and w3
                     (xyz_s[2][1] + xyz_s[3][1])/2  # average of Y coords between w2 and w3
                 )
-                Y = math.atan2(fm_point[0]-bm_point[0], abs(fm_point[1]-bm_point[1]))
+                Y = math.atan2(fm_point[0]-bm_point[0], fm_point[1]-bm_point[1])
 
                 rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{x}, {y}, {z}, 0, 0, {Y}]")
                 self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, Y, increment=False)) # self.update_Y(Y)
