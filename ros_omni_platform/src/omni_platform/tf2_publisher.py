@@ -131,7 +131,9 @@ class TF2Platform(TF2Link):
             self._Y.pop(0)
         rospy.loginfo(sum(self._Y))
         rospy.loginfo(len(self._Y))
-        return sum(self._Y)/float(len(self._Y))
+        result = sum(self._Y)/float(len(self._Y))
+        rospy.loginfo(result)
+        return result
 
 
     def parse_serial(self, wheel_id, raw_data):
