@@ -109,7 +109,7 @@ class TF2WheelWithPivot(TF2BaseLink):
             self.__x += self.__dx
             self.__y += self.__dy
             self.__last_msg_id = int(msg_id)
-            rospy.logdebug(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
+            rospy.loginfo(f"{self.__wheel_id}: {self.__x} {self.__y}")
             return self.update(0, 0, 0, R, P, self.__yaw)
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
@@ -173,7 +173,7 @@ class TF2Platform(TF2Link):
                 back_x = (abs_xyz_s[2][0] + abs_xyz_s[3][0])
                 back_y = (abs_xyz_s[2][1] + abs_xyz_s[3][1])
 
-                Y = math.radians(math.atan2((front_y - back_y), (front_x - front_y)))
+                Y = math.atan2((front_y - back_y), (front_x - front_y))
 
                 # Y = (abs_yaw_s[0] + abs_yaw_s[1])/2
                 # Y = sum(abs_xyz_s)/4
