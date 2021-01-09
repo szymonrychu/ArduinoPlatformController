@@ -72,6 +72,7 @@ class TF2WheelWithPivot(TF2BaseLink):
         self.__last_msg_id = 0
         self.__dx, self.__dy = 0, 0
         self.__x, self.__y = 0, 0
+        self.__yaw = 0
         self.__wheel_pivot = TF2Link(f"{base_wheel_prefix}{wheel_id}", base_link, x=x, y=y, z=z)
         self.__wheel = TF2Link(f"{wheel_prefix}{wheel_id}", self.__wheel_pivot)
 
@@ -82,6 +83,10 @@ class TF2WheelWithPivot(TF2BaseLink):
     @property
     def absolute_xyz(self):
         return self.__x, self.__y, 0
+
+    @property
+    def absolute_yaw(self):
+        return self.__yaw
 
     def update_base_wheel(self):
         return self.__wheel_pivot.update(0, 0, 0, 0, 0, 0)
@@ -95,17 +100,17 @@ class TF2WheelWithPivot(TF2BaseLink):
             msg_id, msg_level, ang_last_pos, ang_err, ang_last_vel, ang_p = data1.split(':')
             dst_last_pos, dst_err, dst_last_vel, dst_p = data2.split(':')
             lastY = float(ang_last_pos)
-            R, P, Y = PlatformStatics.WHEEL_RPY_CONVERTER[self.__wheel_id](0, 0, lastY)
+            R, P, self.__yaw = PlatformStatics.WHEEL_RPY_CONVERTER[self.__wheel_id](0, 0, lastY)
             current_distance = float(dst_last_pos)
             distance_delta = current_distance - self.__prev_distance
             self.__prev_distance = current_distance
-            self.__dx = distance_delta * math.cos(lastY)
-            self.__dy = distance_delta * math.sin(lastY)
+            self.__dx = distance_delta * math.cos(self.__yaw)
+            self.__dy = distance_delta * math.sin(self.__yaw)
             self.__x += self.__dx
             self.__y += self.__dy
             self.__last_msg_id = int(msg_id)
             rospy.logdebug(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
-            return self.update(0, 0, 0, R, P, Y)
+            return self.update(0, 0, 0, R, P, self.__yaw)
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
 
@@ -155,9 +160,9 @@ class TF2Platform(TF2Link):
                 for c in range(PlatformStatics.WHEEL_NUM):
                     rospy.logdebug(f"Publishing wheel_{c} [{self.__wheels[c].link_name}] tf2")
                     self._tf_broadcaster.sendTransform(self.__platform_tf2[c])
-                    self.__platform_tf2_state[c] = False
                     xyz_s[c] = self.__wheels[c].delta_xyz
                     abs_xyz_s[c] = self.__wheels[c].absolute_xyz
+                    self.__platform_tf2_state[c] = False
 
                 front_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0])/2
                 front_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1])/2
@@ -165,7 +170,7 @@ class TF2Platform(TF2Link):
                 centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
                 centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
 
-                Y = math.atan2(10000 * (front_x - centre_x), 10000 * (front_y - centre_y))
+                Y = math.atan2(front_x - centre_x, front_y - centre_y)
 
                 rospy.loginfo(f"dx-dy/yaw [{front_x - centre_x}, {front_y - centre_y}] {math.degrees(Y)}")
                 self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
