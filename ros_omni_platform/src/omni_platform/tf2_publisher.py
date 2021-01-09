@@ -139,11 +139,12 @@ class TF2Platform(TF2Link):
 
 
     def parse_serial(self, wheel_id, raw_data):
-        wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
         with self.__lock:
+            wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
             if wheel_t is not None:
                 self.__platform_tf2[wheel_id] = wheel_t
                 self.__platform_tf2_state[wheel_id] = True
+            
             if all(self.__platform_tf2_state):
                 xyz_s = []
                 for c in range(PlatformStatics.WHEEL_NUM):
