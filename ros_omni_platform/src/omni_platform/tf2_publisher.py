@@ -117,6 +117,7 @@ class TF2Platform(TF2Link):
         self.__wheels = []
         self.__platform_tf2 = []
         self.__platform_tf2_state = []
+        self.sum_x, self.sum_y, self.sum_z = 0, 0, 0
         for c in range(PlatformStatics.WHEEL_NUM):
             x, y, z = PlatformStatics.WHEELS_TRANSLATIONS_XYZ[c]
             wheel = TF2WheelWithPivot(c, self, x, y, z, base_wheel_prefix, wheel_prefix)
@@ -143,7 +144,6 @@ class TF2Platform(TF2Link):
                 self.__platform_tf2[wheel_id] = wheel_t
                 self.__platform_tf2_state[wheel_id] = True
             if all(self.__platform_tf2_state):
-                sum_x, sum_y, sum_z = 0, 0, 0
                 xyz_s = []
                 for c in range(PlatformStatics.WHEEL_NUM):
                     xyz_s.append((0.0, 0.0, 0.0))
@@ -151,14 +151,7 @@ class TF2Platform(TF2Link):
                     rospy.logdebug(f"Publishing wheel_{c} [{self.__wheels[c].link_name}] tf2")
                     self._tf_broadcaster.sendTransform(self.__platform_tf2[c])
                     self.__platform_tf2_state[c] = False
-                    x, y, z = self.__wheels[c].delta_xyz
-                    xyz_s[c] = (x, y, z)
-                    sum_x += x
-                    sum_y += y
-                    sum_z += z
-                x = sum_x / PlatformStatics.WHEEL_NUM
-                y = sum_y / PlatformStatics.WHEEL_NUM
-                z = sum_z / PlatformStatics.WHEEL_NUM
+                    xyz_s[c] = self.__wheels[c].delta_xyz
 
                 fm_point = (
                     (xyz_s[0][0] + xyz_s[1][0])/2, # average of X coords between w0 and w1
@@ -168,10 +161,17 @@ class TF2Platform(TF2Link):
                     (xyz_s[2][0] + xyz_s[3][0])/2, # average of X coords between w2 and w3
                     (xyz_s[2][1] + xyz_s[3][1])/2  # average of Y coords between w2 and w3
                 )
+                delta_x = (xyz_s[0][0] + xyz_s[1][0] + xyz_s[2][0] + xyz_s[3][0])/4
+                delta_y = (xyz_s[0][1] + xyz_s[1][1] + xyz_s[2][1] + xyz_s[3][1])/4
+                delta_length = math.sqrt(delta_x*delta_x + delta_y*delta_y)
+
                 Y = math.atan2(fm_point[0]-bm_point[0], fm_point[1]-bm_point[1])
 
+                self.sum_x += (delta_length * math.cos(Y))
+                self.sum_y += (delta_length * math.sin(Y))
+
                 rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{x}, {y}, {z}, 0, 0, {Y}]")
-                self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, Y, increment=False)) # self.update_Y(Y)
+                self._tf_broadcaster.sendTransform(self.update(self.sum_x, self.sum_y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
