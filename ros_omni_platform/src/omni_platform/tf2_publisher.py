@@ -154,20 +154,15 @@ class TF2Platform(TF2Link):
                     self.__platform_tf2_state[c] = False
                     xyz_s[c] = self.__wheels[c].delta_xyz
 
-                fm_point = (
-                    (xyz_s[0][0] + xyz_s[1][0])/2, # average of X coords between w0 and w1
-                    (xyz_s[0][1] + xyz_s[1][1])/2  # average of Y coords between w0 and w1
-                )
-                bm_point = (
-                    (xyz_s[2][0] + xyz_s[3][0])/2, # average of X coords between w2 and w3
-                    (xyz_s[2][1] + xyz_s[3][1])/2  # average of Y coords between w2 and w3
-                )
+                front_x = (xyz_s[0][0] + xyz_s[1][0])/2
+                front_y = (xyz_s[0][1] + xyz_s[1][1])/2
                 
                 centre_x = (xyz_s[0][0] + xyz_s[1][0] + xyz_s[2][0] + xyz_s[3][0])/4
                 centre_y = (xyz_s[0][1] + xyz_s[1][1] + xyz_s[2][1] + xyz_s[3][1])/4
-                Y = math.atan2(bm_point[0] - fm_point[0], bm_point[1] - fm_point[1])
 
-                rospy.loginfo(f"fm/bm/centre/yaw [{fm_point[0]}, {fm_point[1]}][{bm_point[0]}, {bm_point[1]}][{centre_x}, {centre_y}] {Y}")
+                Y = math.atan2(front_x - centre_x, front_y - centre_y)
+
+                rospy.loginfo(f"front/centre/yaw [{front_x}, {front_y}][{centre_x}, {centre_y}] {Y}")
                 self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
 
 
