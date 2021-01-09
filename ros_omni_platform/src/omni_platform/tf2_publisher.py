@@ -123,7 +123,7 @@ class TF2WheelWithPivot(TF2BaseLink):
 class TF2Platform(TF2Link, threading.Thread):
 
     def __init__(self, base_link_name='/base_link', map_name='/map', base_wheel_prefix='/base_wheel_', wheel_prefix='/wheel_'):
-        Thread.__init__(self, target=self.handle_serial)
+        threading.Thread.__init__(self, target=self.handle_serial)
         TF2Link.__init__(self, base_link_name, TF2BaseLink(map_name))
         SerialWrapper.__init__(self, '/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00', 115200)
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
@@ -197,3 +197,15 @@ class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
 
     def parse_serial(self, wheel_id, raw_data):
         TF2Platform.parse_serial(self, wheel_id, raw_data)
+
+    def start(self):
+        ThreadedSerialOutputHandler.start(self)
+        TF2Platform.start(self)
+
+    @property
+    def running(self):
+        return ThreadedSerialOutputHandler.running and TF2Platform.running
+
+    def join(self, *args, **kwargs):
+        ThreadedSerialOutputHandler.join(self, *args, **kwargs)
+        TF2Platform.join(self, *args, **kwargs)
