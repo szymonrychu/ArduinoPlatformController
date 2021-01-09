@@ -70,13 +70,18 @@ class TF2WheelWithPivot(TF2BaseLink):
         self.__wheel_id = wheel_id
         self.__prev_distance = 0
         self.__last_msg_id = 0
-        self.__dx, self.__dy, self.__dz = 0, 0, 0
+        self.__dx, self.__dy = 0, 0
+        self.__x, self.__y = 0, 0
         self.__wheel_pivot = TF2Link(f"{base_wheel_prefix}{wheel_id}", base_link, x=x, y=y, z=z)
         self.__wheel = TF2Link(f"{wheel_prefix}{wheel_id}", self.__wheel_pivot)
 
     @property
     def delta_xyz(self):
-        return self.__dx, self.__dy, self.__dz
+        return self.__dx, self.__dy, 0
+
+    @property
+    def absolute_xyz(self):
+        return self.__x, self.__y, 0
 
     def update_base_wheel(self):
         return self.__wheel_pivot.update(0, 0, 0, 0, 0, 0)
@@ -96,6 +101,8 @@ class TF2WheelWithPivot(TF2BaseLink):
             self.__prev_distance = current_distance
             self.__dx = distance_delta * math.cos(lastY)
             self.__dy = distance_delta * math.sin(lastY)
+            self.__x += self.__dx
+            self.__y += self.__dy
             self.__last_msg_id = int(msg_id)
             rospy.logdebug(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
             return self.update(0, 0, 0, R, P, Y)
@@ -141,19 +148,22 @@ class TF2Platform(TF2Link):
             
             if all(self.__platform_tf2_state):
                 xyz_s = []
+                abs_xyz_s = []
                 for c in range(PlatformStatics.WHEEL_NUM):
                     xyz_s.append((0.0, 0.0, 0.0))
+                    abs_xyz_s.append((0.0, 0.0, 0.0))
                 for c in range(PlatformStatics.WHEEL_NUM):
                     rospy.logdebug(f"Publishing wheel_{c} [{self.__wheels[c].link_name}] tf2")
                     self._tf_broadcaster.sendTransform(self.__platform_tf2[c])
                     self.__platform_tf2_state[c] = False
                     xyz_s[c] = self.__wheels[c].delta_xyz
+                    abs_xyz_s[c] = self.__wheels[c].absolute_xyz
 
-                front_x = (xyz_s[0][0] + xyz_s[1][0])/2
-                front_y = (xyz_s[0][1] + xyz_s[1][1])/2
+                front_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0])/2
+                front_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1])/2
                 
-                centre_x = (xyz_s[0][0] + xyz_s[1][0] + xyz_s[2][0] + xyz_s[3][0])/4
-                centre_y = (xyz_s[0][1] + xyz_s[1][1] + xyz_s[2][1] + xyz_s[3][1])/4
+                centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
+                centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
 
                 Y = - math.atan2(10000 * (front_y - centre_y), 10000 * (front_x - centre_x))
 
