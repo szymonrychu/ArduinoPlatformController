@@ -170,7 +170,7 @@ class TF2Platform(TF2Link):
                 self.sum_x += (delta_length * math.cos(Y))
                 self.sum_y += (delta_length * math.sin(Y))
 
-                rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{x}, {y}, {z}, 0, 0, {Y}]")
+                rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{self.sum_x}, {self.sum_y}, 0, 0, 0, {Y}]")
                 self._tf_broadcaster.sendTransform(self.update(self.sum_x, self.sum_y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
 
 
