@@ -28,8 +28,8 @@ class OmniPlatform():
         (-0.2, 1000, math.radians( -45), 1000),
         (0, 500, 0, 1000),
         (0, 500, 0, 2000),
-        (-0.1, 500, math.radians( 45), 1000),
-        (0.1, 500, math.radians( -45), 1000),
+        (-0.2, 1000, math.radians( 45), 1000),
+        (0.2, 1000, math.radians( -45), 1000),
     ]
 
     def __init__(self):
