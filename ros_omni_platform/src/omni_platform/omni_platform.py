@@ -24,8 +24,8 @@ class OmniPlatform():
         # (0.1, 500, math.radians(-45), 2000),
         (0.3, 1500, 0, 1000),
         (-0.3, 1500, 0, 1000),
-        (0.1, 500, math.radians( 45), 1000),
-        (-0.1, 500, math.radians( -45), 1000),
+        (0.2, 1000, math.radians( 45), 1000),
+        (-0.2, 1000, math.radians( -45), 1000),
         (0, 500, 0, 1000),
         (0, 500, 0, 2000),
         (-0.1, 500, math.radians( 45), 1000),
@@ -40,7 +40,6 @@ class OmniPlatform():
         self._controller.start()
         while self._controller.running:
             self._controller.turn_and_move(*OmniPlatform.MOVES[self._move_num])
-            time.sleep(5)
             self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
         self.stop()
 

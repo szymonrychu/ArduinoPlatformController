@@ -128,7 +128,7 @@ class TF2Platform(TF2Link):
     def update_Y(self, Y):
         self._Y.append(Y)
         if len(self._Y) > 10:
-            self._Y.pop()
+            self._Y.pop(0)
         return sum(self._Y)/len(self._Y)
 
 
