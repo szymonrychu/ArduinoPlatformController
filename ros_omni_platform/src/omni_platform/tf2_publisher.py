@@ -173,7 +173,7 @@ class TF2Platform(TF2Link):
                 back_x = (abs_xyz_s[2][0] + abs_xyz_s[3][0])
                 back_y = (abs_xyz_s[2][1] + abs_xyz_s[3][1])
 
-                Y = math.atan2((front_y - back_y), (front_x - back_x))
+                Y = math.pi/2 + math.atan2((front_y - back_y), (front_x - back_x))
 
                 # Y = (abs_yaw_s[0] + abs_yaw_s[1])/2
                 # Y = sum(abs_xyz_s)/4
