@@ -162,7 +162,7 @@ class TF2Platform(TF2Link):
 
                 Y = - math.atan2(10000 * (centre_x - front_x), 10000 * (centre_y - front_y))
 
-                rospy.loginfo(f"front/centre/yaw [{front_x}, {front_y}][{centre_x}, {centre_y}] {Y}")
+                rospy.loginfo(f"front/centre/yaw [{front_x}, {front_y}][{centre_x}, {centre_y}] {math.degrees(Y)}")
                 self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
 
 
