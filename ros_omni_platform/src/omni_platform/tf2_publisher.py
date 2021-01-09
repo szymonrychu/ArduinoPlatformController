@@ -94,7 +94,6 @@ class TF2WheelWithPivot(TF2BaseLink):
             current_distance = float(dst_last_pos)
             distance_delta = current_distance - self.__prev_distance
             self.__prev_distance = current_distance
-            
             if self.__wheel_id in [2, 3]:
                 distance_delta = -distance_delta
             self.__dx = distance_delta * math.cos(lastY)
