@@ -144,7 +144,7 @@ class TF2Platform(TF2Link, threading.Thread):
     def start(self):
         self.__running = True
         rospy.loginfo(f"TF2ROSIMU starting!")
-        Thread.start(self)
+        threading.Thread.start(self)
     
     @property
     def running(self):
@@ -152,7 +152,7 @@ class TF2Platform(TF2Link, threading.Thread):
 
     def join(self, *args, **kwargs):
         self.__running = False
-        Thread.join(self, *args, **kwargs)
+        threading.Thread.join(self, *args, **kwargs)
 
     def handle_serial(self):
         while self.__running:
