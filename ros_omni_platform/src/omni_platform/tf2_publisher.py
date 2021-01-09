@@ -167,8 +167,8 @@ class TF2Platform(TF2Link):
                     abs_xyz_s[c] = self.__wheels[c].absolute_xyz
                     self.__platform_tf2_state[c] = False
                 
-                # centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
-                # centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
+                centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
+                centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
                 # delta_c_x = centre_x - self.last_c_x
                 # delta_c_y = centre_y - self.last_c_y
                 # self.last_c_x = centre_x
@@ -197,7 +197,7 @@ class TF2Platform(TF2Link):
                 # # Y = sum(abs_xyz_s)/4
 
                 # rospy.loginfo(f"centre/yaw [{front_x - front_y}, {front_y - back_y}] {Y} {math.degrees(Y)}")
-                # self._tf_broadcaster.sendTransform(self.update(x, y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
+                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, 0, increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
