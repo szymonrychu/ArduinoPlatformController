@@ -127,7 +127,7 @@ class TF2Platform(TF2Link):
 
     def update_Y(self, Y):
         self._Y.append(Y)
-        if len(self._Y) > 10:
+        if len(self._Y) > 3:
             self._Y.pop(0)
         rospy.loginfo(sum(self._Y))
         rospy.loginfo(len(self._Y))
