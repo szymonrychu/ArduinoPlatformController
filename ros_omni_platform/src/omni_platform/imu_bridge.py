@@ -2,7 +2,7 @@
 import serial
 import signal
 import time
-from threading import Thread
+from threading import Thread, Lock
 
 
 import rospy
@@ -20,6 +20,7 @@ class TF2ROSIMU(SerialWrapper, Thread):
         SerialWrapper.__init__(self, '/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00', 115200)
         self.__running = True
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
+        self.__lock = Lock()
 
     def start(self):
         self.__running = True
@@ -40,22 +41,15 @@ class TF2ROSIMU(SerialWrapper, Thread):
             if raw_data is not None:
                 self.__parse(raw_data)
 
+    @property
+    def q(self):
+        with self.__lock:
+            return (self.qx, self.qy, self.qz, self.qw)
+
     def __parse(self, raw_data):
         try:
-            qw, qx, qy, qz = ( float(d) for d in raw_data.split(',') )
-            t = geometry_msgs.msg.TransformStamped()
-            t.header.stamp = rospy.Time.now()
-            t.header.frame_id = '/base_link'
-            t.child_frame_id = '/imu'
-            t.transform.translation.x = 0
-            t.transform.translation.y = 0
-            t.transform.translation.z = 0
-            t.transform.rotation.w = qw
-            t.transform.rotation.x = qx
-            t.transform.rotation.y = qy
-            t.transform.rotation.z = qz
-            self._tf_broadcaster.sendTransform(t)
-            rospy.loginfo(f"Publishing IMU tf2 [{qx}, {qy}, {qz}, {qw}]")
+            with self.__lock:
+                self.qw, self.qx, self.qy, self.qz = ( float(d) for d in raw_data.split(',') )
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
 

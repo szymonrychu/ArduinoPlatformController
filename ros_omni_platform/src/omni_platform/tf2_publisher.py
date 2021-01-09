@@ -9,7 +9,8 @@ import math
 import threading
 
 from .platform_statics import PlatformStatics
-from .serial_helper import ThreadedSerialOutputHandler, SerialWrapper
+from .serial_helper import ThreadedSerialOutputHandler
+from .imu_bridge import TF2ROSIMU
 
 class TF2BaseLink():
 
@@ -58,11 +59,6 @@ class TF2Link(TF2BaseLink):
                 self.__prevR = self.__prevR + R
                 self.__prevP = self.__prevP + P
                 self.__prevY = self.__prevY + Y
-            t.transform.rotation.x = q[0]
-            t.transform.rotation.y = q[1]
-            t.transform.rotation.z = q[2]
-            t.transform.rotation.w = q[3]
-        else:
             t.transform.rotation.x = q[0]
             t.transform.rotation.y = q[1]
             t.transform.rotation.z = q[2]
@@ -123,9 +119,9 @@ class TF2WheelWithPivot(TF2BaseLink):
 class TF2Platform(TF2Link, threading.Thread):
 
     def __init__(self, base_link_name='/base_link', map_name='/map', base_wheel_prefix='/base_wheel_', wheel_prefix='/wheel_'):
-        threading.Thread.__init__(self, target=self.handle_serial)
         TF2Link.__init__(self, base_link_name, TF2BaseLink(map_name))
         SerialWrapper.__init__(self, '/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00', 115200)
+        self.__imu_thread = TF2ROSIMU()
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.__wheels = []
         self.__platform_tf2 = []
@@ -144,28 +140,17 @@ class TF2Platform(TF2Link, threading.Thread):
     def start(self):
         self.__running = True
         rospy.loginfo(f"TF2ROSIMU starting!")
-        threading.Thread.start(self)
+        Thread.start(self)
+        self.__imu_thread.start()
     
     @property
     def running(self):
-        return self.__running
+        return self.__running and self.__imu_thread.running
 
     def join(self, *args, **kwargs):
         self.__running = False
-        threading.Thread.join(self, *args, **kwargs)
-
-    def handle_serial(self):
-        while self.__running:
-            raw_data = self._read_data()
-            if raw_data is not None:
-                self.__parse(raw_data)
-
-    def __parse(self, raw_data):
-        try:
-            with self.__transform_lock:
-                self.qw, self.qx, self.qy, self.qz = ( float(d) for d in raw_data.split(',') )
-        except ValueError:
-            rospy.logwarn(f"Error Parsing: {raw_data}")
+        self.__imu_thread.join(*args, **kwargs)
+        Thread.join(self, *args, **kwargs)
 
     def parse_serial(self, wheel_id, raw_data):
         with self.__transform_lock:
@@ -186,7 +171,7 @@ class TF2Platform(TF2Link, threading.Thread):
                 
                 centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
                 centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
-                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, 0, q=(self.qx, self.qy, self.qz, self.qw), increment=False)) # self.update_Y(Y)
+                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, 0, q=self.__imu_thread.q increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
@@ -197,15 +182,3 @@ class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
 
     def parse_serial(self, wheel_id, raw_data):
         TF2Platform.parse_serial(self, wheel_id, raw_data)
-
-    def start(self):
-        ThreadedSerialOutputHandler.start(self)
-        TF2Platform.start(self)
-
-    @property
-    def running(self):
-        return ThreadedSerialOutputHandler.running and TF2Platform.running
-
-    def join(self, *args, **kwargs):
-        ThreadedSerialOutputHandler.join(self, *args, **kwargs)
-        TF2Platform.join(self, *args, **kwargs)
