@@ -162,18 +162,13 @@ class TF2Platform(TF2Link):
                     (xyz_s[2][0] + xyz_s[3][0])/2, # average of X coords between w2 and w3
                     (xyz_s[2][1] + xyz_s[3][1])/2  # average of Y coords between w2 and w3
                 )
+                
                 centre_x = (xyz_s[0][0] + xyz_s[1][0] + xyz_s[2][0] + xyz_s[3][0])/4
                 centre_y = (xyz_s[0][1] + xyz_s[1][1] + xyz_s[2][1] + xyz_s[3][1])/4
-                delta_x = centre_x - self.last_x
-                delta_y = centre_y - self.last_y
-                self.last_x = centre_x
-                self.last_y = centre_y
-                delta_length = math.sqrt(delta_x*delta_x + delta_y*delta_y)
-
                 Y = math.atan2(fm_point[0]-bm_point[0], fm_point[1]-bm_point[1])
 
-                self.sum_x += (delta_length * math.cos(Y))
-                self.sum_y += (delta_length * math.sin(Y))
+                self.sum_x += centre_x
+                self.sum_y += centre_y
 
                 rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{self.sum_x}, {self.sum_y}, 0, 0, 0, {Y}]")
                 self._tf_broadcaster.sendTransform(self.update(self.sum_x, self.sum_y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
