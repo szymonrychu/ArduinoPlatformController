@@ -167,7 +167,8 @@ class TF2Platform(TF2Link):
                 centre_y = (xyz_s[0][1] + xyz_s[1][1] + xyz_s[2][1] + xyz_s[3][1])/4
                 Y = math.atan2(fm_point[0]-bm_point[0], fm_point[1]-bm_point[1])
 
-                rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{self.sum_x}, {self.sum_y}, 0, 0, 0, {Y}]")
+                rospy.loginfo(f"wheels [{xyz_s[0][0]}, {xyz_s[0][1]}][{xyz_s[1][0]}, {xyz_s[1][1]}][{xyz_s[2][0]}, {xyz_s[2][1]}][{xyz_s[3][0]}, {xyz_s[3][1]}]")
+                rospy.loginfo(f"fm/bm/centre/yaw [{fm_point[0]}, {fm_point[1]}][{bm_point[0]}, {bm_point[1]}][{centre_x}, {centre_y}] {Y}")
                 self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, Y, increment=False)) # self.update_Y(Y)
 
 
