@@ -6,10 +6,10 @@ import geometry_msgs.msg
 import tf_conversions
 
 import math
+import threading
 
 from .platform_statics import PlatformStatics
-from .serial_helper import ThreadedSerialOutputHandler
-import threading
+from .serial_helper import ThreadedSerialOutputHandler, SerialWrapper
 
 class TF2BaseLink():
 
@@ -39,7 +39,7 @@ class TF2Link(TF2BaseLink):
     def root(self):
         return self.__root_part
 
-    def update(self, x, y, z, R, P, Y, increment=True):
+    def update(self, x, y, z, R, P, Y, q=None, increment=True):
         t = geometry_msgs.msg.TransformStamped()
         t.header.stamp = rospy.Time.now()
         t.header.frame_id = self.__root_part.link_name
@@ -51,16 +51,22 @@ class TF2Link(TF2BaseLink):
             self.__prevX = t.transform.translation.x
             self.__prevY = t.transform.translation.y
             self.__prevZ = t.transform.translation.z
-        q = tf_conversions.transformations.quaternion_from_euler(\
-            self.__prevR + R, self.__prevP + P, self.__prevY + Y)
-        if increment:
-            self.__prevR = self.__prevR + R
-            self.__prevP = self.__prevP + P
-            self.__prevY = self.__prevY + Y
-        t.transform.rotation.x = q[0]
-        t.transform.rotation.y = q[1]
-        t.transform.rotation.z = q[2]
-        t.transform.rotation.w = q[3]
+        if not q:
+            q = tf_conversions.transformations.quaternion_from_euler(\
+                self.__prevR + R, self.__prevP + P, self.__prevY + Y)
+            if increment:
+                self.__prevR = self.__prevR + R
+                self.__prevP = self.__prevP + P
+                self.__prevY = self.__prevY + Y
+            t.transform.rotation.x = q[0]
+            t.transform.rotation.y = q[1]
+            t.transform.rotation.z = q[2]
+            t.transform.rotation.w = q[3]
+        else:
+            t.transform.rotation.x = q[0]
+            t.transform.rotation.y = q[1]
+            t.transform.rotation.z = q[2]
+            t.transform.rotation.w = q[3]
         return t
         
 class TF2WheelWithPivot(TF2BaseLink):
@@ -114,19 +120,18 @@ class TF2WheelWithPivot(TF2BaseLink):
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
 
-class TF2Platform(TF2Link):
+class TF2Platform(TF2Link, threading.Thread):
 
     def __init__(self, base_link_name='/base_link', map_name='/map', base_wheel_prefix='/base_wheel_', wheel_prefix='/wheel_'):
+        Thread.__init__(self, target=self.handle_serial)
         TF2Link.__init__(self, base_link_name, TF2BaseLink(map_name))
-        self.__lock = threading.Lock()
+        SerialWrapper.__init__(self, '/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00', 115200)
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.__wheels = []
         self.__platform_tf2 = []
         self.__platform_tf2_state = []
-
-        self.last_c_x, self.last_c_y = 0, 0
-        self.last_f_x, self.last_f_y = 0, 0
-        self.last_b_x, self.last_b_y = 0, 0
+        self.__transform_lock = threading.Lock()
+        self.qw, self.qx, self.qy, self.qz = 0, 0, 0, 0
 
         for c in range(PlatformStatics.WHEEL_NUM):
             x, y, z = PlatformStatics.WHEELS_TRANSLATIONS_XYZ[c]
@@ -134,70 +139,54 @@ class TF2Platform(TF2Link):
             self.__wheels.append(wheel)
             self.__platform_tf2.append(None)
             self.__platform_tf2_state.append(False)
-        self._Y = []
+        self.__running = False
 
-    def update_Y(self, Y):
-        self._Y.append(Y)
-        if len(self._Y) > 10:
-            self._Y.pop(0)
-        rospy.loginfo(sum(self._Y))
-        rospy.loginfo(len(self._Y))
-        result = sum(self._Y)/float(len(self._Y))
-        rospy.loginfo(result)
-        return result
+    def start(self):
+        self.__running = True
+        rospy.loginfo(f"TF2ROSIMU starting!")
+        Thread.start(self)
+    
+    @property
+    def running(self):
+        return self.__running
 
+    def join(self, *args, **kwargs):
+        self.__running = False
+        Thread.join(self, *args, **kwargs)
+
+    def handle_serial(self):
+        while self.__running:
+            raw_data = self._read_data()
+            if raw_data is not None:
+                self.__parse(raw_data)
+
+    def __parse(self, raw_data):
+        try:
+            with self.__transform_lock:
+                self.qw, self.qx, self.qy, self.qz = ( float(d) for d in raw_data.split(',') )
+        except ValueError:
+            rospy.logwarn(f"Error Parsing: {raw_data}")
 
     def parse_serial(self, wheel_id, raw_data):
-        with self.__lock:
+        with self.__transform_lock:
             wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
             if wheel_t is not None:
                 self.__platform_tf2[wheel_id] = wheel_t
                 self.__platform_tf2_state[wheel_id] = True
             
             if all(self.__platform_tf2_state):
-                abs_yaw_s = []
                 abs_xyz_s = []
                 for c in range(PlatformStatics.WHEEL_NUM):
-                    abs_yaw_s.append(0.0)
                     abs_xyz_s.append((0.0, 0.0, 0.0))
                 for c in range(PlatformStatics.WHEEL_NUM):
                     rospy.logdebug(f"Publishing wheel_{c} [{self.__wheels[c].link_name}] tf2")
                     self._tf_broadcaster.sendTransform(self.__platform_tf2[c])
-                    abs_yaw_s[c] = self.__wheels[c].absolute_yaw
                     abs_xyz_s[c] = self.__wheels[c].absolute_xyz
                     self.__platform_tf2_state[c] = False
                 
                 centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
                 centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
-                # delta_c_x = centre_x - self.last_c_x
-                # delta_c_y = centre_y - self.last_c_y
-                # self.last_c_x = centre_x
-                # self.last_c_y = centre_y
-
-                # front_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0])
-                # front_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1])
-                # delta_f_x = front_x - self.last_f_x
-                # delta_f_y = front_y - self.last_f_y
-                # self.last_f_x = front_x
-                # self.last_f_y = front_y
-
-                # back_x = (abs_xyz_s[2][0] + abs_xyz_s[3][0])
-                # back_y = (abs_xyz_s[2][1] + abs_xyz_s[3][1])
-                # delta_b_x = back_x - self.last_b_x
-                # delta_b_y = back_y - self.last_b_y
-                # self.last_b_x = back_x
-                # self.last_b_y = back_y
-
-                # distance = math.sqrt(delta_c_x*delta_c_x + delta_c_y*delta_c_y)
-                # Y = -math.pi/2 + math.atan2((delta_f_y - delta_b_y), -(delta_f_x - delta_b_x))
-                # x = distance * math.sin(Y)
-                # y = distance * math.cos(Y)
-
-                # # Y = (abs_yaw_s[0] + abs_yaw_s[1])/2
-                # # Y = sum(abs_xyz_s)/4
-
-                # rospy.loginfo(f"centre/yaw [{front_x - front_y}, {front_y - back_y}] {Y} {math.degrees(Y)}")
-                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, 0, increment=False)) # self.update_Y(Y)
+                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, 0, q=(self.qx, self.qy, self.qz, self.qw) increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
