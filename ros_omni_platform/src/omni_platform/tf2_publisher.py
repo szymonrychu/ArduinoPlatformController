@@ -155,7 +155,7 @@ class TF2Platform(TF2Link):
                 abs_yaw_s = []
                 abs_xyz_s = []
                 for c in range(PlatformStatics.WHEEL_NUM):
-                    xyz_s.append((0.0, 0.0, 0.0))
+                    abs_yaw_s.append(0.0)
                     abs_xyz_s.append((0.0, 0.0, 0.0))
                 for c in range(PlatformStatics.WHEEL_NUM):
                     rospy.logdebug(f"Publishing wheel_{c} [{self.__wheels[c].link_name}] tf2")
@@ -167,7 +167,12 @@ class TF2Platform(TF2Link):
                 centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
                 centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
 
-                Y = (abs_yaw_s[0] + abs_yaw_s[1])/2
+                front_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0])/2
+                front_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1])/2
+
+                Y = atan2(front_y - centre_y, front_x - centre_x)
+
+                # Y = (abs_yaw_s[0] + abs_yaw_s[1])/2
                 # Y = sum(abs_xyz_s)/4
 
                 rospy.loginfo(f"centre/yaw [{centre_x}, {centre_y}] {math.degrees(Y)}")
