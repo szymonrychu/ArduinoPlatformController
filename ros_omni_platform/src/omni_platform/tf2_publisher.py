@@ -107,7 +107,7 @@ class TF2WheelWithPivot(TF2BaseLink):
             rospy.loginfo(f"{self.__wheel_id}: {self.__x}, {self.__y} {Y}")
             self.__last_msg_id = int(msg_id)
             rospy.logdebug(f"Parsed wheel_{self.__wheel_id}: {raw_data}")
-            return self.update(0, 0, 0, R, P, Y)
+            return self.update(self.__x, self.__y, 0, R, P, Y)
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
 
