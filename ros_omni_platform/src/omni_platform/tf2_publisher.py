@@ -169,7 +169,7 @@ class TF2Platform(TF2Link):
                 Y = math.atan2(fm_point[0]-bm_point[0], abs(fm_point[1]-bm_point[1]))
 
                 rospy.loginfo(f"Publishing platform [{self.link_name}] tf2 [{x}, {y}, {z}, 0, 0, {Y}]")
-                self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, self.update_Y(Y), increment=False))
+                self._tf_broadcaster.sendTransform(self.update(x, y, z, 0, 0, Y, increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
