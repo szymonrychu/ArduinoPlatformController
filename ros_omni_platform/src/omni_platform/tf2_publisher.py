@@ -128,10 +128,10 @@ class TF2Platform(TF2Link):
     def update_Y(self, Y):
         self._Y.append(Y)
         if len(self._Y) > 10:
-            self._Y.pop()
+            self._Y.pop(0)
         rospy.loginfo(sum(self._Y))
         rospy.loginfo(len(self._Y))
-        return sum(self._Y)/len(self._Y)
+        return sum(self._Y)/float(len(self._Y))
 
 
     def parse_serial(self, wheel_id, raw_data):
