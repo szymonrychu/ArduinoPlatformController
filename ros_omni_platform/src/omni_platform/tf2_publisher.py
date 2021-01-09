@@ -170,7 +170,7 @@ class TF2Platform(TF2Link):
                 front_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0])/2
                 front_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1])/2
 
-                Y = math.atan2(front_y - centre_y, front_x - centre_x)
+                Y = math.atan2(front_y - centre_y, centre_x - front_x)
 
                 # Y = (abs_yaw_s[0] + abs_yaw_s[1])/2
                 # Y = sum(abs_xyz_s)/4
