@@ -180,7 +180,7 @@ class TF2Platform(TF2Link):
                 x = delta_distance * math.cos(math.pi/2 + Y)
                 y = delta_distance * math.sin(math.pi/2 + Y)
 
-
+                rospy.loginfo(f"robot: [{x}, {y}, {z}][{R}, {P}, {Y}]")
                 self._tf_broadcaster.sendTransform(self.update(x, y, 0, R, P, math.pi/2 + Y, increment=False)) # self.update_Y(Y)
 
 
