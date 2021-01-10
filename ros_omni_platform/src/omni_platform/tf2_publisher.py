@@ -120,7 +120,7 @@ class TF2WheelWithPivot(TF2BaseLink):
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
 
-class TF2Platform(TF2Link, threading.Thread):
+class TF2Platform(TF2Link):
 
     def __init__(self, base_link_name='/base_link', map_name='/map', base_wheel_prefix='/base_wheel_', wheel_prefix='/wheel_'):
         TF2Link.__init__(self, base_link_name, TF2BaseLink(map_name))
@@ -147,7 +147,7 @@ class TF2Platform(TF2Link, threading.Thread):
         return self.__imu_thread.running
 
     def join(self, *args, **kwargs):
-        Thread.join(self, *args, **kwargs)
+        self.__imu_thread.join(self, *args, **kwargs)
 
     def parse_serial(self, wheel_id, raw_data):
         with self.__transform_lock:
