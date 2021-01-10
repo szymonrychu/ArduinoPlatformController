@@ -111,7 +111,6 @@ class TF2WheelWithPivot(TF2BaseLink):
             self.__x += self.__dx
             self.__y += self.__dy
             self.__last_msg_id = int(msg_id)
-            rospy.loginfo(f"{self.__wheel_id}: {self.__x} {self.__y}")
             return self.update(0, 0, 0, R, P, self.__yaw)
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
@@ -134,21 +133,15 @@ class TF2Platform(TF2Link, threading.Thread):
             self.__wheels.append(wheel)
             self.__platform_tf2.append(None)
             self.__platform_tf2_state.append(False)
-        self.__running = False
 
     def start(self):
-        self.__running = True
-        rospy.loginfo(f"TF2ROSIMU starting!")
-        Thread.start(self)
         self.__imu_thread.start()
     
     @property
     def running(self):
-        return self.__running and self.__imu_thread.running
+        return self.__imu_thread.running
 
     def join(self, *args, **kwargs):
-        self.__running = False
-        self.__imu_thread.join(*args, **kwargs)
         Thread.join(self, *args, **kwargs)
 
     def parse_serial(self, wheel_id, raw_data):
@@ -181,3 +174,15 @@ class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
 
     def parse_serial(self, wheel_id, raw_data):
         TF2Platform.parse_serial(self, wheel_id, raw_data)
+
+    def start(self):
+        TF2Platform.start(self)
+        ThreadedSerialOutputHandler.start(self)
+    
+    @property
+    def running(self):
+        return ThreadedSerialOutputHandler.running and TF2Platform.running
+
+    def join(self, *args, **kwargs):
+        TF2Platform.join(self, *args, **kwargs)
+        ThreadedSerialOutputHandler.join(self, *args, **kwargs)
