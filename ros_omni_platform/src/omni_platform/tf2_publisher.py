@@ -63,6 +63,11 @@ class TF2Link(TF2BaseLink):
             t.transform.rotation.y = q[1]
             t.transform.rotation.z = q[2]
             t.transform.rotation.w = q[3]
+        else:
+            t.transform.rotation.x = q[0]
+            t.transform.rotation.y = q[1]
+            t.transform.rotation.z = q[2]
+            t.transform.rotation.w = q[3]
         return t
         
 class TF2WheelWithPivot(TF2BaseLink):
@@ -181,7 +186,7 @@ class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
     
     @property
     def running(self):
-        return ThreadedSerialOutputHandler.running and TF2Platform.running
+        return ThreadedSerialOutputHandler.running(self) and TF2Platform.running(self)
 
     def join(self, *args, **kwargs):
         TF2Platform.join(self, *args, **kwargs)
