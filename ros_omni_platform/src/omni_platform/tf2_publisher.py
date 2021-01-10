@@ -177,11 +177,11 @@ class TF2Platform(TF2Link):
 
                 delta_distance = math.sqrt(delta_x*delta_x + delta_y*delta_y)
                 R, P, Y = tf.transformations.euler_from_quaternion(self.__imu_thread.q)
-                x = delta_distance * math.cos(math.PI/2 + Y)
-                y = delta_distance * math.sin(math.PI/2 + Y)
+                x = delta_distance * math.cos(math.pi/2 + Y)
+                y = delta_distance * math.sin(math.pi/2 + Y)
 
 
-                self._tf_broadcaster.sendTransform(self.update(x, y, 0, R, P, math.PI/2 + Y, increment=False)) # self.update_Y(Y)
+                self._tf_broadcaster.sendTransform(self.update(x, y, 0, R, P, math.pi/2 + Y, increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
