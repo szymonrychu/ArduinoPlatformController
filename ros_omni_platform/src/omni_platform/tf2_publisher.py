@@ -186,7 +186,8 @@ class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
     
     @property
     def running(self):
-        return ThreadedSerialOutputHandler.running(self) and TF2Platform.running(self)
+        
+        return super(ThreadedSerialOutputHandler).running and super(TF2Platform).running
 
     def join(self, *args, **kwargs):
         TF2Platform.join(self, *args, **kwargs)
