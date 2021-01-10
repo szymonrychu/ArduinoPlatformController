@@ -19,7 +19,7 @@ class TF2ROSIMU(SerialWrapper, Thread):
         Thread.__init__(self, target=self.handle_serial)
         SerialWrapper.__init__(self, '/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00', 115200)
         self.__running = False
-        self.__qw, self.__qx, self.__qy, self.__qz, self.qw = 0, 0, 0, 0
+        self.__qx, self.__qy, self.__qz, self.qw = 0, 0, 0, 0
         self._voltage = 0
         self.__voltage_history = []
         self.__lock = Lock()
