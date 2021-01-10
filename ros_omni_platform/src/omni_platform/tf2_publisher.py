@@ -120,7 +120,6 @@ class TF2Platform(TF2Link, threading.Thread):
 
     def __init__(self, base_link_name='/base_link', map_name='/map', base_wheel_prefix='/base_wheel_', wheel_prefix='/wheel_'):
         TF2Link.__init__(self, base_link_name, TF2BaseLink(map_name))
-        SerialWrapper.__init__(self, '/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00', 115200)
         self.__imu_thread = TF2ROSIMU()
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.__wheels = []
