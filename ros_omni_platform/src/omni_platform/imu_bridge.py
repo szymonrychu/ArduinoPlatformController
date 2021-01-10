@@ -19,7 +19,7 @@ class TF2ROSIMU(SerialWrapper, Thread):
         Thread.__init__(self, target=self.handle_serial)
         SerialWrapper.__init__(self, '/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00', 115200)
         self.__running = True
-        self._tf_broadcaster = tf2_ros.TransformBroadcaster()
+        self.qx, self.qy, self.qz, self.qw = 0, 0, 0, 0
         self.__lock = Lock()
 
     def start(self):
@@ -52,10 +52,3 @@ class TF2ROSIMU(SerialWrapper, Thread):
                 self.qw, self.qx, self.qy, self.qz = ( float(d) for d in raw_data.split(',') )
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")
-
-
-def main():
-    rospy.init_node("imu_bridge")
-
-    imuObj = TF2ROSIMU()
-    imuObj.handle_serial()
