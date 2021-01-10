@@ -19,7 +19,9 @@ class TF2ROSIMU(SerialWrapper, Thread):
         Thread.__init__(self, target=self.handle_serial)
         SerialWrapper.__init__(self, '/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00', 115200)
         self.__running = False
-        self.qx, self.qy, self.qz, self.qw = 0, 0, 0, 0
+        self.__qw, self.__qx, self.__qy, self.__qz, self.qw = 0, 0, 0, 0
+        self._voltage = 0
+        self.__voltage_history = []
         self.__lock = Lock()
 
     def start(self):
@@ -44,11 +46,19 @@ class TF2ROSIMU(SerialWrapper, Thread):
     @property
     def q(self):
         with self.__lock:
-            return (self.qx, self.qy, self.qz, self.qw)
+            return (self.__qx, self.__qy, self.__qz, self.__qw)
+    
+    def voltage(self):
+        return self._voltage
 
     def __parse(self, raw_data):
         try:
             with self.__lock:
-                self.qw, self.qx, self.qy, self.qz = ( float(d) for d in raw_data.split(',') )
+                self.__qw, self.__qx, self.__qy, self.__qz, voltage = ( float(d) for d in raw_data.split(',') )
+                self.__voltage_history.append(voltage)
+                if len(self.__voltage_history) > 100:
+                    self._voltage = sum(self.__voltage_history)/len(self.__voltage_history)
+                    self.__voltage_history = []
+                    rospy.loginfo(f"Current voltage: {self._voltage}")
         except ValueError:
             rospy.logwarn(f"Error Parsing: {raw_data}")

@@ -130,6 +130,8 @@ class TF2Platform(TF2Link):
         self.__platform_tf2 = []
         self.__platform_tf2_state = []
         self.__transform_lock = threading.Lock()
+        self.__last_centre_x = 0
+        self.__last_centre_y = 0
         self.qw, self.qx, self.qy, self.qz = 0, 0, 0, 0
 
         for c in range(PlatformStatics.WHEEL_NUM):
@@ -168,7 +170,18 @@ class TF2Platform(TF2Link):
                 
                 centre_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0] + abs_xyz_s[2][0] + abs_xyz_s[3][0])/4
                 centre_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1] + abs_xyz_s[2][1] + abs_xyz_s[3][1])/4
-                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, 0, q=self.__imu_thread.q, increment=False)) # self.update_Y(Y)
+                delta_x = centre_x - self.__last_centre_x
+                delta_y = centre_y - self.__last_centre_y
+                self.__last_centre_x = centre_x
+                self.__last_centre_y = centre_y
+
+                delta_distance = math.sqrt(delta_x*delta_x + delta_y*delta_y)
+                R, P, Y = tf.transformations.euler_from_quaternion(self.__imu_thread.q)
+                x = delta_distance * math.cos(math.PI/2 + Y)
+                y = delta_distance * math.sin(math.PI/2 + Y)
+
+
+                self._tf_broadcaster.sendTransform(self.update(x, y, 0, R, P, math.PI/2 + Y, increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
