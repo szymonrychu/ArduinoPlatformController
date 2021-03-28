@@ -6,19 +6,19 @@ class PlatformStatics():
     BL_WHEEL3 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_5437890-if00'
     BR_WHEEL4 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952790-if00'
     SERIAL_BAUDRATE = 115200
-    ROBOT_LENGTH = 487.3
-    ROBOT_WIDTH  = 322.534
+    ROBOT_LENGTH = 474.0
+    ROBOT_WIDTH  = 256.0
     ANGLE_OFFSETS = [
-        -0.1, 0.1, 0.1, -0.1
+        0, 0, 0, 0
     ]
     WHEELS = [
         FL_WHEEL1, FR_WHEEL2, BL_WHEEL3, BR_WHEEL4
     ]
     WHEELS_TRANSLATIONS_XYZ = [
-        (0.2436, 0.161267, 0),
-        (-0.2436, 0.161267, 0),
-        (0.2436, -0.161267, 0),
-        (-0.2436, -0.161267, 0),
+        (ROBOT_LENGTH/200.0, ROBOT_WIDTH/200.0, 0),
+        (-ROBOT_LENGTH/200.0, ROBOT_WIDTH/200.0, 0),
+        (ROBOT_LENGTH/200.0, -ROBOT_WIDTH/200.0, 0),
+        (-ROBOT_LENGTH/200.0, -ROBOT_WIDTH/200.0, 0),
     ]
     TURNING_LIMIT = math.radians(60)
     SPEED_LIMIT = 10
