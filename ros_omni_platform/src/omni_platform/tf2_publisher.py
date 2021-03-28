@@ -10,7 +10,6 @@ import threading
 
 from .platform_statics import PlatformStatics
 from .serial_helper import ThreadedSerialOutputHandler
-from .imu_bridge import TF2ROSIMU
 
 class TF2BaseLink():
 
@@ -124,7 +123,6 @@ class TF2Platform(TF2Link):
 
     def __init__(self, base_link_name='/base_link', map_name='/map', base_wheel_prefix='/base_wheel_', wheel_prefix='/wheel_'):
         TF2Link.__init__(self, base_link_name, TF2BaseLink(map_name))
-        self.__imu_thread = TF2ROSIMU()
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.__wheels = []
         self.__platform_tf2 = []
@@ -140,16 +138,6 @@ class TF2Platform(TF2Link):
             self.__wheels.append(wheel)
             self.__platform_tf2.append(None)
             self.__platform_tf2_state.append(False)
-
-    def start(self):
-        self.__imu_thread.start()
-    
-    @property
-    def running(self):
-        return self.__imu_thread.running
-
-    def join(self, *args, **kwargs):
-        self.__imu_thread.join(self, *args, **kwargs)
 
     def parse_serial(self, wheel_id, raw_data):
         with self.__transform_lock:
@@ -176,12 +164,12 @@ class TF2Platform(TF2Link):
                 self.__last_centre_y = centre_y
 
                 delta_distance = math.sqrt(delta_x*delta_x + delta_y*delta_y)
-                R, P, Y = tf.transformations.euler_from_quaternion(self.__imu_thread.q)
-                x = delta_distance * math.cos(math.pi/2 + Y)
-                y = delta_distance * math.sin(math.pi/2 + Y)
+                # R, P, Y = tf.transformations.euler_from_quaternion(self.__imu_thread.q)
+                # x = delta_distance * math.cos(math.pi/2 + Y)
+                # y = delta_distance * math.sin(math.pi/2 + Y)
 
-                rospy.loginfo(f"robot: [{x}, {y}, 0][{R}, {P}, {Y}]")
-                self._tf_broadcaster.sendTransform(self.update(x, y, 0, R, P, math.pi/2 + Y, increment=False)) # self.update_Y(Y)
+                # rospy.loginfo(f"robot: [{x}, {y}, 0][{R}, {P}, {Y}]")
+                # self._tf_broadcaster.sendTransform(self.update(x, y, 0, R, P, math.pi/2 + Y, increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
