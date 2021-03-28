@@ -96,7 +96,7 @@ class PlatformStateTransformPublisher(ThreadedSerialOutputHandler):
         self._wheels = []
         for c in range(PlatformStatics.WHEEL_NUM):
             self._wheels.append(WheelDetails(c))
-        # rospy.Timer(rospy.Duration(0, 100), self.send_transforms)
+        rospy.Timer(rospy.Duration(0, 10), self.send_transforms)
 
     def send_transforms(self, event=None):
         for wheel in self._wheels:
@@ -105,11 +105,12 @@ class PlatformStateTransformPublisher(ThreadedSerialOutputHandler):
 
     def parse_serial(self, wheel_id, raw_data):
         self._wheels[wheel_id].parse(raw_data)
+        rospy.loginfo(f"W_{wheel_id}: {raw_data}")
         self._tf_broadcaster.sendTransform(self._wheels[wheel_id].produce_tf())
         
         # wheel_positions = (0, 0, 0)
-            # wheel_positions = [sum(x) for x in zip(wheel_positions, wheel.current_translation)]
-            # wheel.data_read()
+        # wheel_positions = [sum(x) for x in zip(wheel_positions, wheel.current_translation)]
+        # wheel.data_read()
         # self._tf_broadcaster.sendTransform(wheel_positions, (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), 'ignite_robot', f"/base")
         
         
