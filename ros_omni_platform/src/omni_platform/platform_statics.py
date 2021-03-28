@@ -1,10 +1,10 @@
 import math
 class PlatformStatics():
     WHEEL_NUM = 4
-    FL_WHEEL1 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_6075600-if00'
-    FR_WHEEL2 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952630-if00'
-    BL_WHEEL3 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_5437890-if00'
-    BR_WHEEL4 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952790-if00'
+    FL_WHEEL1 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952790-if00'
+    FR_WHEEL2 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_5437890-if00'
+    BL_WHEEL3 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952630-if00'
+    BR_WHEEL4 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_6075600-if00'
     SERIAL_BAUDRATE = 115200
     ROBOT_LENGTH = 474.0
     ROBOT_WIDTH  = 256.0
