@@ -19,7 +19,6 @@ class PlatformController(PlatformMath, PlatformCommands):
 
     def __init__(self):
         PlatformMath.__init__(self)
-        rospy.init_node('robot_node')
         receive_queue = queue.Queue()
         self.__threads = []
         for _id, wheel_serial_id in enumerate(PlatformController.WHEELS):

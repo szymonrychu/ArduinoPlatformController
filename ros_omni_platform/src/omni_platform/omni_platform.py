@@ -13,7 +13,8 @@ import signal
 from .controller import PlatformController
 
 import rospy
-from geometry_msgs.msg import Twist, Vector3
+import tf_conversions
+from geometry_msgs.msg import Twist, Vector3, PoseStamped, Pose
 from std_msgs.msg import String
 
 
@@ -33,18 +34,37 @@ class OmniPlatform():
     ]
 
     def __init__(self):
+        rospy.init_node('robot_node')
+        rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.__callback)
         self._controller = PlatformController()
         self._move_num = 0
+        self._move_queue = queue.Queue()
+
+        self._current_pose = Pose()
+        self._current_pose.position.x = 0
+        self._current_pose.position.y = 0
+        self._current_pose.position.z = 0
+
+    def __callback(self, data):
+        delta_x = data.pose.position.x - self._current_pose.position.x
+        delta_y = data.pose.position.y - self._current_pose.position.y
+        delta_z = data.pose.position.z - self._current_pose.position.z
+
+        rpy_angles = tf_conversions.transformations.euler_from_quaternion(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)
+        print(rpy_angles)
+        
 
     def start(self):
         self._controller.start()
-        while self._controller.running:
-            self._controller.turn_and_move(*OmniPlatform.MOVES[self._move_num])
-            self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
-            time.sleep(1)
-        self.stop()
 
-    def stop(self, *args, **kwargs):
+        # while self._controller.running:
+        #     self._controller.turn_and_move(*OmniPlatform.MOVES[self._move_num])
+        #     self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
+        #     time.sleep(1)
+
+
+
+        rospy.spin()
         self._controller.join()
 
 
