@@ -56,15 +56,15 @@ class OmniPlatform():
 
     def start(self):
         self._controller.start()
-
-        # while self._controller.running:
-        #     self._controller.turn_and_move(*OmniPlatform.MOVES[self._move_num])
-        #     self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
-        #     time.sleep(1)
-
-
-
         rospy.spin()
+
+        while self._controller.running:
+            # self._controller.turn_and_move(*OmniPlatform.MOVES[self._move_num])
+            # self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
+            time.sleep(1)
+
+
+
         self._controller.join()
 
 
