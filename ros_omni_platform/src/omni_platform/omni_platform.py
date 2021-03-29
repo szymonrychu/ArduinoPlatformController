@@ -64,7 +64,7 @@ class OmniPlatform():
             time.sleep(1)
 
 
-
+    def stop(self):
         self._controller.join()
 
 
