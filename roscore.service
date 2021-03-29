@@ -2,7 +2,7 @@
 Description=Roscore
 
 [Service]
-User=ubuntu
+User=szymonri
 ExecStart=/bin/bash -c "source /opt/ros/noetic/setup.bash; ROS_HOSTNAME=robot ROS_MASTER_URI=http://robot:11311 roscore"
 
 [Install]
