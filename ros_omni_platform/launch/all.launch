@@ -23,7 +23,7 @@
   <node pkg="tf" type="static_transform_publisher" name="wheel2_translation" args="-0.23625   0.13  0.0575  0 0 0 /base_link /base_wheel_2 50"/>
   <node pkg="tf" type="static_transform_publisher" name="wheel3_translation" args="-0.23625  -0.13  0.0575  0 0 0 /base_link /base_wheel_3 50"/>
 
-  <node pkg="tf" type="static_transform_publisher" name="kinect_translation" args="-0.14845   0     0.4645  3.14159265 1.74532925 0 0 /base_link /camera_link 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="kinect_translation" args="-0.14845   0     0.4645  3.14159265 1.74532925 0 /base_link /camera_link 50"/>
 
 
   
