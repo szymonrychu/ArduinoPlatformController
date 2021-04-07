@@ -19,7 +19,7 @@ from std_msgs.msg import String
 
 
 
-class OmniPlatform():
+class OmniPlatform(PlatformController):
     MOVES = [
         # (0.1, 500, math.radians( 45), 1000),
         # (0.1, 500, math.radians(-45), 2000),
@@ -34,36 +34,35 @@ class OmniPlatform():
     ]
 
     def __init__(self):
-        rospy.init_node('robot_node')
+        PlatformController.__init__(self)
+        rospy.init_node('omni_platform')
         rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.__callback)
-        self._controller = PlatformController()
         self._move_num = 0
         self._move_queue = queue.Queue()
-
         self._current_pose = Pose()
         self._current_pose.position.x = 0
         self._current_pose.position.y = 0
         self._current_pose.position.z = 0
 
     def __callback(self, data):
-        delta_x = data.pose.position.x - self._current_pose.position.x
-        delta_y = data.pose.position.y - self._current_pose.position.y
-        delta_z = data.pose.position.z - self._current_pose.position.z
+        dx = data.pose.position.x - self._current_pose.position.x
+        dy = data.pose.position.y - self._current_pose.position.y
+        dz = data.pose.position.z - self._current_pose.position.z
 
-        rpy_angles = tf_conversions.transformations.euler_from_quaternion(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)
-        print(rpy_angles)
+        r, p, y = tf_conversions.transformations.euler_from_quaternion(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)
+        rospy.loginfo(f"x,y,z,r,p,y:{dx},{dy},{dz},{r},{p},{y}")
 
     def start(self):
-        self._controller.start()
         rospy.spin()
+        PlatformController.start(self)
 
-        while self._controller.running:
-            # self._controller.turn_and_move(*OmniPlatform.MOVES[self._move_num])
+        while self.running:
+            # self.turn_and_move(*OmniPlatform.MOVES[self._move_num])
             # self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
             time.sleep(1)
 
     def stop(self, *args, **kwargs):
-        self._controller.join()
+        self.join()
 
 
 def main():
