@@ -10,16 +10,22 @@
 
   <include file="$(find rplidar_ros)/launch/rplidar.launch">
   </include>
+  <include file="$(find freenect_launch)/launch/freenect-registered-xyzrgb.launch">
+  </include>
 
   <!-- <include file="$(find imu_bridge)/launch/imu_bridge.launch">
   </include> -->
 
-  <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args=" 0       0        0.1  0 0 -1 0.0001963 /base_link /laser 50"/>
-  
-  <node pkg="tf" type="static_transform_publisher" name="wheel0_translation" args=" 0.2436  0.161267 0    0 0 0 /base_link /base_wheel_0 50"/>
-  <node pkg="tf" type="static_transform_publisher" name="wheel1_translation" args=" 0.2436 -0.161267 0    0 0 0 /base_link /base_wheel_1 50"/>
-  <node pkg="tf" type="static_transform_publisher" name="wheel2_translation" args="-0.2436  0.161267 0    0 0 0 /base_link /base_wheel_2 50"/>
-  <node pkg="tf" type="static_transform_publisher" name="wheel3_translation" args="-0.2436 -0.161267 0    0 0 0 /base_link /base_wheel_3 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args="-0.07945   0     0.2225  0 0 -1 0.0001963 /base_link /laser 50"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="wheel0_translation" args=" 0.23625   0.13  0.0575  0 0 0 /base_link /base_wheel_0 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="wheel1_translation" args=" 0.23625  -0.13  0.0575  0 0 0 /base_link /base_wheel_1 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="wheel2_translation" args="-0.23625   0.13  0.0575  0 0 0 /base_link /base_wheel_2 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="wheel3_translation" args="-0.23625  -0.13  0.0575  0 0 0 /base_link /base_wheel_3 50"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="kinect_translation" args="-0.14845   0     0.4645  0.996 0.087 0 0 /base_link /base_wheel_3 50"/>
+
+
   
   <node pkg="omni_platform" type="omni_platform" name="omni_platform" output="screen" respawn="true">
     <!-- <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_6075600-if00" />

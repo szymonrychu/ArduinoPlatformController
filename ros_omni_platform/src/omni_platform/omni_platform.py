@@ -52,7 +52,6 @@ class OmniPlatform():
 
         rpy_angles = tf_conversions.transformations.euler_from_quaternion(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)
         print(rpy_angles)
-        
 
     def start(self):
         self._controller.start()
@@ -63,8 +62,7 @@ class OmniPlatform():
             # self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
             time.sleep(1)
 
-
-    def stop(self):
+    def stop(self, *args, **kwargs):
         self._controller.join()
 
 
