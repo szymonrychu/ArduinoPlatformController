@@ -16,7 +16,7 @@
   <!-- <include file="$(find imu_bridge)/launch/imu_bridge.launch">
   </include> -->
 
-  <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args="-0.07945   0     0.2225  0 3.14159265 0 /base_link /laser 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args="-0.07945   0     0.2225  3.14159265 3.14159265 0 /base_link /laser 50"/>
 
   <node pkg="tf" type="static_transform_publisher" name="wheel0_translation" args=" 0.23625   0.13  0.0575  0 0 0 /base_link /base_wheel_0 50"/>
   <node pkg="tf" type="static_transform_publisher" name="wheel1_translation" args=" 0.23625  -0.13  0.0575  0 0 0 /base_link /base_wheel_1 50"/>
