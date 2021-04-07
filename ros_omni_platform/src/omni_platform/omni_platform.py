@@ -37,6 +37,7 @@ class OmniPlatform(PlatformController):
         PlatformController.__init__(self)
         rospy.init_node('omni_platform')
         rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.__callback)
+        self._rate = rospy.Rate(10)
         self._move_num = 0
         self._move_queue = queue.Queue()
         self._current_pose = Pose()
@@ -49,7 +50,7 @@ class OmniPlatform(PlatformController):
         dy = data.pose.position.y - self._current_pose.position.y
         dz = data.pose.position.z - self._current_pose.position.z
 
-        r, p, y = tf_conversions.transformations.euler_from_quaternion(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)
+        r, p, y = tf_conversions.transformations.euler_from_quaternion([data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w])
         rospy.loginfo(f"x,y,z,r,p,y:{dx},{dy},{dz},{r},{p},{y}")
 
     def start(self):
@@ -59,7 +60,7 @@ class OmniPlatform(PlatformController):
         while self.running:
             # self.turn_and_move(*OmniPlatform.MOVES[self._move_num])
             # self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
-            time.sleep(1)
+            self._rate.sleep()
 
     def stop(self, *args, **kwargs):
         self.join()
