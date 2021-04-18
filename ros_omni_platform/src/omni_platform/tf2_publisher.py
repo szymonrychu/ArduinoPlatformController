@@ -162,8 +162,18 @@ class TF2Platform(TF2Link):
                 delta_y = centre_y - self.__last_centre_y
                 self.__last_centre_x = centre_x
                 self.__last_centre_y = centre_y
-
                 delta_distance = math.sqrt(delta_x*delta_x + delta_y*delta_y)
+                front_x = (abs_xyz_s[0][0] + abs_xyz_s[1][0])/2
+                front_y = (abs_xyz_s[0][1] + abs_xyz_s[1][1])/2
+                back_x = (abs_xyz_s[2][0] + abs_xyz_s[3][0])/2
+                back_y = (abs_xyz_s[2][1] + abs_xyz_s[3][1])/2
+
+                angle_orientation = math.atan2(front_x-back_x, front_y-back_y)
+
+                rospy.loginfo(f"### Robot Orientation: {math.degrees(angle_orientation)} / {delta_distance}")
+
+
+
                 # R, P, Y = tf.transformations.euler_from_quaternion(self.__imu_thread.q)
                 # x = delta_distance * math.cos(math.pi/2 + Y)
                 # y = delta_distance * math.sin(math.pi/2 + Y)
