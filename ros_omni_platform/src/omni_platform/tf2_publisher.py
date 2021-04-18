@@ -141,6 +141,7 @@ class TF2Platform(TF2Link):
 
     def parse_serial(self, wheel_id, raw_data):
         with self.__transform_lock:
+            rospy.logwarn(f"### Parsing serial for tf2")
             wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
             if wheel_t is not None:
                 self.__platform_tf2[wheel_id] = wheel_t
