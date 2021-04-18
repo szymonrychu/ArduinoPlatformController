@@ -67,7 +67,7 @@ class PlatformController(PlatformMath, PlatformCommands):
         for wheel_thread, wheel_angle in zip(self.__threads, angles):
             move_command = self.move_command(wheel_angle, 0.0, 5)
             wheel_thread.write_data(move_command)
-        time.sleep(5)
+        time.sleep(1)
         for wheel_thread, wheel_angle, wheel_distance in zip(self.__threads, angles, distances):
             move_command = self.move_command(wheel_angle, wheel_distance, moving_time)
             wheel_thread.write_data(move_command)
