@@ -14,7 +14,7 @@ import math
 class PlatformParser(ThreadedSerialOutputHandler):
 
     def parse_serial(self, wheel_id, raw_data):
-        rospy.loginfo("{}: {}".format(str(wheel_id+1), raw_data))
+        rospy.logwarn("{}: {}".format(str(wheel_id+1), raw_data))
 
 class WheelDetails():
 
@@ -105,7 +105,7 @@ class PlatformStateTransformPublisher(ThreadedSerialOutputHandler):
 
     def parse_serial(self, wheel_id, raw_data):
         self._wheels[wheel_id].parse(raw_data)
-        rospy.loginfo(f"W_{wheel_id}: {raw_data}")
+        rospy.logwarn(f"W_{wheel_id}: {raw_data}")
         self._tf_broadcaster.sendTransform(self._wheels[wheel_id].produce_tf())
         
         # wheel_positions = (0, 0, 0)

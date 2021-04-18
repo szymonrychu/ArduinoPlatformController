@@ -170,7 +170,7 @@ class TF2Platform(TF2Link):
 
                 angle_orientation = math.atan2(front_x-back_x, front_y-back_y)
 
-                rospy.loginfo(f"### Robot Orientation: {math.degrees(angle_orientation)} / {delta_distance}")
+                rospy.logwarn(f"### Robot Orientation: {math.degrees(angle_orientation)} / {delta_distance}")
 
 
 
@@ -178,7 +178,7 @@ class TF2Platform(TF2Link):
                 # x = delta_distance * math.cos(math.pi/2 + Y)
                 # y = delta_distance * math.sin(math.pi/2 + Y)
 
-                # rospy.loginfo(f"robot: [{x}, {y}, 0][{R}, {P}, {Y}]")
+                # rospy.logwarn(f"robot: [{x}, {y}, 0][{R}, {P}, {Y}]")
                 # self._tf_broadcaster.sendTransform(self.update(x, y, 0, R, P, math.pi/2 + Y, increment=False)) # self.update_Y(Y)
 
 

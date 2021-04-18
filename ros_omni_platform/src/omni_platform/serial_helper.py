@@ -12,7 +12,7 @@ import rospy
 class SerialMock():
     def __init__(self, *args, **kwargs):
         self.__last_timestamp = 0
-        rospy.loginfo("SerialMock.__init__:args:{} kwargs:{}".format(str(args), str(kwargs)))
+        rospy.logwarn("SerialMock.__init__:args:{} kwargs:{}".format(str(args), str(kwargs)))
 
     def __get_time_ms(self):
         return int(round(time.time() * 1000))
@@ -27,7 +27,7 @@ class SerialMock():
             return "".encode('ascii')
 
     def write(self, *args, **kwargs):
-        rospy.loginfo("SerialMock.write:args:{} kwargs:{}".format(str(args), str(kwargs)))
+        rospy.logwarn("SerialMock.write:args:{} kwargs:{}".format(str(args), str(kwargs)))
         
 class SerialWrapper():
 
@@ -38,7 +38,7 @@ class SerialWrapper():
             self.serial = serial.Serial(fpath, baudrate)
         except Exception:
             tb = traceback.format_exc()
-            rospy.loginfo(str(tb))
+            rospy.logwarn(str(tb))
             self.serial = SerialMock(fpath, baudrate)
 
     def _read_data(self):
@@ -52,7 +52,7 @@ class SerialWrapper():
                         if raw_data[-1] == '\n':
                             raw_data = raw_data[:-1]
         except UnicodeDecodeError:
-            rospy.loginfo('cannot parse "{}"'.format(raw_data))
+            rospy.logwarn('cannot parse "{}"'.format(raw_data))
             self._repair_serial()
         return raw_data
 
@@ -62,7 +62,7 @@ class SerialWrapper():
             return True
         except TypeError:
             tb = traceback.format_exc()
-            rospy.loginfo(str(tb))
+            rospy.logwarn(str(tb))
             self._repair_serial()
 
     def _repair_serial(self):
@@ -71,7 +71,7 @@ class SerialWrapper():
             self.serial = None
         except Exception:
             tb = traceback.format_exc()
-            rospy.loginfo(str(tb))
+            rospy.logwarn(str(tb))
         SerialWrapper.__init__(self, self.__fpath, self.__baudrate)
 
 
@@ -86,7 +86,7 @@ class ThreadedSerialWrapper(Thread, SerialWrapper):
 
     def start(self):
         self.__running = True
-        rospy.loginfo(f"ThreadedSerialWrapper starting!")
+        rospy.logwarn(f"ThreadedSerialWrapper starting!")
         Thread.start(self)
     
     @property
@@ -112,7 +112,7 @@ class ThreadedSerialOutputHandler(Thread):
 
     def start(self):
         self.__running = True
-        rospy.loginfo(f"ThreadedSerialOutputHandler starting!")
+        rospy.logwarn(f"ThreadedSerialOutputHandler starting!")
         Thread.start(self)
     
     @property
