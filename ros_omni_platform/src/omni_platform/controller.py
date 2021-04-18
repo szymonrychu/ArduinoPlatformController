@@ -60,6 +60,8 @@ class PlatformController(PlatformMath, PlatformCommands):
             self.__threads[wheel_id].write_data(move_command)
         time.sleep(moving_time/1000.0)
 
-    def turn_in_place(self, distance, moving_time):
-        raise NotImplementedError("XD")
-
+    def turn_in_place(self, angle, moving_time):        
+        for wheel_thread, wheel_angle in zip(self.__threads, list(self.get_in_place_angles())):
+            move_command = self.move_command(wheel_angle, 0.0, 5)
+            wheel_thread.write_data(move_command)
+        time.sleep(5)
