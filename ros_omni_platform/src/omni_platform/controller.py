@@ -50,13 +50,13 @@ class PlatformController(PlatformMath, PlatformCommands):
         if turning_time > 0:
             for wheel_id, wheel_angle in enumerate(angles):
                 move_command = self.move_command(wheel_angle, 0, turning_time)
-                print("{}: {}".format(str(wheel_id+1), move_command))
+                rospy.loginfo("{}: {}".format(str(wheel_id+1), move_command))
                 self.__threads[wheel_id].write_data(move_command)
             time.sleep(turning_time/1000.0)
 
         for wheel_id, (wheel_angle, wheel_distance) in enumerate(zip(angles, distances)):
             move_command = self.move_command(wheel_angle, wheel_distance, moving_time)
-            print("{}: {}".format(str(wheel_id+1), move_command))
+            rospy.loginfo("{}: {}".format(str(wheel_id+1), move_command))
             self.__threads[wheel_id].write_data(move_command)
         time.sleep(moving_time/1000.0)
 
@@ -66,9 +66,11 @@ class PlatformController(PlatformMath, PlatformCommands):
 
         for wheel_thread, wheel_angle in zip(self.__threads, angles):
             move_command = self.move_command(wheel_angle, 0.0, 5)
+            rospy.loginfo("{}: {}".format(str(wheel_id+1), move_command))
             wheel_thread.write_data(move_command)
         time.sleep(1)
         for wheel_thread, wheel_angle, wheel_distance in zip(self.__threads, angles, distances):
             move_command = self.move_command(wheel_angle, wheel_distance, moving_time)
+            rospy.loginfo("{}: {}".format(str(wheel_id+1), move_command))
             wheel_thread.write_data(move_command)
         time.sleep(moving_time/1000.0)
