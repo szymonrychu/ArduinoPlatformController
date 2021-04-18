@@ -53,7 +53,7 @@ class OmniPlatform(PlatformController):
         r, p, y = tf_conversions.transformations.euler_from_quaternion([data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w])
         rospy.logwarn(f"x,y,z,r,p,y:{dx},{dy},{dz},{r},{p},{y}")
 
-        angle = math.atan2(dx, dy)
+        angle = math.atan2(dy, dx)
 
         distance = math.sqrt(dx*dx + dy*dy)
 
