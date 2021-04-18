@@ -57,6 +57,7 @@ class OmniPlatform(PlatformController):
         rospy.logwarn(f"a/d:{angle}/{distance}")
 
         self.turn_in_place(angle, 2000)
+        self.turn_and_move(distance, 3000, 0.0, 0.0)
 
     def start(self):
         rospy.spin()
