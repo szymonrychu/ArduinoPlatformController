@@ -62,7 +62,7 @@ class PlatformController(PlatformMath, PlatformCommands):
 
     def turn_in_place(self, angle, moving_time):
         angles = list(self.get_in_place_angles())
-        distances = list(self.get_in_place_angle2distance())
+        distances = list(self.get_in_place_angle2distance(angle))
 
         for wheel_thread, wheel_angle in zip(self.__threads, angles):
             move_command = self.move_command(wheel_angle, 0.0, 5)
