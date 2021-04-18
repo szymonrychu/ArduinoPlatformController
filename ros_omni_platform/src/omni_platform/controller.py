@@ -60,8 +60,15 @@ class PlatformController(PlatformMath, PlatformCommands):
             self.__threads[wheel_id].write_data(move_command)
         time.sleep(moving_time/1000.0)
 
-    def turn_in_place(self, angle, moving_time):        
-        for wheel_thread, wheel_angle in zip(self.__threads, list(self.get_in_place_angles())):
+    def turn_in_place(self, angle, moving_time):
+        angles = list(self.get_in_place_angles())
+        distances = list(self.get_in_place_angle2distance())
+
+        for wheel_thread, wheel_angle in zip(self.__threads, angles):
             move_command = self.move_command(wheel_angle, 0.0, 5)
             wheel_thread.write_data(move_command)
         time.sleep(5)
+        for wheel_thread, wheel_angle, wheel_distance in zip(self.__threads, angles, distances):
+            move_command = self.move_command(wheel_angle, wheel_distance, moving_time)
+            wheel_thread.write_data(move_command)
+        time.sleep(moving_time/1000.0)
