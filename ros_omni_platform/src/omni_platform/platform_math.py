@@ -83,7 +83,7 @@ class PlatformMath(PlatformStatics):
         return result
         
     def get_in_place_angles(self):
-        base_angle = math.atan(ROBOT_LENGTH/ROBOT_WIDTH)
+        base_angle = math.atan(PlatformMath.ROBOT_LENGTH/PlatformMath.ROBOT_WIDTH)
         return base_angle, -base_angle, base_angle, -base_angle
 
 
