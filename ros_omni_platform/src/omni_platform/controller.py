@@ -69,15 +69,21 @@ class PlatformController(PlatformMath, PlatformCommands):
             rospy.logwarn("{}: {}".format(str(wheel_id+1), move_command))
             self.__threads[wheel_id].write_data(move_command)
         time.sleep(1)
+        for wheel_id, (wheel_angle, wheel_distance) in enumerate(zip(angles, distances)):
+            move_command = self.move_command(wheel_angle, wheel_distance, moving_time)
+            rospy.logwarn("{}: {}".format(str(wheel_id+1), move_command))
+            self.__threads[wheel_id].write_data(move_command)
+        time.sleep(moving_time/1000.0)
 
+    def turn_in_place_and_move(self, angle, turning_time, distance, moving_time):
+        self.turn_in_place(angle, turning_time)
         for wheel_id in range(PlatformMath.WHEEL_NUM):
             move_command = self.move_command(0.0, 0.0, 5)
             rospy.logwarn("{}: {}".format(str(wheel_id+1), move_command))
             self.__threads[wheel_id].write_data(move_command)
         time.sleep(1)
-
-        for wheel_id, wheel_distance in enumerate(distances):
-            move_command = self.move_command(0.0, wheel_distance, moving_time)
+        for wheel_id in range(PlatformMath.WHEEL_NUM):
+            move_command = self.move_command(0.0, distance, moving_time)
             rospy.logwarn("{}: {}".format(str(wheel_id+1), move_command))
             self.__threads[wheel_id].write_data(move_command)
         time.sleep(moving_time/1000.0)
