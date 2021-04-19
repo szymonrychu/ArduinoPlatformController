@@ -77,9 +77,9 @@ class PlatformController(PlatformMath, PlatformCommands):
 
     def turn_in_place_and_move(self, angle, distance, turning_time=None, moving_time=None):
         if not turning_time:
-            turning_time = angle * 2000.0
+            turning_time = abs(angle * 2000.0)
         if not moving_time:
-            moving_time = distance * 5000.0
+            moving_time = abs(distance * 7000.0)
         self.turn_in_place(angle, turning_time)
         for wheel_id in range(PlatformMath.WHEEL_NUM):
             move_command = self.move_command(0.0, 0.0, 5)
