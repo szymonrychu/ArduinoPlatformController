@@ -190,6 +190,7 @@ class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
         TF2Platform.__init__(self, *args, **kwargs)
 
     def parse_serial(self, wheel_id, raw_data):
+        print(f"RAW_DATA {raw_data}")
         TF2Platform.parse_serial(self, wheel_id, raw_data)
 
     def start(self):
