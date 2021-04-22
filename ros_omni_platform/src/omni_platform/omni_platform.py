@@ -16,6 +16,7 @@ import rospy
 import tf_conversions
 from geometry_msgs.msg import Twist, Vector3, PoseStamped, Pose
 from std_msgs.msg import String
+import logging
 
 
 
