@@ -66,10 +66,11 @@ class OmniPlatform(PlatformController):
         while self.running:
             # self.turn_and_move(*OmniPlatform.MOVES[self._move_num])
             # self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
+            print("TICK")
             self._rate.sleep()
 
     def stop(self, *args, **kwargs):
-        self.join()
+        PlatformController.join()
 
 
 def main():
