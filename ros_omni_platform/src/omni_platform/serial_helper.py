@@ -100,8 +100,8 @@ class ThreadedSerialWrapper(Thread, SerialWrapper):
     def __handle_incoming_data(self):
         while self.__running:
             raw_data = self._read_data()
-            rospy.loginfo(f"received raw: {raw_data}")
             if raw_data is not None:
+                rospy.loginfo(f"received raw: {raw_data}")
                 self.__outgoing_queue.put((self.__id, raw_data))
 
 class ThreadedSerialOutputHandler(Thread):
