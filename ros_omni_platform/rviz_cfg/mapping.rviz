@@ -6,8 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /Map1
-        - /PointCloud21
       Splitter Ratio: 0.5
     Tree Height: 1006
   - Class: rviz/Selection
@@ -136,7 +134,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.202605247497559
+      Distance: 9.997760772705078
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -152,9 +150,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.1297974586486816
+      Pitch: 0.6647968292236328
       Target Frame: <Fixed Frame>
-      Yaw: 2.350377321243286
+      Yaw: 2.2903928756713867
     Saved: ~
 Window Geometry:
   Displays:

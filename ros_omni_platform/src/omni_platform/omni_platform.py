@@ -34,7 +34,10 @@ class OmniPlatform(PlatformController):
     ]
 
     def __init__(self):
-        rospy.init_node('omni_platform', log_level=rospy.DEBUG)
+        rospy.init_node('omni_platform')
+        logger = logging.getLogger("rosout")
+        logger.setLevel(logging.DEBUG)
+
         PlatformController.__init__(self)
         rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.__callback)
         self._rate = rospy.Rate(10)
@@ -54,7 +57,7 @@ class OmniPlatform(PlatformController):
 
         angle = math.atan2(dy, dx)
         distance = math.sqrt(dx*dx + dy*dy)
-        rospy.logwarn(f"a/d:{angle}/{distance}")
+        rospy.loginfo(f"a/d:{angle}/{distance}")
 
         self.turn_in_place_and_move(angle, distance) #, 2000, 3000)
 

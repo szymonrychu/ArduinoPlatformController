@@ -117,7 +117,7 @@ class TF2WheelWithPivot(TF2BaseLink):
             self.__last_msg_id = int(msg_id)
             return self.update(0, 0, 0, R, P, self.__yaw)
         except ValueError:
-            rospy.logwarn(f"Error Parsing: {raw_data}")
+            rospy.loginfo(f"Error Parsing: {raw_data}")
 
 class TF2Platform(TF2Link):
 
@@ -141,7 +141,7 @@ class TF2Platform(TF2Link):
 
     def parse_serial(self, wheel_id, raw_data):
         with self.__transform_lock:
-            rospy.logwarn(f"### Parsing serial for tf2")
+            rospy.loginfo(f"### Parsing serial for tf2")
             wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
             if wheel_t is not None:
                 self.__platform_tf2[wheel_id] = wheel_t
@@ -171,7 +171,7 @@ class TF2Platform(TF2Link):
 
                 angle_orientation = math.atan2(front_x-back_x, front_y-back_y)
 
-                rospy.logwarn(f"### Robot Orientation: {math.degrees(angle_orientation)} / {delta_distance}")
+                rospy.loginfo(f"### Robot Orientation: {math.degrees(angle_orientation)} / {delta_distance}")
 
 
 
@@ -179,7 +179,7 @@ class TF2Platform(TF2Link):
                 # x = delta_distance * math.cos(math.pi/2 + Y)
                 # y = delta_distance * math.sin(math.pi/2 + Y)
 
-                # rospy.logwarn(f"robot: [{x}, {y}, 0][{R}, {P}, {Y}]")
+                # rospy.loginfo(f"robot: [{x}, {y}, 0][{R}, {P}, {Y}]")
                 # self._tf_broadcaster.sendTransform(self.update(x, y, 0, R, P, math.pi/2 + Y, increment=False)) # self.update_Y(Y)
 
 
