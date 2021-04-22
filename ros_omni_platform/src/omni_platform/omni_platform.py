@@ -36,6 +36,7 @@ class OmniPlatform(PlatformController):
 
     def __init__(self):
         rospy.init_node('omni_platform')
+        rospy.configure_logging('omni_platform')
         PlatformController.__init__(self)
         rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.__callback)
         self._rate = rospy.Rate(10)
@@ -66,7 +67,6 @@ class OmniPlatform(PlatformController):
         while self.running:
             # self.turn_and_move(*OmniPlatform.MOVES[self._move_num])
             # self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
-            print("TICK")
             self._rate.sleep()
 
     def stop(self, *args, **kwargs):
