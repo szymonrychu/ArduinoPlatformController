@@ -34,6 +34,7 @@ class PlatformController(PlatformMath, PlatformCommands):
 
     def start(self):
         for th in self.__threads:
+            print(th)
             th.start()
 
     def join(self, *args, **kwargs):
