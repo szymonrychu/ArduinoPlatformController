@@ -30,6 +30,7 @@ class PlatformController(PlatformMath, PlatformCommands):
         running = []
         for t in self.__threads:
             running.append(t.running)
+            print("TEST")
         return all(running)
 
     def start(self):
