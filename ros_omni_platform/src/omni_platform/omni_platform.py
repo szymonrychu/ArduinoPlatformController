@@ -64,6 +64,7 @@ class OmniPlatform(PlatformController):
         PlatformController.start(self)
 
         while self.running:
+            print("TESTXD")
             # self.turn_and_move(*OmniPlatform.MOVES[self._move_num])
             # self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
             self._rate.sleep()
