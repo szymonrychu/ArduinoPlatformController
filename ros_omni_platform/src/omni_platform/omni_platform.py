@@ -36,7 +36,8 @@ class OmniPlatform(PlatformController):
 
     def __init__(self):
         rospy.init_node('omni_platform')
-        rospy.configure_logging('omni_platform')
+        print("TEST")
+        exit(1)
         PlatformController.__init__(self)
         rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.__callback)
         self._rate = rospy.Rate(10)
