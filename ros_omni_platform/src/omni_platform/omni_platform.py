@@ -45,7 +45,6 @@ class OmniPlatform(PlatformController):
         self._current_pose.position.x = 0
         self._current_pose.position.y = 0
         self._current_pose.position.z = 0
-        self.__running = False
 
     def __callback(self, data):
         dx = data.pose.position.x - self._current_pose.position.x
@@ -61,17 +60,14 @@ class OmniPlatform(PlatformController):
         self.turn_in_place_and_move(angle, distance) #, 2000, 3000)
 
     def start(self):
-        self.__running = True
         PlatformController.start(self)
-        while self.__running:
+        while self.running:
             rospy.spin()
-            print("TESTXD")
             # self.turn_and_move(*OmniPlatform.MOVES[self._move_num])
             # self._move_num = (self._move_num+1)%len(OmniPlatform.MOVES)
             self._rate.sleep()
 
     def stop(self, *args, **kwargs):
-        self.__running = False
         PlatformController.join()
 
 
