@@ -141,7 +141,6 @@ class TF2Platform(TF2Link):
 
     def parse_serial(self, wheel_id, raw_data):
         with self.__transform_lock:
-            rospy.loginfo(f"### Parsing serial for tf2")
             wheel_t = self.__wheels[wheel_id].parse_wheel(raw_data)
             if wheel_t is not None:
                 self.__platform_tf2[wheel_id] = wheel_t
@@ -176,11 +175,11 @@ class TF2Platform(TF2Link):
 
 
                 # R, P, Y = tf.transformations.euler_from_quaternion(self.__imu_thread.q)
-                # x = delta_distance * math.cos(math.pi/2 + Y)
-                # y = delta_distance * math.sin(math.pi/2 + Y)
+                x = delta_distance * math.cos(angle_orientation)
+                y = delta_distance * math.sin(angle_orientation)
 
                 # rospy.loginfo(f"robot: [{x}, {y}, 0][{R}, {P}, {Y}]")
-                self._tf_broadcaster.sendTransform(self.update(centre_x, centre_y, 0, 0, 0, angle_orientation, increment=False)) # self.update_Y(Y)
+                self._tf_broadcaster.sendTransform(self.update(x, y, 0, 0, 0, angle_orientation, increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
