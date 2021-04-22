@@ -131,6 +131,7 @@ class TF2Platform(TF2Link):
         self.__last_centre_x = 0
         self.__last_centre_y = 0
         self.qw, self.qx, self.qy, self.qz = 0, 0, 0, 0
+        self._x_history, self._y_history = 0.0, 0.0
 
         for c in range(PlatformStatics.WHEEL_NUM):
             x, y, z = PlatformStatics.WHEELS_TRANSLATIONS_XYZ[c]
@@ -170,7 +171,7 @@ class TF2Platform(TF2Link):
 
                 angle_orientation = math.atan2(front_x-back_x, front_y-back_y)
 
-                rospy.loginfo(f"### Robot Orientation: {math.degrees(angle_orientation)} / {delta_distance}")
+                rospy.loginfo(f"Robot Orientation: {math.degrees(angle_orientation)} / {delta_distance}")
 
 
 
@@ -178,8 +179,11 @@ class TF2Platform(TF2Link):
                 x = delta_distance * math.cos(angle_orientation)
                 y = delta_distance * math.sin(angle_orientation)
 
+                self._x_history += x
+                self._y_history += y
+
                 # rospy.loginfo(f"robot: [{x}, {y}, 0][{R}, {P}, {Y}]")
-                self._tf_broadcaster.sendTransform(self.update(x, y, 0, 0, 0, angle_orientation, increment=False)) # self.update_Y(Y)
+                self._tf_broadcaster.sendTransform(self.update(self._x_history, self._y_history, 0, 0, 0, angle_orientation, increment=False)) # self.update_Y(Y)
 
 
 class TF2PlatformPublisher(ThreadedSerialOutputHandler, TF2Platform):
