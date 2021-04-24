@@ -1,0 +1,14 @@
+<launch>
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
+  <env name="ROS_LOG_DIR" value="/tmp/"/>
+  
+  <include file="$(find wheel_bridge)/launch/wheel1.launch">
+  </include>
+  <include file="$(find wheel_bridge)/launch/wheel2.launch">
+  </include>
+  <include file="$(find wheel_bridge)/launch/wheel3.launch">
+  </include>
+  <include file="$(find wheel_bridge)/launch/wheel4.launch">
+  </include>
+
+</launch>

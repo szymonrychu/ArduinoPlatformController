@@ -1,0 +1,16 @@
+<launch>
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="imu_translation"  args="0 0 0 1.57079632679 0 0 /imu /base_link_imu 50"/>
+
+
+  <!-- Microcontroller Device Argument -->
+  <arg name="serial_dev" default="/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00"/>
+  <arg name="serial_baud" default="115200"/>
+
+  <node pkg="bms_imu_bridge" type="bms_imu_bridge" name="bms_imu_bridge" clear_params="true" output="screen" respawn="true">
+    <param name="serial_dev" value="$(arg serial_dev)" />
+    <param name="baudrate" type="int" value="$(arg serial_baud)"/>
+    <!-- <remap from="cmd_vel" to="cmd_vel" /> -->
+  </node>
+</launch>
