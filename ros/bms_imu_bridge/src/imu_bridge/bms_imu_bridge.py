@@ -1,67 +1,59 @@
 #!/usr/bin/env python3
-import serial
-import signal
-import time
-from threading import Thread
-
-
+from serial_helper import SerialWrapper
 import rospy
+from geometry_msgs.msg import Vector3
 import tf
 import tf2_ros
-import geometry_msgs.msg
-import tf_conversions
 
-from .serial_helper import SerialWrapper
 
-class TF2ROSIMU(SerialWrapper, Thread):
+class Monitor(SerialWrapper):
 
-    def __init__(self):
-        Thread.__init__(self, target=self.handle_serial)
-        SerialWrapper.__init__(self, '/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00', 115200)
-        self.__running = True
+    def __init__(self, serial_dev, baudrate, battery_topic, tf2_base_link, tf2_output):
+        SerialWrapper.__init__(self, serial_dev, baudrate=baudrate)
+        self.__last_distance = 0.0
+        self.__distance_set = False
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
+        self._tf2_base_link = tf2_base_link
+        self._tf2_output = tf2_output
+        self._battery_topic = battery_topic
 
-    def start(self):
-        self.__running = True
-        rospy.loginfo(f"TF2ROSIMU starting!")
-        Thread.start(self)
-    
-    @property
-    def running(self):
-        return self.__running
+    def _parse(self, data):
+        data = ( float(d) for d in raw_data.split(',') )
+        # qw, qx, qy, qz
+        # battFull, systemON, powerON, chargingON
+        # batteryVoltage, chargingVoltage
+        # gpsFix, GPSfixQuality, GPSSatellites,
+        # latitude, longitude, speed, angle, altitude
+        
+        t = geometry_msgs.msg.TransformStamped()
+        t.header.stamp = rospy.Time.now()
+        t.header.frame_id = self._tf2_base_link
+        t.child_frame_id = self._tf2_output
+        t.transform.translation.x = 0
+        t.transform.translation.y = 0
+        t.transform.translation.z = 0
+        t.transform.rotation.w = data[0]
+        t.transform.rotation.x = data[1]
+        t.transform.rotation.y = data[2]
+        t.transform.rotation.z = data[3]
+        self._tf_broadcaster.sendTransform(t)
 
-    def join(self, *args, **kwargs):
-        self.__running = False
-        Thread.join(self, *args, **kwargs)
-
-    def handle_serial(self):
-        while self.__running:
-            raw_data = self._read_data()
+    def process(self):
+        while True:
+            rospy.spin()
+            raw_data = self.read_data()
             if raw_data is not None:
-                self.__parse(raw_data)
-
-    def __parse(self, raw_data):
-        try:
-            qw, qx, qy, qz = ( float(d) for d in raw_data.split(',') )
-            t = geometry_msgs.msg.TransformStamped()
-            t.header.stamp = rospy.Time.now()
-            t.header.frame_id = '/base_link'
-            t.child_frame_id = '/imu'
-            t.transform.translation.x = 0
-            t.transform.translation.y = 0
-            t.transform.translation.z = 0
-            t.transform.rotation.w = qw
-            t.transform.rotation.x = qx
-            t.transform.rotation.y = qy
-            t.transform.rotation.z = qz
-            self._tf_broadcaster.sendTransform(t)
-            rospy.loginfo(f"Publishing IMU tf2 [{qx}, {qy}, {qz}, {qw}]")
-        except ValueError:
-            rospy.logwarn(f"Error Parsing: {raw_data}")
-
+                rospy.logdebug(f"received raw: {raw_data}")
+                self._parse(raw_data)
 
 def main():
-    rospy.init_node("bms_imu_bridge")
+    rospy.init_node('bms_imu_bridge')
 
-    imuObj = TF2ROSIMU()
-    imuObj.handle_serial()
+    serial_dev = rospy.get_param("/serial_dev")
+    baudrate = rospy.get_param("/baudrate")
+    battery_topic = rospy.get_param("/battery_topic")
+    tf2_base_link = rospy.get_param("/tf2_base_link")
+    tf2_output = rospy.get_param("/tf2_output")
+
+
+    Monitor(serial_dev, baudrate, battery_topic, tf2_base_link, tf2_output).process()

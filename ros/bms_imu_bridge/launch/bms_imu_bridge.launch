@@ -3,14 +3,14 @@
 
   <node pkg="tf" type="static_transform_publisher" name="imu_translation"  args="0 0 0 1.57079632679 0 0 /imu /base_link_imu 50"/>
 
+  <node pkg="bms_imu_bridge" type="bms_imu_bridge" name="monitor" output="screen" respawn="true">
+    <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_4292050-if00" />
+    <param name="baudrate" type="int" value="115200"/>
 
-  <!-- Microcontroller Device Argument -->
-  <arg name="serial_dev" default="/dev/serial/by-id/usb-Teensyduino_USB_Serial_7121500-if00"/>
-  <arg name="serial_baud" default="115200"/>
+    <param name="battery_topic" value="/battery" />
 
-  <node pkg="bms_imu_bridge" type="bms_imu_bridge" name="bms_imu_bridge" clear_params="true" output="screen" respawn="true">
-    <param name="serial_dev" value="$(arg serial_dev)" />
-    <param name="baudrate" type="int" value="$(arg serial_baud)"/>
-    <!-- <remap from="cmd_vel" to="cmd_vel" /> -->
+    <param name="tf2_base_link" value="base_footprint" />
+    <param name="tf2_output" value="base_link" />
   </node>
+
 </launch>
