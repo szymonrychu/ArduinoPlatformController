@@ -28,25 +28,29 @@ class Wheel(SerialWrapper):
         rospy.loginfo(f"Wrote '{cmd}' to {self._fpath}")
 
     def _parse(self, data):
-        rospy.loginfo(f"Received '{data}' from {self._fpath}")
-        data1, data2, timeDelta = data.split(' ')
-        msg_id, msg_level, ang_last_pos, ang_err, ang_last_vel, ang_p = data1.split(':')
-        dst_last_pos, dst_err, dst_last_vel, dst_p = data2.split(':')
+        rospy.logdebug(f"Received '{data}' from {self._fpath}")
+        try:
+            # 35340:INF:-0.0204:0.0204:-0.0000:-76 0.0001:-0.0001:-0.0000:0 0.114
+            data1, data2, timeDelta = data.split(' ')
+            msg_id, msg_level, ang_last_pos, ang_err, ang_last_vel, ang_p = data1.split(':')
+            dst_last_pos, dst_err, dst_last_vel, dst_p = data2.split(':')
 
-        current_distance = float(dst_last_pos)
-        current_distance_v = float(dst_last_vel)
-        current_angle = float(ang_last_pos)
-        current_angle_v = float(ang_last_vel)
-        if not self.__distance_set:
+            current_distance = float(dst_last_pos)
+            current_distance_v = float(dst_last_vel)
+            current_angle = float(ang_last_pos)
+            current_angle_v = float(ang_last_vel)
+            if not self.__distance_set:
+                self.__last_distance = current_distance
+                return
+            delta_distance = current_distance - self.__last_distance
+            dx = distance_delta * math.cos(current_angle)
+            dy = distance_delta * math.sin(current_angle)
+
+            self._output_pub.publish(t)
+            self._tf_broadcaster.sendTransform(self._xyzRPY2TransformStamped(dx, dy, 0, 0, 0, current_angle))
             self.__last_distance = current_distance
-            return
-        delta_distance = current_distance - self.__last_distance
-        dx = distance_delta * math.cos(current_angle)
-        dy = distance_delta * math.sin(current_angle)
-
-        self._output_pub.publish(t)
-        self._tf_broadcaster.sendTransform(self._xyzRPY2TransformStamped(dx, dy, 0, 0, 0, current_angle))
-        self.__last_distance = current_distance
+        except ValueError:
+            rospy.logwarn(f"Couldn't parse data '{data}'")
 
     def _xyzRPY2TransformStamped(self, x, y, z, R, P, Y):
         t = geometry_msgs.msg.TransformStamped()
