@@ -6,7 +6,7 @@ import tf2_ros
 
 class Wheel(SerialWrapper):
 
-    def _move_command(self, angle, distance, time):
+    def _move_command(self, distance, angle, time):
         return "G11 {} {} {}".format(distance, angle, time)
 
     def __init__(self, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output):
