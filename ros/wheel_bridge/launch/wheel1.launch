@@ -3,7 +3,7 @@
   <env name="ROS_LOG_DIR" value="/tmp/"/>
   
   <node pkg="wheel_bridge" type="wheel_bridge" name="wheel1" output="screen" respawn="true">
-    <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952790-if00" />
+    <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_6075600-if00" />
     <param name="baudrate" type="int" value="115200"/>
 
     <param name="input_topic" value="/wheel1" />
