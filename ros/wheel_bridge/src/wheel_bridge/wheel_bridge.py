@@ -69,7 +69,6 @@ class Wheel(SerialWrapper):
             if raw_data is not None:
                 rospy.logdebug(f"received raw: {raw_data}")
                 self._parse(raw_data)
-                rospy.spin()
 
 def main():
     rospy.init_node('wheel_bridge')
