@@ -15,9 +15,10 @@ import time
 
 class Meta():
 
-    def __init__(self):
-        self._tf2_base_link = ''
-        self._tf2_link = ''
+    def __init__(self, base_link, link):
+        rospy.loginfo(f"{base_link} {link}")
+        self._tf2_base_link = base_link
+        self._tf2_link = link
 
     def xyzRPY2TransformStamped(self, x, y, z, R, P, Y):
         t = TransformStamped()
@@ -38,11 +39,10 @@ class Meta():
 class Wheel(Meta):
 
     def __init__(self, _id, input_topic, output_topic, translation, base_link, link, data_handler):
+        Meta.__init__(self, base_link, link)
         self._handler = data_handler
         self._id = _id
         self._static_translation = translation
-        self._tf2_link = link
-        self._tf2_base_link = base_link
         self.publisher = rospy.Publisher(output_topic, Vector3, queue_size=10)
         rospy.Subscriber(input_topic, TransformStamped, self.__callback)
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
@@ -51,6 +51,7 @@ class Wheel(Meta):
         self._handler(self._id+1, data)
 
     def send_transform(self):
+        self._static_translation.header.stamp = rospy.Time.now()
         self._tf_broadcaster.sendTransform(self._static_translation)
 
     def send_command(self, distance, angle, time):
@@ -63,11 +64,10 @@ class Wheel(Meta):
 class Platform(PlatformMath, Meta):
 
     def __init__(self, wheel_input_topics, wheel_output_topics, wheel_translations, wheel_base_links, wheel_links):
+        Meta.__init__(self, "/base_link", "/map")
         self._wheels = []
         self._current_pose = PoseStamped()
         self._wheel_transforms = [None] * Platform.WHEEL_NUM
-        self._tf2_base_link = "/map"
-        self._tf2_link = "/base_link"
         self._lock = Lock()
         for _id in range(Platform.WHEEL_NUM):
             self._wheels.append(Wheel(_id, wheel_input_topics[_id], wheel_output_topics[_id], wheel_translations[_id], wheel_base_links[_id], wheel_links[_id], self.wheel_output_hander))
@@ -77,19 +77,25 @@ class Platform(PlatformMath, Meta):
     def wheel_output_hander(self, _id, data):
         with self._lock:
             self._wheel_transforms[_id-1] = data
-            rospy.loginfo(f"{_id}: {data.transform.translation.x}:{data.transform.translation.y}")
+            rospy.logdebug(f"{_id}: {data.transform.translation.x}:{data.transform.translation.y}")
             if all(self._wheel_transforms):
                 x = sum([self._wheel_transforms[c].transform.translation.x for c in range(Platform.WHEEL_NUM)])/float(Platform.WHEEL_NUM)
                 y = sum([self._wheel_transforms[c].transform.translation.y for c in range(Platform.WHEEL_NUM)])/float(Platform.WHEEL_NUM)
 
                 front_x = (self._wheel_transforms[0].transform.translation.x + self._wheel_transforms[1].transform.translation.x)/2
                 front_y = (self._wheel_transforms[0].transform.translation.y + self._wheel_transforms[1].transform.translation.y)/2
-                Y = math.atan2(front_y-y, front_x-x)
+                back_x = (self._wheel_transforms[2].transform.translation.x + self._wheel_transforms[3].transform.translation.x)/2
+                back_y = (self._wheel_transforms[2].transform.translation.y + self._wheel_transforms[3].transform.translation.y)/2
+
+                Y = math.atan2(front_y-back_y, front_x-back_x)
+
+                rospy.loginfo(f"[{self._wheel_transforms[0].transform.translation.x},{self._wheel_transforms[0].transform.translation.y}][{self._wheel_transforms[1].transform.translation.x},{self._wheel_transforms[1].transform.translation.y}][{self._wheel_transforms[2].transform.translation.x},{self._wheel_transforms[2].transform.translation.y}][{self._wheel_transforms[3].transform.translation.x},{self._wheel_transforms[3].transform.translation.y}]")
+                rospy.loginfo(f"{math.degrees(Y)} [{front_x},{front_y}][{back_x},{back_y}]")
 
                 self._current_pose.pose.position.x = x
                 self._current_pose.pose.position.y = y
 
-                rospy.loginfo(f"Robot position: {x}, {y}, 0.0, 0.0, 0.0, {Y}")
+                rospy.logdebug(f"Robot position: {x}, {y}, 0.0, 0.0, 0.0, {Y}")
                 self._tf_broadcaster.sendTransform(self.xyzRPY2TransformStamped(x, y, 0, 0, 0, Y))
                 for wheel in self._wheels:
                     wheel.send_transform()
@@ -104,7 +110,6 @@ class Platform(PlatformMath, Meta):
 
         angle = math.atan2(dy, dx)
         distance = math.sqrt(dx*dx + dy*dy)
-        rospy.loginfo(f"a/d:{angle}/{distance}")
 
         self.turn_in_place_and_move(angle, distance) #, 2000, 3000)
 
@@ -154,7 +159,7 @@ class Platform(PlatformMath, Meta):
 
 
 def main():
-    rospy.init_node('platform')
+    rospy.init_node('robot_platform')
     wheels = []
     wheel_input_topics = []
     wheel_output_topics = []
@@ -170,7 +175,7 @@ def main():
         wheel_base_links.append(base_link)
         wheel_links.append(wheel_link)
         
-        wheel_translations.append(Meta().xyzRPY2TransformStamped(float(xStr), float(yStr), float(zStr), float(RStr), float(PStr), float(YStr)))
+        wheel_translations.append(Meta('/base_link', f"/wheel{_id+1}_pivot").xyzRPY2TransformStamped(float(xStr), float(yStr), float(zStr), float(RStr), float(PStr), float(YStr)))
         
     
     tf2_base_link = rospy.get_param("~tf2_base_link")
