@@ -98,11 +98,11 @@ def main():
     wheel_input_topics = []
     wheel_output_topics = []
     for _id in range(PlatformMath.WHEEL_NUM):
-        wheel_input_topics.append(rospy.get_param(f"wheel{_id}_input_topic"))
-        wheel_output_topics.append(rospy.get_param(f"wheel{_id}_output_topic"))
+        wheel_input_topics.append(rospy.get_param(f"~wheel{_id}_input_topic"))
+        wheel_output_topics.append(rospy.get_param(f"~wheel{_id}_output_topic"))
     
-    tf2_base_link = rospy.get_param("tf2_base_link")
-    tf2_output = rospy.get_param("tf2_output")
+    tf2_base_link = rospy.get_param("~tf2_base_link")
+    tf2_output = rospy.get_param("~tf2_output")
 
     op = Platform()
     signal.signal(signal.SIGINT, op.stop)

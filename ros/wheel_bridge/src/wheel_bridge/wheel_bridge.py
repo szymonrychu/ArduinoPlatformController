@@ -73,11 +73,11 @@ class Wheel(SerialWrapper):
 def main():
     rospy.init_node('wheel_bridge')
 
-    serial_dev = rospy.get_param("serial_dev")
-    baudrate = rospy.get_param("baudrate")
-    input_topic = rospy.get_param("input_topic")
-    output_topic = rospy.get_param("output_topic")
-    tf2_base_link = rospy.get_param("tf2_base_link")
-    tf2_output = rospy.get_param("tf2_output")
+    serial_dev = rospy.get_param("~serial_dev")
+    baudrate = rospy.get_param("~baudrate")
+    input_topic = rospy.get_param("~input_topic")
+    output_topic = rospy.get_param("~output_topic")
+    tf2_base_link = rospy.get_param("~tf2_base_link")
+    tf2_output = rospy.get_param("~tf2_output")
 
     Wheel(serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output).process()
