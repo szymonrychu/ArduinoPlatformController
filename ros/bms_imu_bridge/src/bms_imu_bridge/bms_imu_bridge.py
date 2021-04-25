@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from serial_helper import SerialWrapper
+from .serial_helper import SerialWrapper
 import rospy
 from geometry_msgs.msg import Vector3
 import tf
