@@ -3,7 +3,7 @@
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
 
-  <node pkg="platform" type="platform" name="platform" output="screen" respawn="true">
+  <node pkg="robot_platform" type="robot_platform" name="robot_platform" output="screen" respawn="true">
 
     <param name="wheel1_input_topic" value="/wheel1" />
     <param name="wheel1_output_topic" value="/wheel1_meta" />

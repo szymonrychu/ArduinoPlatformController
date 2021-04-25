@@ -1,0 +1,13 @@
+[Unit]
+Description=Roscore
+After=Network.target
+Wants=Network.target
+
+[Service]
+User=szymonri
+ExecStart=/bin/bash -c "source /opt/ros/noetic/setup.bash; ROS_HOSTNAME=robot ROS_MASTER_URI=http://robot:11311 roscore"
+ExecStartPost=/usr/bin/timeout 30 sh -c 'while ! ss -H -t -l -n sport = :11311 | grep -q "^LISTEN.*:11311"; do sleep 1; done'
+
+
+[Install]
+WantedBy=multi-user.target

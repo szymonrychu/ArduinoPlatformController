@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from platform import platform
+from robot_platform import robot_platform
 
 if __name__ == '__main__':
-    platform.main()
+    robot_platform.main()

@@ -1,4 +1,3 @@
-from .serial_helper import ThreadedSerialWrapper
 from .platform_statics import PlatformStatics
 import math
 

@@ -1,27 +1,52 @@
 #!/usr/bin/env python3
-from platform_math import PlatformMath
+from .platform_math import PlatformMath
 
-
-
+import signal
 import rospy
 import tf_conversions
-from geometry_msgs.msg import Twist, Vector3, PoseStamped, Pose
+from geometry_msgs.msg import Twist, Vector3, PoseStamped, TransformStamped
 from std_msgs.msg import String
 import logging
+from copy import copy
+from threading import Lock
 
+class Wheel():
 
+    def __init__(self, _id, input_topic, output_topic, data_handler):
+        self._handler = data_handler
+        self._id = _id
+        self.publisher = rospy.Publisher(output_topic, Vector3, queue_size=10)
+        rospy.Subscriber(input_topic, TransformStamped, self.__callback)
+        self._lock = Lock()
+        self._fresh = False
+    
+    def __callback(self, data):
+        with self._lock:
+            self._fresh = True
+            self._handler(self._id+1, data)
+
+    @property
+    def fresh(self):
+        return self._lock
+    
+    def done()
+        with self._lock:
+            self._fresh = False
+        
 
 class Platform(PlatformMath):
 
     def __init__(self, wheel_input_topics, wheel_output_topics, tf2_base_link, tf2_output):
-        self._wheel_publishers = []
-        for _id, (input_t, output_t) in enumerate(zip(wheel_input_topics, wheel_output_topics)):
-            self._wheel_publishers.append(rospy.Publisher(output_topic, Vector3, queue_size=10))
-            rospy.Subscriber("/move_base_simple/goal", PoseStamped, def(data):
-                wheel_output_hander(_id+1, data) # _id+1 copies _id, not references it
-            )
+        self._wheels = []
+        self._wheel_transforms = []
+        for _id in range(Platform.WHEEL_NUM):
+            self._wheels.append(Wheel(_id, wheel_input_topics[_id], wheel_output_topics[_id], self.wheel_output_hander))
+        rospy.Subscriber("/move_base_simple/goal", PoseStamped, self._goal_callback)
 
-    def wheel_output_hander(self, id, data):
+    def wheel_output_hander(self, _id, data):
+
+
+        rospy.loginfo(f"Received update from {_id}")
         pass
 
     def _goal_callback(self, data):
@@ -98,12 +123,13 @@ def main():
     wheel_input_topics = []
     wheel_output_topics = []
     for _id in range(PlatformMath.WHEEL_NUM):
-        wheel_input_topics.append(rospy.get_param(f"~wheel{_id}_input_topic"))
-        wheel_output_topics.append(rospy.get_param(f"~wheel{_id}_output_topic"))
+        wheel_input_topics.append(rospy.get_param(f"~wheel{_id+1}_output_topic"))
+        wheel_output_topics.append(rospy.get_param(f"~wheel{_id+1}_input_topic"))
     
     tf2_base_link = rospy.get_param("~tf2_base_link")
     tf2_output = rospy.get_param("~tf2_output")
 
-    op = Platform()
-    signal.signal(signal.SIGINT, op.stop)
-    op.start()
+    platform = Platform(wheel_input_topics, wheel_output_topics, tf2_base_link, tf2_output)
+    rospy.spin()
+    # signal.signal(signal.SIGINT, op.stop)
+    # op.start()

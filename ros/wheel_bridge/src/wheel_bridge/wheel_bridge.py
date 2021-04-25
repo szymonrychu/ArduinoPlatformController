@@ -46,17 +46,19 @@ class Wheel(SerialWrapper):
             current_distance_v = float(dst_last_vel)
             current_angle = float(ang_last_pos)
             current_angle_v = float(ang_last_vel)
-            # if not self.__distance_set:
-            #     self.__last_distance = current_distance
-            #     self.__distance_set = True
-            #     return
-            # distance_delta = current_distance - self.__last_distance
-            # dx = distance_delta * math.cos(current_angle)
-            # dy = distance_delta * math.sin(current_angle)
+            if not self.__distance_set:
+                self.__last_distance = current_distance
+                self.__distance_set = True
+                return
+            distance_delta = current_distance - self.__last_distance
+            dx = distance_delta * math.cos(current_angle)
+            dy = distance_delta * math.sin(current_angle)
             
-            t = self._xyzRPY2TransformStamped(0, 0, 0, 0, 0, current_angle)
-            self._output_pub.publish(t)
-            self._tf_broadcaster.sendTransform(t)
+            # publish tranform with angles only, so the other node can compute mean position of the platform
+            # based on all wheels positions
+            self._tf_broadcaster.sendTransform(self._xyzRPY2TransformStamped(0, 0, 0, 0, 0, current_angle))
+            # publish position of a wheel including translation and angle, so the mena position can be computed
+            self._output_pub.publish(self._xyzRPY2TransformStamped(dx, dy, 0, 0, 0, current_angle))
             self.__last_distance = current_distance
         except ValueError:
             rospy.logwarn(f"Couldn't parse data '{data}'")
