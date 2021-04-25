@@ -3,6 +3,7 @@ import rospy
 from geometry_msgs.msg import Vector3, TransformStamped
 import tf
 import tf2_ros
+import signal
 
 class Wheel(SerialWrapper):
 
@@ -11,6 +12,7 @@ class Wheel(SerialWrapper):
 
     def __init__(self, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output):
         SerialWrapper.__init__(self, serial_dev, baudrate=baudrate)
+        self.__running = False
         self.__last_distance = 0.0
         self.__distance_set = False
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
@@ -26,6 +28,9 @@ class Wheel(SerialWrapper):
         cmd = self._move_command(distance, angle, time)
         self.write_data(cmd)
         rospy.loginfo(f"Wrote '{cmd}' to {self._fpath}")
+    
+    def stop(self, *args, **kwargs):
+        self.__running = False
 
     def _parse(self, data):
         rospy.logdebug(f"Received '{data}' from {self._fpath}")
@@ -68,7 +73,8 @@ class Wheel(SerialWrapper):
         return t
 
     def process(self):
-        while True:
+        self.__running = True
+        while self.__running:
             raw_data = self.read_data()
             if raw_data is not None:
                 rospy.logdebug(f"received raw: {raw_data}")
@@ -84,4 +90,6 @@ def main():
     tf2_base_link = rospy.get_param("~tf2_base_link")
     tf2_output = rospy.get_param("~tf2_output")
 
-    Wheel(serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output).process()
+    wheel = Wheel(serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output)
+    signal.signal(signal.SIGINT, wheel.stop)
+    wheel.process()
