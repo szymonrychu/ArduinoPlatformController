@@ -16,7 +16,7 @@ class Platform(PlatformMath):
     def __init__(self, wheel_input_topics, wheel_output_topics, tf2_base_link, tf2_output):
         self._wheel_publishers = []
         for _id, (input_t, output_t) in enumerate(zip(wheel_input_topics, wheel_output_topics)):
-            self._wheel_publishers.append(rospy.Publisher(output_topic, geometry_msgs.msg.Vector3, queue_size=10))
+            self._wheel_publishers.append(rospy.Publisher(output_topic, Vector3, queue_size=10))
             rospy.Subscriber("/move_base_simple/goal", PoseStamped, def(data):
                 wheel_output_hander(_id+1, data) # _id+1 copies _id, not references it
             )

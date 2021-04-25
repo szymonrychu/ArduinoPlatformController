@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from .serial_helper import SerialWrapper
 import rospy
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import TransformStamped
 import tf
 import tf2_ros
 
@@ -25,7 +25,7 @@ class Monitor(SerialWrapper):
         # gpsFix, GPSfixQuality, GPSSatellites,
         # latitude, longitude, speed, angle, altitude
         
-        t = geometry_msgs.msg.TransformStamped()
+        t = TransformStamped()
         t.header.stamp = rospy.Time.now()
         t.header.frame_id = self._tf2_base_link
         t.child_frame_id = self._tf2_output

@@ -17,7 +17,7 @@ class Wheel(SerialWrapper):
         self._tf2_base_link = tf2_base_link
         self._tf2_output = tf2_output
         rospy.Subscriber(input_topic, Vector3, self._topic_callback)
-        self._output_pub = rospy.Publisher(output_topic, geometry_msgs.msg.TransformStamped, queue_size=10)
+        self._output_pub = rospy.Publisher(output_topic, TransformStamped, queue_size=10)
 
     def _topic_callback(self, data):
         distance = data.x
