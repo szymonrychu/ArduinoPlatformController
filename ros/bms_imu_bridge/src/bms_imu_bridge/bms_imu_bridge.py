@@ -49,11 +49,11 @@ class Monitor(SerialWrapper):
 def main():
     rospy.init_node('bms_imu_bridge')
 
-    serial_dev = rospy.get_param("/serial_dev")
-    baudrate = rospy.get_param("/baudrate")
-    battery_topic = rospy.get_param("/battery_topic")
-    tf2_base_link = rospy.get_param("/tf2_base_link")
-    tf2_output = rospy.get_param("/tf2_output")
+    serial_dev = rospy.get_param("serial_dev")
+    baudrate = rospy.get_param("baudrate")
+    battery_topic = rospy.get_param("battery_topic")
+    tf2_base_link = rospy.get_param("tf2_base_link")
+    tf2_output = rospy.get_param("tf2_output")
 
 
     Monitor(serial_dev, baudrate, battery_topic, tf2_base_link, tf2_output).process()
