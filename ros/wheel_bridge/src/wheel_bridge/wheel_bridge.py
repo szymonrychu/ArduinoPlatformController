@@ -28,7 +28,7 @@ class Wheel(SerialWrapper):
         rospy.loginfo(f"Wrote {cmd} to {self._fpath}")
 
     def _parse(self, data):
-        data1, data2, timeDelta = raw_data.split(' ')
+        data1, data2, timeDelta = data.split(' ')
         msg_id, msg_level, ang_last_pos, ang_err, ang_last_vel, ang_p = data1.split(':')
         dst_last_pos, dst_err, dst_last_vel, dst_p = data2.split(':')
 
