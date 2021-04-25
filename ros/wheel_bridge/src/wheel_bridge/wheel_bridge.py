@@ -52,9 +52,10 @@ class Wheel(SerialWrapper):
             distance_delta = current_distance - self.__last_distance
             dx = distance_delta * math.cos(current_angle)
             dy = distance_delta * math.sin(current_angle)
-
+            
+            t = self._xyzRPY2TransformStamped(dx, dy, 0, 0, 0, current_angle)
             self._output_pub.publish(t)
-            self._tf_broadcaster.sendTransform(self._xyzRPY2TransformStamped(dx, dy, 0, 0, 0, current_angle))
+            self._tf_broadcaster.sendTransform(t)
             self.__last_distance = current_distance
         except ValueError:
             rospy.logwarn(f"Couldn't parse data '{data}'")
