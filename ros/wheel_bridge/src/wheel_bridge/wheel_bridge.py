@@ -10,17 +10,16 @@ class Wheel(SerialWrapper):
     def _move_command(self, distance, angle, time):
         return "G11 {} {} {}".format(distance, angle, time)
 
-    def __init__(self, node_name, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output):
+    def __init__(self, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output):
         SerialWrapper.__init__(self, serial_dev, baudrate=baudrate)
         self.__running = False
         self.__last_distance = 0.0
         self.__distance_set = False
+        self._tf_broadcaster = tf2_ros.TransformBroadcaster()
         self._tf2_base_link = tf2_base_link
         self._tf2_output = tf2_output
         rospy.Subscriber(input_topic, Vector3, self._topic_callback)
         self._output_pub = rospy.Publisher(output_topic, TransformStamped, queue_size=10)
-        self._tf_broadcaster = tf2_ros.TransformBroadcaster()
-        rospy.init_node(node_name)
 
     def _topic_callback(self, data):
         distance = data.x
@@ -59,7 +58,7 @@ class Wheel(SerialWrapper):
             rospy.logwarn(f"Couldn't parse data '{data}'")
 
     def _xyzRPY2TransformStamped(self, x, y, z, R, P, Y):
-        t = geometry_msgs.msg.TransformStamped()
+        t = TransformStamped()
         t.header.stamp = rospy.Time.now()
         t.header.frame_id = self._tf2_base_link
         t.child_frame_id = self._tf2_output
@@ -82,6 +81,7 @@ class Wheel(SerialWrapper):
                 self._parse(raw_data)
 
 def main():
+    rospy.init_node('wheel_bridge', anonymous=True)
 
     serial_dev = rospy.get_param("~serial_dev")
     baudrate = rospy.get_param("~baudrate")
@@ -90,6 +90,7 @@ def main():
     tf2_base_link = rospy.get_param("~tf2_base_link")
     tf2_output = rospy.get_param("~tf2_output")
 
-    wheel = Wheel('wheel_bridge', serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output)
+    wheel = Wheel(serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output)
+
     signal.signal(signal.SIGINT, wheel.stop)
-    wheel.process()
+    Wheel(serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output).process()
