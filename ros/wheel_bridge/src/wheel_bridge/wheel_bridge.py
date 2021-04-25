@@ -22,6 +22,7 @@ class Wheel(SerialWrapper):
         self._tf2_output = tf2_output
         rospy.Subscriber(input_topic, Vector3, self._topic_callback)
         self._output_pub = rospy.Publisher(output_topic, TransformStamped, queue_size=10)
+        self._x, self._y = 0.0, 0.0
 
     def _topic_callback(self, data):
         distance = data.x
@@ -53,12 +54,15 @@ class Wheel(SerialWrapper):
             distance_delta = current_distance - self.__last_distance
             dx = distance_delta * math.cos(current_angle)
             dy = distance_delta * math.sin(current_angle)
+
+            self._x += dx
+            self._y += dy
             
             # publish tranform with angles only, so the other node can compute mean position of the platform
             # based on all wheels positions
             self._tf_broadcaster.sendTransform(self._xyzRPY2TransformStamped(0, 0, 0, 0, 0, current_angle))
             # publish position of a wheel including translation and angle, so the mena position can be computed
-            self._output_pub.publish(self._xyzRPY2TransformStamped(dx, dy, 0, 0, 0, current_angle))
+            self._output_pub.publish(self._xyzRPY2TransformStamped(self._x, self._y, 0, 0, 0, current_angle))
             self.__last_distance = current_distance
         except ValueError:
             rospy.logwarn(f"Couldn't parse data '{data}'")

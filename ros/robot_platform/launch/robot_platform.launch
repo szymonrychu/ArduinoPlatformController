@@ -7,18 +7,21 @@
 
     <param name="wheel1_input_topic" value="/wheel1" />
     <param name="wheel1_output_topic" value="/wheel1_meta" />
+    <param name="wheel1_translation" value="0.23625 0.13 0.0575 0 0 0 /base_link /wheel1_pivot" />
 
     <param name="wheel2_input_topic" value="/wheel2" />
     <param name="wheel2_output_topic" value="/wheel2_meta" />
+    <param name="wheel2_translation" value="0.23625 -0.13 0.0575 0 0 0 /base_link /wheel2_pivot" />
 
     <param name="wheel3_input_topic" value="/wheel3" />
     <param name="wheel3_output_topic" value="/wheel3_meta" />
+    <param name="wheel3_translation" value="-0.23625 0.13 0.0575 0 0 0 /base_link /wheel3_pivot" />
     
     <param name="wheel4_input_topic" value="/wheel4" />
     <param name="wheel4_output_topic" value="/wheel4_meta" />
+    <param name="wheel4_translation" value="-0.23625 -0.13 0.0575 0 0 0 /base_link /wheel4_pivot" />
 
-    <param name="tf2_base_link" value="wheel1_pivot" />
-    <param name="tf2_output" value="wheel1" />
+    <param name="tf2_base_link" value="/base_link" />
   </node>
 
 </launch>
