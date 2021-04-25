@@ -25,9 +25,10 @@ class Wheel(SerialWrapper):
         time = data.z
         cmd = self._move_command(distance, angle, time)
         self.write_data(cmd)
-        rospy.loginfo(f"Wrote {cmd} to {self._fpath}")
+        rospy.loginfo(f"Wrote '{cmd}' to {self._fpath}")
 
     def _parse(self, data):
+        rospy.loginfo(f"Received '{data}' from {self._fpath}")
         data1, data2, timeDelta = data.split(' ')
         msg_id, msg_level, ang_last_pos, ang_err, ang_last_vel, ang_p = data1.split(':')
         dst_last_pos, dst_err, dst_last_vel, dst_p = data2.split(':')
