@@ -1,6 +1,6 @@
 from serial_helper import SerialWrapper
 import rospy
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, TransformStamped
 import tf
 import tf2_ros
 
@@ -16,8 +16,8 @@ class Wheel(SerialWrapper):
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
         self._tf2_base_link = tf2_base_link
         self._tf2_output = tf2_output
-        self._output_topic = output_topic
         rospy.Subscriber(input_topic, Vector3, self._topic_callback)
+        self._output_pub = rospy.Publisher(output_topic, geometry_msgs.msg.TransformStamped, queue_size=10)
 
     def _topic_callback(self, data):
         distance = data.x
@@ -43,6 +43,7 @@ class Wheel(SerialWrapper):
         dx = distance_delta * math.cos(current_angle)
         dy = distance_delta * math.sin(current_angle)
 
+        self._output_pub.publish(t)
         self._tf_broadcaster.sendTransform(self._xyzRPY2TransformStamped(dx, dy, 0, 0, 0, current_angle))
         self.__last_distance = current_distance
 
@@ -70,12 +71,12 @@ class Wheel(SerialWrapper):
                 self._parse(raw_data)
 
 def main():
-    rospy.init_node('platform')
+    rospy.init_node('wheel_bridge')
 
     serial_dev = rospy.get_param("/serial_dev")
     baudrate = rospy.get_param("/baudrate")
     input_topic = rospy.get_param("/input_topic")
-    # output_topic = rospy.get_param("/output_topic")
+    output_topic = rospy.get_param("/output_topic")
     tf2_base_link = rospy.get_param("/tf2_base_link")
     tf2_output = rospy.get_param("/tf2_output")
 

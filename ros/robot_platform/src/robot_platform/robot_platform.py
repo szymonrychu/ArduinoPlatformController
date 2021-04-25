@@ -1,45 +1,43 @@
-from .serial_helper import ThreadedSerialWrapper
-from .platform_math import PlatformMath
-from .tf2_publisher import TF2PlatformPublisher
+#!/usr/bin/env python3
+from platform_math import PlatformMath
 
-try:
-    import queue
-except ImportError:
-    import Queue as queue
-import time
+
 
 import rospy
+import tf_conversions
+from geometry_msgs.msg import Twist, Vector3, PoseStamped, Pose
+from std_msgs.msg import String
+import logging
 
-class PlatformCommands():
 
-    def move_command(self, angle, distance, time):
-        return "G11 {} {} {}".format(distance, angle, time)
 
-class PlatformController(PlatformMath, PlatformCommands):
+class Platform(PlatformMath):
 
-    def __init__(self):
-        PlatformMath.__init__(self)
-        receive_queue = queue.Queue()
-        self.__threads = []
-        for _id, wheel_serial_id in enumerate(PlatformController.WHEELS):
-            self.__threads.append(ThreadedSerialWrapper(wheel_serial_id, _id, receive_queue))
-        self.__threads.append(TF2PlatformPublisher(receive_queue))
+    def __init__(self, wheel_input_topics, wheel_output_topics, tf2_base_link, tf2_output):
+        self._wheel_publishers = []
+        for _id, (input_t, output_t) in enumerate(zip(wheel_input_topics, wheel_output_topics)):
+            self._wheel_publishers.append(rospy.Publisher(output_topic, geometry_msgs.msg.Vector3, queue_size=10))
+            rospy.Subscriber("/move_base_simple/goal", PoseStamped, def(data):
+                wheel_output_hander(_id+1, data) # _id+1 copies _id, not references it
+            )
 
-    @property
-    def running(self):
-        running = []
-        for t in self.__threads:
-            running.append(t.running)
-            print(t.running)
-        return all(running)
+    def wheel_output_hander(self, id, data):
+        pass
 
-    def start(self):
-        for th in self.__threads:
-            th.start()
+    def _goal_callback(self, data):
+        dx = data.pose.position.x - self._current_pose.position.x
+        dy = data.pose.position.y - self._current_pose.position.y
+        dz = data.pose.position.z - self._current_pose.position.z
 
-    def join(self, *args, **kwargs):
-        for th in self.__threads:
-            th.join(*args, **kwargs)
+        r, p, y = tf_conversions.transformations.euler_from_quaternion([data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w])
+
+        angle = math.atan2(dy, dx)
+        distance = math.sqrt(dx*dx + dy*dy)
+        rospy.loginfo(f"a/d:{angle}/{distance}")
+
+        self.turn_in_place_and_move(angle, distance) #, 2000, 3000)
+    
+
 
     def turn_and_move(self, distance, moving_time, angle, turning_time):
         distances = []
@@ -92,3 +90,20 @@ class PlatformController(PlatformMath, PlatformCommands):
             rospy.loginfo("{}: {}".format(str(wheel_id+1), move_command))
             self.__threads[wheel_id].write_data(move_command)
         time.sleep(moving_time/1000.0)
+
+
+
+def main():
+    rospy.init_node('platform')
+    wheel_input_topics = []
+    wheel_output_topics = []
+    for _id in range(PlatformMath.WHEEL_NUM):
+        wheel_input_topics.append(rospy.get_param(f"wheel{_id}_input_topic"))
+        wheel_output_topics.append(rospy.get_param(f"wheel{_id}_output_topic"))
+    
+    tf2_base_link = rospy.get_param("/tf2_base_link")
+    tf2_output = rospy.get_param("/tf2_output")
+
+    op = Platform()
+    signal.signal(signal.SIGINT, op.stop)
+    op.start()

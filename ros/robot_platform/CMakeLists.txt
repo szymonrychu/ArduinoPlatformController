@@ -14,7 +14,7 @@ catkin_package(
 )
 
 catkin_install_python(
-  PROGRAMS nodes/platform
+  PROGRAMS nodes/robot_platform
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -1,0 +1,24 @@
+
+<launch>
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
+  <env name="ROS_LOG_DIR" value="/tmp/"/>
+
+  <node pkg="platform" type="platform" name="platform" output="screen" respawn="true">
+
+    <param name="wheel1_input_topic" value="/wheel1" />
+    <param name="wheel1_output_topic" value="/wheel1_meta" />
+
+    <param name="wheel2_input_topic" value="/wheel2" />
+    <param name="wheel2_output_topic" value="/wheel2_meta" />
+
+    <param name="wheel3_input_topic" value="/wheel3" />
+    <param name="wheel3_output_topic" value="/wheel3_meta" />
+    
+    <param name="wheel4_input_topic" value="/wheel4" />
+    <param name="wheel4_output_topic" value="/wheel4_meta" />
+
+    <param name="tf2_base_link" value="wheel1_pivot" />
+    <param name="tf2_output" value="wheel1" />
+  </node>
+
+</launch>
