@@ -1,16 +1,16 @@
 <launch>
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
-
-  <node pkg="wheel_bridge" type="wheel_bridge" name="wheel1" output="screen" respawn="true">
-    <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952790-if00" />
+  
+  <node pkg="wheel_bridge" type="wheel_bridge" name="wheel4" output="screen" respawn="true">
+    <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_6075600-if00" />
     <param name="baudrate" type="int" value="115200"/>
 
-    <param name="input_topic" value="/wheel1" />
-    <param name="output_topic" value="/wheel1_meta" />
+    <param name="input_topic" value="/wheel4" />
+    <param name="output_topic" value="/wheel4_meta" />
 
-    <param name="tf2_base_link" value="wheel1_pivot" />
-    <param name="tf2_output" value="wheel1" />
+    <param name="tf2_base_link" value="wheel4_pivot" />
+    <param name="tf2_output" value="wheel4" />
   </node>
 
 </launch>
