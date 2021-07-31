@@ -1,0 +1,3 @@
+ros_version: noetic
+ros_user: ros
+ros_extra_packages: []

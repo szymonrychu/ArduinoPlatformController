@@ -1,0 +1,62 @@
+
+- name: set up ros keys
+  ansible.builtin.apt_key:
+    url: https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc
+    state: present
+
+- name: accept software from packages.ros.org
+  apt_repository:
+    repo: 'deb http://packages.ros.org/ros/ubuntu focal main'
+    filename: 'ros-latest'
+    update_cache: yes
+
+- name: install ros-base package
+  apt:
+    update_cache: yes
+    name: "ros-{{ ros_version }}-ros-base"
+
+- name: install ros packages
+  apt:
+    update_cache: yes
+    name: "ros-{{ ros_version }}-{{ item }}"
+  with_items: "{{ ros_extra_packages }}"
+
+- name: Add ros to .bashrc
+  become_user: "{{ ros_user }}"
+  lineinfile:
+    path: "/home/{{ ros_user }}/.bashrc"
+    search_string: 'source /opt/ros/noetic/setup.bash'
+    line: source /opt/ros/noetic/setup.bash
+    owner: "{{ ros_user }}"
+    mode: '0644'
+
+- name: Add ros to .zshrc
+  become_user: "{{ ros_user }}"
+  lineinfile:
+    path: "/home/{{ ros_user }}/.zshrc"
+    search_string: 'source /opt/ros/noetic/zsh.bash'
+    line: source /opt/ros/noetic/zsh.bash
+    owner: "{{ ros_user }}"
+    mode: '0644'
+
+- name: install ros build dependencies
+  ansible.builtin.package:
+    update_cache: yes
+    name: "{{ item }}"
+  with_items:
+    - python3-rosdep
+    - python3-rosinstall
+    - python3-rosinstall-generator
+    - python3-wstool
+    - build-essential
+
+- name: initialize rosdep
+  ansible.builtin.command:
+    cmd: rosdep init
+    creates: /etc/ros/rosdep/sources.list.d/20-default.list
+
+- name: update rosdep
+  become_user: "{{ ros_user }}"
+  ansible.builtin.command:
+    cmd: rosdep update
+    creates: "/home/{{ ros_user }}/.ros/rosdep/"

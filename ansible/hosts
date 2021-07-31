@@ -1,0 +1,5 @@
+[rosmaster]
+127.0.0.1    ansible_connection=local
+
+[platform]
+192.168.1.11    ansible_connection=ssh  ansible_user=szymonri

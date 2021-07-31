@@ -1,0 +1,31 @@
+---
+- name: ROS master
+  hosts: rosmaster
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: ROS master install
+      ansible.builtin.include_role:
+        name: ros
+      vars:
+        ros_user: szymonri
+        ros_packages:
+          - desktop-full
+          - hector-mapping
+          - hector-geotiff
+
+- name: ROS robot
+  hosts: platform
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: ROS master install
+      ansible.builtin.include_role:
+        name: ros
+      vars:
+        ros_user: szymonri
+        ros_extra_packages:
+          - hector-mapping
+          - hector-geotiff
