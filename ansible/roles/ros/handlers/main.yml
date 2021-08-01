@@ -1,0 +1,25 @@
+- name: build and install catkin_ws
+  tags:
+    - ros_update
+  become_user: "{{ ansible_user }}"
+  ansible.builtin.command:
+    chdir: "/home/{{ ansible_user }}/catkin_ws"
+    cmd: bash -ce "source /opt/ros/noetic/setup.bash; catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/noetic install"
+  notify:
+    - restart ros service
+
+- name: restart ros service
+  tags:
+    - ros_update
+  ansible.builtin.service:
+    name: ros
+    state: restarted
+    enabled: yes
+
+- name: systemctl daemon-reload
+  tags:
+    - ros_update
+  ansible.builtin.command:
+    cmd: systemctl daemon-reload
+  notify:
+    - restart ros service
