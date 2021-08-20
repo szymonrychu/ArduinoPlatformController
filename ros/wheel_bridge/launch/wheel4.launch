@@ -9,7 +9,7 @@
     <param name="input_topic" value="/wheel4" />
     <param name="output_topic" value="/wheel4_meta" />
 
-    <param name="tf2_base_link" value="wheel4_pivot" />
+    <param name="tf2_base_link" value="wheel4_base" />
     <param name="tf2_output" value="wheel4" />
   </node>
 
