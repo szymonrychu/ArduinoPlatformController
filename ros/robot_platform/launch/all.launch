@@ -10,8 +10,8 @@
   <include file="$(find freenect_launch)/launch/examples/freenect-registered-xyzrgb.launch">
   </include>
 
-  <include file="$(find imu_bridge)/launch/imu_bridge.launch">
-  </include>
+  <!-- <include file="$(find imu_bridge)/launch/imu_bridge.launch">
+  </include> -->
 
   <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args="-0.07945   0     0.2225  3.14159265 0 0 /base_link /laser 50"/>
 

@@ -5,6 +5,6 @@
   <env name="ROS_LOG_DIR" value="/tmp/"/>
 
   <node pkg="rviz" type="rviz" name="rviz"
-    args="-d $(find robot_platform)/rviz_cfg/mapping.rviz"/>
+    args="-d $(find wheel_bridge)/rviz_cfg/wheels.rviz"/>
 
 </launch>
