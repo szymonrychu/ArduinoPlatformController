@@ -135,7 +135,7 @@ class TF2Platform(TF2Link):
 
         for c in range(PlatformStatics.WHEEL_NUM):
             x, y, z = PlatformStatics.WHEELS_TRANSLATIONS_XYZ[c]
-            wheel = TF2WheelWithPivot(c, self, x, y, z, base_wheel_prefix, wheel_prefix)
+            wheel = TF2WheelWithPivot(c+1, self, x, y, z, base_wheel_prefix, wheel_prefix)
             self.__wheels.append(wheel)
             self.__platform_tf2.append(None)
             self.__platform_tf2_state.append(False)

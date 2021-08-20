@@ -2,17 +2,17 @@
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
   
-  <node pkg="tf" type="static_transform_publisher" name="wheel4_translation" args="-0.23625  -0.13  0.0575  0 0 0 /base_link /wheel4_base 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="wheel4_translation" args="-0.23625  -0.13  0.0575  0 0 0 /base_link /base_wheel_4 50"/>
 
   <node pkg="wheel_bridge" type="wheel_bridge" name="wheel4" output="screen" respawn="true">
     <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952790-if00" />
     <param name="baudrate" type="int" value="115200"/>
 
-    <param name="input_topic" value="/wheel4" />
-    <param name="output_topic" value="/wheel4_meta" />
+    <param name="input_topic" value="/wheel_4" />
+    <param name="output_topic" value="/wheel_4_meta" />
 
-    <param name="tf2_base_link" value="wheel4_base" />
-    <param name="tf2_output" value="wheel4" />
+    <param name="tf2_base_link" value="base_wheel_4" />
+    <param name="tf2_output" value="wheel_4" />
   </node>
 
 </launch>
