@@ -18,8 +18,7 @@
   <node pkg="tf" type="static_transform_publisher" name="kinect_translation" args="-0.14845   0     0.4645  3.14159265 3.0368729 3.14159265 /base_link /camera_link 50"/>
 
 
-  
-  <node pkg="platform" type="platform" name="platform" output="screen" respawn="true">
-  </node>
+  <include file="$(find robot_platform)/launch/robot_platform.launch">
+  </include>
 
 </launch>
