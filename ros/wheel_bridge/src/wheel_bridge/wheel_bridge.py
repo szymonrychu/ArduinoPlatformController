@@ -45,7 +45,7 @@ class Wheel(SerialWrapper):
 
             current_distance = float(dst_last_pos)
             current_distance_v = float(dst_last_vel)
-            current_angle = float(ang_last_pos)
+            current_angle = float(ang_last_pos) * 2.0
             current_angle_v = float(ang_last_vel)
             if not self.__distance_set:
                 self.__last_distance = current_distance
