@@ -53,8 +53,8 @@ class Wheel(SerialWrapper):
                 return
             distance_delta = current_distance - self.__last_distance
             
-            dx = distance_delta * math.cos(-current_angle)
-            dy = distance_delta * math.sin(-current_angle)
+            dx = distance_delta * math.cos(current_angle-math.pi)
+            dy = distance_delta * math.sin(current_angle-math.pi)
 
             self._x += dx
             self._y += dy
