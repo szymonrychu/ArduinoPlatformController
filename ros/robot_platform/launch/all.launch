@@ -1,6 +1,10 @@
 <launch>
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args="-0.07945   0     0.2225  3.14159265 0 0 /base_link /laser 50"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="kinect_translation" args="-0.14845   0     0.4645  3.14159265 3.0368729 3.14159265 /base_link /camera_link 50"/>
   
   <include file="$(find wheel_bridge)/launch/wheels.launch">
   </include>
@@ -12,10 +16,6 @@
 
   <!-- <include file="$(find imu_bridge)/launch/imu_bridge.launch">
   </include> -->
-
-  <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args="-0.07945   0     0.2225  3.14159265 0 0 /base_link /laser 50"/>
-
-  <node pkg="tf" type="static_transform_publisher" name="kinect_translation" args="-0.14845   0     0.4645  3.14159265 3.0368729 3.14159265 /base_link /camera_link 50"/>
 
 
   <include file="$(find robot_platform)/launch/robot_platform.launch">
