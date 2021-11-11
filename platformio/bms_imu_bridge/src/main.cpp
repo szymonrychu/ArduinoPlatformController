@@ -10,27 +10,10 @@
 #include <Adafruit_Sensor_Calibration.h>
 #include <Adafruit_AHRS.h>
 #include <Adafruit_GPS.h>
+#include "SerialLogger.h"
 
-#define CHARGING_ENABLE 2
-#define POWER_ENABLE 3
-#define SYSTEM_ENABLE 15
-
-#define CHARGING_ADC A3
-#define BATTERY_ADC A2
-
-#define CHG_FULL_INDICATOR 6
-
-#define BATTERY_MAX_VOLTAGE 4.2*3
-#define BATTERY_MIN_VOLTAGE 3.1*3
-#define BATTERY_MID_VOLTAGE (BATTERY_MAX_VOLTAGE+BATTERY_MIN_VOLTAGE)/2
-
-#define CHARGING_MIN_VOLTAGE 15
-
-#define MEAN_POINTS_NUM 100
-float batteryVoltages[MEAN_POINTS_NUM] = {};
-float chargingVoltages[MEAN_POINTS_NUM] = {};
-int voltagesPointer = 0;
-bool histerezis = true;
+#define QUAT_STABILITY_GATE 0.001
+#define MIN_STABLE_READINGS_N 100
 
 #define GPSSerial Serial1
 Adafruit_GPS GPS(&GPSSerial);
@@ -64,21 +47,34 @@ Adafruit_Madgwick filter;  // faster than NXP
 //#define AHRS_DEBUG_OUTPUT
 
 uint32_t timestamp;
+bool initialPoseStabilized = false;
+float pQW, pQX, pQY, pQZ = 0;
+float offsets[] = { 0, 0, 0, 0, 0, 0, 0 };
+int readingsCount = 0;
+
+bool quaternionIsStable(float qW, float qX, float qY, float qZ){
+  bool result = abs(offsets[0] - qW) < QUAT_STABILITY_GATE;
+  result = result && abs(offsets[1] - qX) < QUAT_STABILITY_GATE;
+  result = result && abs(offsets[2] - qY) < QUAT_STABILITY_GATE;
+  result = result && abs(offsets[3] - qZ) < QUAT_STABILITY_GATE;
+  if(result){
+    readingsCount++;
+  }else{
+    readingsCount = 0;
+  }
+  if(readingsCount == 0){
+    offsets[0] = qW; offsets[1] = qX; offsets[2] = qY; offsets[3] = qZ;
+    offsets[4] = filter.getRoll(); offsets[5] = filter.getPitch(); offsets[6] = filter.getYaw();
+  }
+  if (readingsCount > MIN_STABLE_READINGS_N) {
+    offsets[0] = qW; offsets[1] = qX; offsets[2] = qY; offsets[3] = qZ;
+    offsets[4] = filter.getRoll(); offsets[5] = filter.getPitch(); offsets[6] = filter.getYaw();
+    return true;
+  }
+}
 
 void setup() {
-  pinMode(CHARGING_ENABLE, OUTPUT);
-  digitalWrite(CHARGING_ENABLE, HIGH);
-  pinMode(POWER_ENABLE, OUTPUT);
-  digitalWrite(POWER_ENABLE, HIGH);
-  pinMode(SYSTEM_ENABLE, OUTPUT);
-  digitalWrite(SYSTEM_ENABLE, HIGH);
-  pinMode(CHG_FULL_INDICATOR, INPUT_PULLDOWN);
-
   Serial.begin(115200);
-  for(int c=0; c<MEAN_POINTS_NUM;c++){
-    batteryVoltages[c] = 0.0;
-    chargingVoltages[c] = 0.0;
-  }
   // while (!Serial) yield();
 
   if (!cal.begin()) {
@@ -106,24 +102,11 @@ void setup() {
 void serialEvent1() {
   char c = GPS.read();
   // if (Serial && c) Serial.print(c);
-
-  if (GPS.newNMEAreceived()) {
-  // a tricky thing here is if we print the NMEA sentence, or data
-  // we end up not listening and catching other sentences!
-  // so be very wary if using OUTPUT_ALLDATA and trying to print out data
-  // Serial.println(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
-  if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
-    return; // we can fail to parse a sentence in which case we should just wait for another
-  }
+  if (GPS.newNMEAreceived()) GPS.parse(GPS.lastNMEA());
 }
 
 void loop() {
   float gx, gy, gz;
-
-  if ((millis() - timestamp) < (1000 / FILTER_UPDATE_RATE_HZ)) {
-    return;
-  }
-  timestamp = millis();
   // Read the motion sensors
   sensors_event_t accel, gyro, mag;
   accelerometer->getEvent(&accel);
@@ -144,82 +127,46 @@ void loop() {
                 accel.acceleration.x, accel.acceleration.y, accel.acceleration.z, 
                 mag.magnetic.x, mag.magnetic.y, mag.magnetic.z);
 
-  bool systemON = false;
-  bool powerON = false;
-  bool chargingON = false;
-  bool batteryFull = digitalRead(CHG_FULL_INDICATOR);
-  float batteryRawVoltage = 12.25*float(analogRead(BATTERY_ADC))/488.0;
-  float chargingRawVoltage = 20.5*float(analogRead(CHARGING_ADC))/807.0;
-  batteryVoltages[voltagesPointer] = batteryRawVoltage;
-  chargingVoltages[voltagesPointer] = chargingRawVoltage;
-  voltagesPointer = (voltagesPointer + 1) % MEAN_POINTS_NUM;
-  float batteryVoltageSum = 0.0f;
-  float chargingVoltageSum = 0.0f;
-  for(int c=0; c<MEAN_POINTS_NUM;c++){
-    batteryVoltageSum += batteryVoltages[c];
-    chargingVoltageSum += chargingVoltages[c];
-  }
-  float batteryVoltage = batteryVoltageSum / float(MEAN_POINTS_NUM);
-  float chargingVoltage = chargingVoltageSum / float(MEAN_POINTS_NUM);
-
-  if((!batteryFull || batteryVoltage<BATTERY_MID_VOLTAGE) && chargingVoltage>CHARGING_MIN_VOLTAGE ){
-    chargingON = true;
-  }
-  if(batteryVoltage < BATTERY_MIN_VOLTAGE){
-    histerezis = false;
-  }
-  if(batteryVoltage > BATTERY_MID_VOLTAGE){
-    histerezis = true;
-  }
-  if(histerezis){
-    systemON = true;
-    powerON = true;
-  }
-  digitalWrite(CHARGING_ENABLE, chargingON ? LOW : HIGH);
-  digitalWrite(POWER_ENABLE, powerON ? LOW : HIGH);
-  digitalWrite(SYSTEM_ENABLE, systemON ? HIGH : LOW);
-
   float qw, qx, qy, qz;
   filter.getQuaternion(&qw, &qx, &qy, &qz);
+  if(!initialPoseStabilized) initialPoseStabilized = quaternionIsStable(qw, qx, qy, qz);
+
   if(Serial){
-    Serial.print(qw, 4);
+    Logger::info("", false);
+    Serial.print("Q:");
+    Serial.print(initialPoseStabilized ? "T" : "F");
     Serial.print(",");
-    Serial.print(qx, 4);
+    Serial.print(qw - offsets[0], 4);
     Serial.print(",");
-    Serial.print(qy, 4);
+    Serial.print(qx - offsets[1], 4);
     Serial.print(",");
-    Serial.print(qz, 4);
-    Serial.print(":");
-    Serial.print(batteryFull ? "T" : "F");
+    Serial.print(qy - offsets[2], 4);
     Serial.print(",");
-    Serial.print(systemON ? "T" : "F");
+    Serial.print(qz - offsets[3], 4);
+    Serial.print(":RPY:");
+    Serial.print(filter.getRoll() - offsets[4], 4);
     Serial.print(",");
-    Serial.print(powerON ? "T" : "F");
+    Serial.print(filter.getPitch() - offsets[5], 4);
     Serial.print(",");
-    Serial.print(chargingON ? "T" : "F");
-    Serial.print(":");
-    Serial.print(batteryVoltage, 2);
-    Serial.print(",");
-    Serial.print(chargingVoltage, 2);
-  }
-  if(Serial){
-    Serial.print(":");
+    Serial.print(filter.getYaw() - offsets[6], 4);
+    Serial.print(":GPS:");
     Serial.print(GPS.fix ? "T" : "F");
     Serial.print(",");
-    Serial.print((int)GPS.fixquality);
-    Serial.print(",");
-    Serial.print((int)GPS.satellites);
+    if(GPS.fix){
+      Serial.print((int)GPS.fixquality);
+      Serial.print(",");
+      Serial.print((int)GPS.satellites);
+      Serial.print(",");
+      Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
+      Serial.print(",");
+      Serial.print(GPS.longitude, 4); Serial.print(GPS.lon);
+      Serial.print(","); Serial.print(GPS.speed);
+      Serial.print(","); Serial.print(GPS.angle);
+      Serial.print(","); Serial.print(GPS.altitude);
+    }else{
+      Serial.print(",,,,,,");
+    }
+    Serial.println("");
   }
-  if (Serial && GPS.fix) {
-    Serial.print(",");
-    Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
-    Serial.print(",");
-    Serial.print(GPS.longitude, 4); Serial.print(GPS.lon);
-    Serial.print(","); Serial.print(GPS.speed);
-    Serial.print(","); Serial.print(GPS.angle);
-    Serial.print(","); Serial.print(GPS.altitude);
-  }
-  if(Serial)Serial.println("");
-  
-  
+  delay(1);
 }
