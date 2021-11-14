@@ -1,5 +1,5 @@
 [rosmaster]
-overlord ansible_host=192.168.1.10 ansible_connection=ssh ansible_user=szymonri
+overlord ansible_host=192.168.1.170 ansible_connection=ssh ansible_user=szymonri
 
 [platform]
-robot ansible_host=192.168.1.11 ansible_connection=ssh  ansible_user=szymonri
+robot ansible_host=192.168.1.197 ansible_connection=ssh  ansible_user=szymonri

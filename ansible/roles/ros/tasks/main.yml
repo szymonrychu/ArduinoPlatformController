@@ -60,6 +60,7 @@
       - python3-rosinstall-generator
       - python3-wstool
       - build-essential
+      - ros-noetic-hector-slam
 
 - name: initialize rosdep
   tags:
@@ -104,7 +105,7 @@
   become_user: "{{ ansible_user }}"
   ansible.builtin.command:
     chdir: "/home/{{ ansible_user }}/catkin_ws"
-    cmd: "bash -ce \"source /opt/ros/{{ ros_version }}/setup.bash; catkin_make\""
+    cmd: "bash -ce \"source /opt/ros/{{ ros_version }}/setup.bash; catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/noetic/\""
     creates: "/home/{{ ansible_user }}/catkin_ws/devel/setup.bash"
   when: create_workspace
 
@@ -120,6 +121,20 @@
     accept_hostkey: yes
   notify:
     - build and install catkin_ws
+  when: manage_platform_sources
+
+- name: place roscore.service
+  tags:
+    - ros_update
+  ansible.builtin.template:
+    src: roscore.service.j2
+    dest: /etc/systemd/system/ros.service
+    owner: root
+    group: root
+    mode: "0640"
+  notify:
+    - systemctl daemon-reload
+    - restart roscore service
   when: manage_platform_sources
 
 - name: place ros.service

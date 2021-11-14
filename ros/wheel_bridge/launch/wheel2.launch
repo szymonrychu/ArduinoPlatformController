@@ -9,7 +9,7 @@
     <param name="baudrate" type="int" value="115200"/>
 
     <param name="input_topic" value="/wheel_2" />
-    <param name="output_topic" value="/wheel2_meta" />
+    <param name="output_topic" value="/wheel_2_meta" />
 
     <param name="tf2_base_link" value="base_wheel_2" />
     <param name="tf2_output" value="wheel_2" />

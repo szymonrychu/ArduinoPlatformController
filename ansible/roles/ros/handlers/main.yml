@@ -8,6 +8,14 @@
   notify:
     - restart ros service
 
+- name: restart roscore service
+  tags:
+    - ros_update
+  ansible.builtin.service:
+    name: roscore
+    state: restarted
+    enabled: yes
+
 - name: restart ros service
   tags:
     - ros_update

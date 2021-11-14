@@ -18,6 +18,8 @@
   </include> -->
 
 
+  <!-- <include file="$(find robot_platform)/launch/rplidar_hector.launch">
+  </include> -->
   <include file="$(find robot_platform)/launch/robot_platform.launch">
   </include>
 

@@ -89,17 +89,19 @@ class Platform(PlatformMath, Meta):
 
                 Y = math.atan2(front_y-back_y, front_x-back_x)
 
-                rospy.loginfo(f"[{self._wheel_transforms[0].transform.translation.x},{self._wheel_transforms[0].transform.translation.y}][{self._wheel_transforms[1].transform.translation.x},{self._wheel_transforms[1].transform.translation.y}][{self._wheel_transforms[2].transform.translation.x},{self._wheel_transforms[2].transform.translation.y}][{self._wheel_transforms[3].transform.translation.x},{self._wheel_transforms[3].transform.translation.y}]")
-                rospy.loginfo(f"{math.degrees(Y)} [{front_x},{front_y}][{back_x},{back_y}]")
+                rospy.logdebug(f"[{self._wheel_transforms[0].transform.translation.x},{self._wheel_transforms[0].transform.translation.y}][{self._wheel_transforms[1].transform.translation.x},{self._wheel_transforms[1].transform.translation.y}][{self._wheel_transforms[2].transform.translation.x},{self._wheel_transforms[2].transform.translation.y}][{self._wheel_transforms[3].transform.translation.x},{self._wheel_transforms[3].transform.translation.y}]")
+                rospy.logdebug(f"{math.degrees(Y)} [{front_x},{front_y}][{back_x},{back_y}]")
 
                 self._current_pose.pose.position.x = x
                 self._current_pose.pose.position.y = y
 
-                rospy.logdebug(f"Robot position: {x}, {y}, 0.0, 0.0, 0.0, {Y}")
+                rospy.loginfo(f"Robot position: {x}, {y}, 0.0, 0.0, 0.0, {Y}")
                 self._tf_broadcaster.sendTransform(self.xyzRPY2TransformStamped(x, y, 0, 0, 0, Y))
                 for wheel in self._wheels:
                     wheel.send_transform()
                 self._wheel_transforms = [None] * Platform.WHEEL_NUM
+
+                
 
     def _goal_callback(self, data):
         dx = data.pose.position.x - self._current_pose.pose.position.x
@@ -135,7 +137,6 @@ class Platform(PlatformMath, Meta):
 
         for _id, wheel_angle in enumerate(angles):
             self._wheels[_id].send_command(0.0, wheel_angle, 2000)
-
         time.sleep(2)
         for _id, (wheel_angle, wheel_distance) in enumerate(zip(angles, distances)):
             self._wheels[_id].send_command(wheel_distance, wheel_angle, moving_time)
@@ -145,7 +146,7 @@ class Platform(PlatformMath, Meta):
         if not turning_time:
             turning_time = abs(angle * 2000.0)
         if not moving_time:
-            moving_time = abs(distance * 7000.0)
+            moving_time = abs(distance * 10000.0)
         
         self.turn_in_place(angle, turning_time)
 

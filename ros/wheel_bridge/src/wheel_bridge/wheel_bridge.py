@@ -11,6 +11,7 @@ class Wheel(SerialWrapper):
 
     def _move_command(self, distance, angle, time):
         return "G11 {} {} {}".format(distance, angle, time)
+        # G11 0 0 1
 
     def __init__(self, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output):
         SerialWrapper.__init__(self, serial_dev, baudrate=baudrate)

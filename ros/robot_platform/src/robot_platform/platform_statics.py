@@ -21,8 +21,8 @@ class PlatformStatics():
         (-ROBOT_LENGTH/2.0, -ROBOT_WIDTH/2.0, 0),
     ]
     TURNING_LIMIT = math.radians(60)
-    SPEED_LIMIT = 10
-    WHEEL_RADIUS = 0.115
+    SPEED_LIMIT = 0.5
+    WHEEL_RADIUS = 0.230
 
 
     @staticmethod
