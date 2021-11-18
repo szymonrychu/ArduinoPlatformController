@@ -5,7 +5,7 @@ import signal
 import rospy
 import tf_conversions
 import tf2_ros
-from geometry_msgs.msg import Twist, Vector3, PoseStamped, TransformStamped
+from geometry_msgs.msg import Twist, Vector3, PoseStamped, TransformStamped, Pose2D
 from std_msgs.msg import String
 import logging
 from copy import copy
@@ -44,11 +44,11 @@ class Wheel(Meta):
         self._id = _id
         self._static_translation = translation
         self.publisher = rospy.Publisher(output_topic, Vector3, queue_size=10)
-        rospy.Subscriber(input_topic, TransformStamped, self.__callback)
+        rospy.Subscriber(input_topic, Pose2D, self.__callback)
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
     
-    def __callback(self, data):
-        self._handler(self._id+1, data)
+    def __callback(self, distance_angle):
+        self._handler(self._id+1, distance_angle)
 
     def send_transform(self):
         self._static_translation.header.stamp = rospy.Time.now()
@@ -66,47 +66,71 @@ class Platform(PlatformMath, Meta):
     def __init__(self, wheel_input_topics, wheel_output_topics, wheel_translations, wheel_base_links, wheel_links):
         Meta.__init__(self, "/base_link", "/map")
         self._wheels = []
-        self._current_pose = PoseStamped()
-        self._wheel_transforms = [None] * Platform.WHEEL_NUM
+        self._platform_transform = TransformStamped()
+        self._platform_transform.header.frame_id = "/map"
+        self._platform_transform.child_frame_id = "/base_link"
+        self._distance_angles = [None] * Platform.WHEEL_NUM
+        self._wheel_xy = [Pose2D() for _ in range(Platform.WHEEL_NUM)]
+        for c in range(Platform.WHEEL_NUM):
+            tr_x, tr_y, tr_z = self.WHEELS_TRANSLATIONS_XYZ[c]
+            self._wheel_xy[c].x = tr_x
+            self._wheel_xy[c].y = tr_y
         self._lock = Lock()
         for _id in range(Platform.WHEEL_NUM):
             self._wheels.append(Wheel(_id, wheel_input_topics[_id], wheel_output_topics[_id], wheel_translations[_id], wheel_base_links[_id], wheel_links[_id], self.wheel_output_hander))
         rospy.Subscriber("/move_base_simple/goal", PoseStamped, self._goal_callback)
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
+        self._previous_center_distance = Pose2D()
 
-    def wheel_output_hander(self, _id, data):
+    def wheel_output_hander(self, _id, distance_angle):
         with self._lock:
-            self._wheel_transforms[_id-1] = data
-            rospy.logdebug(f"{_id}: {data.transform.translation.x}:{data.transform.translation.y}")
-            if all(self._wheel_transforms):
-                x = sum([self._wheel_transforms[c].transform.translation.x for c in range(Platform.WHEEL_NUM)])/float(Platform.WHEEL_NUM)
-                y = sum([self._wheel_transforms[c].transform.translation.y for c in range(Platform.WHEEL_NUM)])/float(Platform.WHEEL_NUM)
+            self._distance_angles[_id-1] = distance_angle
+            if all(self._distance_angles):
+                for c in range(Platform.WHEEL_NUM):
+                    if c == 0 or c == 1:
+                        self._wheel_xy[c].x += self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
+                        self._wheel_xy[c].y += self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
+                    else:
+                        self._wheel_xy[c].x += -(self._distance_angles[c].x * math.cos(self._distance_angles[c].y))
+                        self._wheel_xy[c].y += -(self._distance_angles[c].x * math.sin(self._distance_angles[c].y))
 
-                front_x = (self._wheel_transforms[0].transform.translation.x + self._wheel_transforms[1].transform.translation.x)/2
-                front_y = (self._wheel_transforms[0].transform.translation.y + self._wheel_transforms[1].transform.translation.y)/2
-                back_x = (self._wheel_transforms[2].transform.translation.x + self._wheel_transforms[3].transform.translation.x)/2
-                back_y = (self._wheel_transforms[2].transform.translation.y + self._wheel_transforms[3].transform.translation.y)/2
+                raw_delta_distance = sum([self._distance_angles[c].x if c==0 or c==1 else -self._distance_angles[c].x for c in range(Platform.WHEEL_NUM)])/Platform.WHEEL_NUM
+                # raw_delta_distance = sum([self._distance_angles[c].x for c in range(Platform.WHEEL_NUM)])
 
-                Y = math.atan2(front_y-back_y, front_x-back_x)
+                debug_str = []
+                for c in range(Platform.WHEEL_NUM):
+                    debug_str.append(f"{100*self._wheel_xy[c].x:.4f}/{100*self._wheel_xy[c].y:.4f}")
+                    # debug_str.append(f"{'U' if self._wheel_xy[c].x > 0 else 'D'}/{'R' if self._wheel_xy[c].y > 0 else 'L'}")
+                rospy.loginfo(' '.join(debug_str))
+                
+                front_back_vector = Pose2D()
+                front_back_vector.x = (self._wheel_xy[0].x + self._wheel_xy[1].x) - (self._wheel_xy[2].x + self._wheel_xy[3].x)
+                front_back_vector.y = (self._wheel_xy[0].y + self._wheel_xy[1].y) - (self._wheel_xy[2].y + self._wheel_xy[3].y)
 
-                rospy.logdebug(f"[{self._wheel_transforms[0].transform.translation.x},{self._wheel_transforms[0].transform.translation.y}][{self._wheel_transforms[1].transform.translation.x},{self._wheel_transforms[1].transform.translation.y}][{self._wheel_transforms[2].transform.translation.x},{self._wheel_transforms[2].transform.translation.y}][{self._wheel_transforms[3].transform.translation.x},{self._wheel_transforms[3].transform.translation.y}]")
-                rospy.logdebug(f"{math.degrees(Y)} [{front_x},{front_y}][{back_x},{back_y}]")
+                Y = 2*math.atan2(-front_back_vector.y, front_back_vector.x)
 
-                self._current_pose.pose.position.x = x
-                self._current_pose.pose.position.y = y
+                self._platform_transform.transform.translation.x += raw_delta_distance * math.cos(Y)
+                self._platform_transform.transform.translation.y += raw_delta_distance * math.sin(Y)
 
-                rospy.loginfo(f"Robot position: {x}, {y}, 0.0, 0.0, 0.0, {Y}")
-                self._tf_broadcaster.sendTransform(self.xyzRPY2TransformStamped(x, y, 0, 0, 0, Y))
+                q = tf_conversions.transformations.quaternion_from_euler(0.0, 0.0, Y)
+                self._platform_transform.transform.rotation.x = q[0]
+                self._platform_transform.transform.rotation.y = q[1]
+                self._platform_transform.transform.rotation.z = q[2]
+                self._platform_transform.transform.rotation.w = q[3]
+
+                rospy.loginfo(f"center: {self._platform_transform.transform.translation.x}, {self._platform_transform.transform.translation.y}, {Y}")
+                self._platform_transform.header.stamp = rospy.Time.now()
+                self._tf_broadcaster.sendTransform(self._platform_transform)
                 for wheel in self._wheels:
                     wheel.send_transform()
-                self._wheel_transforms = [None] * Platform.WHEEL_NUM
-
+                self._distance_angles = [None] * Platform.WHEEL_NUM
+                
                 
 
     def _goal_callback(self, data):
-        dx = data.pose.position.x - self._current_pose.pose.position.x
-        dy = data.pose.position.y - self._current_pose.pose.position.y
-        dz = data.pose.position.z - self._current_pose.pose.position.z
+        dx = data.pose.position.x - self._platform_transform.transform.translation.x
+        dy = data.pose.position.y - self._platform_transform.transform.translation.y
+        dz = data.pose.position.z - self._platform_transform.transform.translation.z
 
         r, p, y = tf_conversions.transformations.euler_from_quaternion([data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w])
 
@@ -153,9 +177,9 @@ class Platform(PlatformMath, Meta):
         for _id in range(PlatformMath.WHEEL_NUM):
             self._wheels[_id].send_command(0.0, 0.0, 2000)
         time.sleep(2)
-        for _id in range(PlatformMath.WHEEL_NUM):
-            self._wheels[_id].send_command(distance, 0.0, moving_time)
-        time.sleep(moving_time/1000.0)
+        # for _id in range(PlatformMath.WHEEL_NUM):
+        #     self._wheels[_id].send_command(distance, 0.0, moving_time)
+        # time.sleep(moving_time/1000.0)
 
 
 

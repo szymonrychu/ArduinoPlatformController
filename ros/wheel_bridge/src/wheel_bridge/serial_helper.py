@@ -41,10 +41,13 @@ class SerialWrapper():
             rospy.loginfo(str(tb))
             self.serial = SerialMock(fpath, baudrate)
 
+    def data_available(self):
+        return self.serial.inWaiting()
+
     def read_data(self):
         raw_data = None
         try:
-            if self.serial.inWaiting():
+            if self.data_available():
                 raw_line = self.serial.readline()
                 if raw_line is not None:
                     raw_data = raw_line.decode('ascii')

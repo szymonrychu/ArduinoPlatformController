@@ -15,10 +15,10 @@ class PlatformStatics():
         FL_WHEEL1, FR_WHEEL2, BL_WHEEL3, BR_WHEEL4
     ]
     WHEELS_TRANSLATIONS_XYZ = [
-        (ROBOT_LENGTH/2.0, ROBOT_WIDTH/2.0, 0),
-        (-ROBOT_LENGTH/2.0, ROBOT_WIDTH/2.0, 0),
         (ROBOT_LENGTH/2.0, -ROBOT_WIDTH/2.0, 0),
+        (ROBOT_LENGTH/2.0, ROBOT_WIDTH/2.0, 0),
         (-ROBOT_LENGTH/2.0, -ROBOT_WIDTH/2.0, 0),
+        (-ROBOT_LENGTH/2.0, ROBOT_WIDTH/2.0, 0),
     ]
     TURNING_LIMIT = math.radians(60)
     SPEED_LIMIT = 0.5

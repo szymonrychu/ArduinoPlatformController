@@ -1,6 +1,6 @@
 from .serial_helper import SerialWrapper
 import rospy
-from geometry_msgs.msg import Vector3, TransformStamped
+from geometry_msgs.msg import Vector3, TransformStamped, Pose2D
 import tf
 import tf_conversions
 import tf2_ros
@@ -13,8 +13,9 @@ class Wheel(SerialWrapper):
         return "G11 {} {} {}".format(distance, angle, time)
         # G11 0 0 1
 
-    def __init__(self, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output):
+    def __init__(self, wheel_id, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output):
         SerialWrapper.__init__(self, serial_dev, baudrate=baudrate)
+        self.__wheel_id = wheel_id
         self.__running = False
         self.__last_distance = 0.0
         self.__distance_set = False
@@ -22,7 +23,7 @@ class Wheel(SerialWrapper):
         self._tf2_base_link = tf2_base_link
         self._tf2_output = tf2_output
         rospy.Subscriber(input_topic, Vector3, self._topic_callback)
-        self._output_pub = rospy.Publisher(output_topic, TransformStamped, queue_size=10)
+        self._output_pub = rospy.Publisher(output_topic, Pose2D, queue_size=10)
         self._x, self._y = 0.0, 0.0
 
     def _topic_callback(self, data):
@@ -46,13 +47,16 @@ class Wheel(SerialWrapper):
 
             current_distance = float(dst_last_pos)
             current_distance_v = float(dst_last_vel)
-            current_angle = float(ang_last_pos) * 2.0
+            current_angle = - float(ang_last_pos) * 2.0 # wheelm raports itself wrongly (current '-' serves as current workaround)
             current_angle_v = float(ang_last_vel)
             if not self.__distance_set:
                 self.__last_distance = current_distance
                 self.__distance_set = True
                 return
-            distance_delta = current_distance - self.__last_distance
+            if self.__wheel_id == 1 or self.__wheel_id == 2:
+                distance_delta = current_distance - self.__last_distance
+            else:
+                distance_delta = self.__last_distance - current_distance
             
             dx = distance_delta * math.cos(current_angle)
             dy = distance_delta * math.sin(current_angle)
@@ -64,7 +68,10 @@ class Wheel(SerialWrapper):
             # based on all wheels positions
             self._tf_broadcaster.sendTransform(self._xyzRPY2TransformStamped(0, 0, 0, 0, 0, current_angle))
             # publish position of a wheel including translation and angle, so the mena position can be computed
-            self._output_pub.publish(self._xyzRPY2TransformStamped(self._x, self._y, 0, 0, 0, current_angle))
+            distance_angle = Pose2D()
+            distance_angle.x = distance_delta/2
+            distance_angle.y = current_angle/2
+            self._output_pub.publish(distance_angle)
             self.__last_distance = current_distance
         except ValueError:
             rospy.logwarn(f"Couldn't parse data '{data}'")
@@ -96,13 +103,14 @@ def main():
     rospy.init_node('wheel_bridge', anonymous=True)
 
     serial_dev = rospy.get_param("~serial_dev")
+    wheel_id = rospy.get_param("~id")
     baudrate = rospy.get_param("~baudrate")
     input_topic = rospy.get_param("~input_topic")
     output_topic = rospy.get_param("~output_topic")
     tf2_base_link = rospy.get_param("~tf2_base_link")
     tf2_output = rospy.get_param("~tf2_output")
 
-    wheel = Wheel(serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output)
+    wheel = Wheel(wheel_id, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output)
 
     signal.signal(signal.SIGINT, wheel.stop)
-    Wheel(serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output).process()
+    Wheel(wheel_id, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output).process()

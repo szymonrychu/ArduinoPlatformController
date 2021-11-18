@@ -6,6 +6,7 @@
 
   <node pkg="wheel_bridge" type="wheel_bridge" name="wheel4" output="screen" respawn="true">
     <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952790-if00" />
+    <param name="id" type="int" value="4"/>
     <param name="baudrate" type="int" value="115200"/>
 
     <param name="input_topic" value="/wheel_4" />
