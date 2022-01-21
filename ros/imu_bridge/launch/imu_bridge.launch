@@ -3,8 +3,8 @@
 
   <node pkg="tf" type="static_transform_publisher" name="imu_translation"  args="0 0 0 1.57079632679 0 0 /imu /base_link_imu 50"/>
 
-  <node pkg="bms_imu_bridge" type="bms_imu_bridge" name="monitor" output="screen" respawn="true">
-    <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_4292050-if00" />
+  <node pkg="imu_bridge" type="imu_bridge" name="monitor" output="screen" respawn="true">
+    <param name="serial_dev" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_5440650-if00" />
     <param name="baudrate" type="int" value="115200"/>
 
     <param name="battery_topic" value="/battery" />

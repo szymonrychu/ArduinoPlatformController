@@ -42,11 +42,11 @@ class Monitor(SerialWrapper):
         while True:
             raw_data = self.read_data()
             if raw_data is not None:
-                rospy.logdebug(f"received raw: {raw_data}")
+                rospy.loginfo(f"received raw: {raw_data}")
                 self._parse(raw_data)
 
 def main():
-    rospy.init_node('bms_imu_bridge')
+    rospy.init_node('imu_bridge', log_level=rospy.DEBUG)
 
     serial_dev = rospy.get_param("~serial_dev")
     baudrate = rospy.get_param("~baudrate")

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(bms_imu_bridge)
+project(imu_bridge)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
@@ -15,7 +15,7 @@ catkin_package(
 
 
 catkin_install_python(
-  PROGRAMS nodes/bms_imu_bridge
+  PROGRAMS nodes/imu_bridge
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
