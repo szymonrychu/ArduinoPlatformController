@@ -7,6 +7,21 @@ import tf2_ros
 import signal
 import math
 
+import os
+_env2log_name = 'ROS_LOG_LEVEL'
+_env2log = {
+    'DEBUG': rospy.DEBUG,
+    'INFO':  rospy.INFO,
+    'WARN':  rospy.WARN,
+    'ERROR': rospy.ERROR,
+    'FATAL': rospy.FATAL
+}
+def env2log():
+    try:
+        return _env2log[os.getenv(_env2log_name, 'INFO')]
+    except Exception:
+        return rospy.INFO
+
 class Wheel(SerialWrapper):
 
     def _move_command(self, distance, angle, time):
@@ -100,7 +115,7 @@ class Wheel(SerialWrapper):
                 self._parse(raw_data)
 
 def main():
-    rospy.init_node('wheel_bridge', anonymous=True)
+    rospy.init_node('wheel_bridge', log_level=env2log())
 
     serial_dev = rospy.get_param("~serial_dev")
     wheel_id = rospy.get_param("~id")

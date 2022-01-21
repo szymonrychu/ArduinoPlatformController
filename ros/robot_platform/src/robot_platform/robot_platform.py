@@ -13,6 +13,23 @@ from threading import Lock
 import math
 import time
 
+import os
+_env2log_name = 'ROS_LOG_LEVEL'
+_env2log = {
+    'DEBUG': rospy.DEBUG,
+    'INFO':  rospy.INFO,
+    'WARN':  rospy.WARN,
+    'ERROR': rospy.ERROR,
+    'FATAL': rospy.FATAL
+}
+def env2log():
+    try:
+        return _env2log[os.getenv(_env2log_name, 'INFO')]
+    except Exception:
+        return rospy.INFO
+
+
+
 class Meta():
 
     def __init__(self, base_link, link):
@@ -184,7 +201,7 @@ class Platform(PlatformMath, Meta):
 
 
 def main():
-    rospy.init_node('robot_platform')
+    rospy.init_node('robot_platform', log_level=env2log())
     wheels = []
     wheel_input_topics = []
     wheel_output_topics = []

@@ -5,6 +5,21 @@ from geometry_msgs.msg import TransformStamped
 import tf
 import tf2_ros
 
+import os
+_env2log_name = 'ROS_LOG_LEVEL'
+_env2log = {
+    'DEBUG': rospy.DEBUG,
+    'INFO':  rospy.INFO,
+    'WARN':  rospy.WARN,
+    'ERROR': rospy.ERROR,
+    'FATAL': rospy.FATAL
+}
+def env2log():
+    try:
+        return _env2log[os.getenv(_env2log_name, 'INFO')]
+    except Exception:
+        return rospy.INFO
+
 
 class Monitor(SerialWrapper):
 
@@ -18,7 +33,8 @@ class Monitor(SerialWrapper):
         self._battery_topic = battery_topic
 
     def _parse(self, data):
-        data = ( float(d) for d in raw_data.split(',') )
+        _q, quat_t = data.split(':')
+        data = [ float(d) for d in quat_t.split(',') ]
         # qw, qx, qy, qz
         # battFull, systemON, powerON, chargingON
         # batteryVoltage, chargingVoltage
@@ -42,11 +58,11 @@ class Monitor(SerialWrapper):
         while True:
             raw_data = self.read_data()
             if raw_data is not None:
-                rospy.loginfo(f"received raw: {raw_data}")
+                rospy.logdebug(f"received raw: {raw_data}")
                 self._parse(raw_data)
 
 def main():
-    rospy.init_node('imu_bridge', log_level=rospy.DEBUG)
+    rospy.init_node('imu_bridge', log_level=env2log())
 
     serial_dev = rospy.get_param("~serial_dev")
     baudrate = rospy.get_param("~baudrate")
