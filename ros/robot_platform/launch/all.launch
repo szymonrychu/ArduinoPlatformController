@@ -9,8 +9,6 @@
   <include file="$(find wheel_bridge)/launch/wheels.launch">
   </include>
 
-  <include file="$(find rplidar_ros)/launch/rplidar.launch">
-  </include>
   <include file="$(find freenect_launch)/launch/examples/freenect-registered-xyzrgb.launch">
   </include>
 
