@@ -65,7 +65,7 @@ class Monitor(SerialWrapper):
         t2 = TransformStamped()
         t2.header.stamp = rospy.Time.now()
         t2.header.frame_id = self._tf2_base_link
-        t2.child_frame_id = self._tf2_output
+        t2.child_frame_id = self._tf2_output_stabilized
         t2.transform.translation.x = 0
         t2.transform.translation.y = 0
         t2.transform.translation.z = 0
