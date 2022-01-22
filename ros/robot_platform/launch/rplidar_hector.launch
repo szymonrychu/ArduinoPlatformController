@@ -6,7 +6,7 @@
   <arg name="map_frame" default="map" />
   <arg name="base_frame" default="base_stabilized"/>
   <!-- <arg name="base_frame" default="base_frame"/>  without imu-->
-  <arg name="odom_frame" default="base_stabilized"/>
+  <arg name="odom_frame" default="base_frame"/>
   <!-- <arg name="odom_frame" default="odom"/> with wheels turning -->
   <arg name="scan_subscriber_queue_size" default="5"/>
   <arg name="scan_topic" default="scan"/>
