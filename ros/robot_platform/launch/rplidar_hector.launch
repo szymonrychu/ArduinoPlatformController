@@ -20,7 +20,7 @@
   <include file="$(find imu_bridge)/launch/imu_bridge.launch">
   </include>
 
-  <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args="-0.07945   0     0.2225  3.14159265 0 0 /base_link /laser 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args="-0.07945   0     0.2225  0 0 0 /base_link /laser 50"/>
 
   <include file="$(find hector_geotiff_launch)/launch/geotiff_mapper.launch">
     <arg name="trajectory_source_frame_name" value="$(arg tf_map_scanmatch_transform_frame_name"/>
