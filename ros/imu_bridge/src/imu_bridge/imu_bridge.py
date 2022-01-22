@@ -35,9 +35,9 @@ class Monitor(SerialWrapper):
         self._battery_topic = battery_topic
 
     def _stabilize_quat(self, q1):
-        roll, pitch, yaw = euler_from_quaternion([q1[1], q1[2], q1[3], q1[0]])
-        q2 = quaternion_from_euler(0, 0, yaw)
-        return [q2[1], q2[2], q2[3], q2[0]]
+        roll, pitch, yaw = euler_from_quaternion([q1[1], q1[2], q1[3], q1[0]]) # wxyz -> xyzw
+        q2 = quaternion_from_euler(0, 0, yaw) # xyzw
+        return [q2[3], q2[0], q2[1], q2[2]] # xyzw -> wxyz
 
     def _parse(self, data):
         _q, quat_t = data.split(':')
