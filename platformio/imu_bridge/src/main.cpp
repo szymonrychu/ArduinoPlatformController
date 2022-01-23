@@ -13,14 +13,14 @@ Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x28);
 
 void setup(void){
   Serial.begin(115200);
-  while(Serial){;} // Wait for someone to open Serial port
-  if(!bno.begin())  {
-    while(true){
-      Serial.print("ERROR");
-      delay(10000);
-    }
+  // while(!Serial){
+  //   delay(1000);
+  // }
+  while(!bno.begin())  {
+    Serial.print("ERROR");
+    delay(1000);
   }
-  bno.setExtCrystalUse(true);
+  // bno.setExtCrystalUse(true);
 }
 
 void loop(void){
