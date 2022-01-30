@@ -43,51 +43,52 @@ class Monitor(SerialWrapper):
         return [q2[3], q2[0], q2[1], q2[2]] # xyzw -> wxyz
 
     def _parse(self, data):
-        rospy_time_now = rospy.get_rostime()
+        rospy_time_now = rospy.Time.now()
         if rospy_time_now == 0:
             rospy.logerr('ROSPY returned time == 0!')
             return
         _q, _raw_data = data.split(':')
         _spitted_raw_data = [s for s in _raw_data.split(',')]
 
-        nav_sat_status = NavSatStatus()
-        nav_sat_status.service = NavSatStatus.SERVICE_GPS
+        # nav_sat_status = NavSatStatus()
+        # nav_sat_status.service = NavSatStatus.SERVICE_GPS
+        # nav_sat_fix = NavSatFix()
+        # nav_sat_fix.position_covariance_type = NavSatFix.COVARIANCE_TYPE_UNKNOWN
+        # nav_sat_fix.header.stamp = rospy_time_now
+        # nav_sat_fix.header.frame_id = self._tf2_base_link
+        # gps_fix_Q = int(_spitted_raw_data[5] or 0)
+        # gps_satellites = int(_spitted_raw_data[6] or 0)
+        # if gps_fix_Q > 0 and gps_satellites > 0:
+        #     gps_latitude = float(_spitted_raw_data[7])
+        #     gps_longitude = float(_spitted_raw_data[8])
+        #     gps_speed = float(_spitted_raw_data[9])
+        #     gps_angle = float(_spitted_raw_data[10])
+        #     gps_altitude = float(_spitted_raw_data[11])
+        #     nav_sat_status.status = NavSatStatus.STATUS_FIX
+        #     nav_sat_fix.status = nav_sat_status
+        #     nav_sat_fix.latitude = gps_latitude
+        #     nav_sat_fix.longitude = gps_longitude
+        #     nav_sat_fix.altitude = gps_altitude
+        # else:
+        #     nav_sat_status.status = NavSatStatus.STATUS_NO_FIX
+        # self._gps_pub.publish(nav_sat_fix)
 
-        nav_sat_fix = NavSatFix()
-        nav_sat_fix.position_covariance_type = NavSatFix.COVARIANCE_TYPE_UNKNOWN
-        nav_sat_fix.header.stamp = rospy_time_now
-        nav_sat_fix.header.frame_id = self._tf2_base_link
-        gps_fix_Q = int(_spitted_raw_data[5] or 0)
-        gps_satellites = int(_spitted_raw_data[6] or 0)
-        if gps_fix_Q > 0 and gps_satellites > 0:
-            gps_latitude = float(_spitted_raw_data[7])
-            gps_longitude = float(_spitted_raw_data[8])
-            gps_speed = float(_spitted_raw_data[9])
-            gps_angle = float(_spitted_raw_data[10])
-            gps_altitude = float(_spitted_raw_data[11])
-            nav_sat_status.status = NavSatStatus.STATUS_FIX
-            nav_sat_fix.status = nav_sat_status
-            nav_sat_fix.latitude = gps_latitude
-            nav_sat_fix.longitude = gps_longitude
-            nav_sat_fix.altitude = gps_altitude
-        else:
-            nav_sat_status.status = NavSatStatus.STATUS_NO_FIX
-
-        voltage = float(_spitted_raw_data[4])
-        battery_state = BatteryState()
-        battery_state.header.stamp = rospy_time_now
-        battery_state.header.frame_id = self._tf2_base_link
-        if voltage > 0:
-            battery_state.present = True
-            battery_state.voltage = voltage
-            battery_state.percentage = min(voltage / 13.00, 13.00)
-            if voltage > 13:
-                battery_state.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_CHARGING
-            else:
-                battery_state.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_NOT_CHARGING
-        else:
-            battery_state.present = False
-            battery_state.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_NOT_CHARGING
+        # voltage = float(_spitted_raw_data[4])
+        # battery_state = BatteryState()
+        # battery_state.header.stamp = rospy_time_now
+        # battery_state.header.frame_id = self._tf2_base_link
+        # if voltage > 0:
+        #     battery_state.present = True
+        #     battery_state.voltage = voltage
+        #     battery_state.percentage = min(voltage / 13.00, 13.00)
+        #     if voltage > 13:
+        #         battery_state.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_CHARGING
+        #     else:
+        #         battery_state.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_NOT_CHARGING
+        # else:
+        #     battery_state.present = False
+        #     battery_state.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_NOT_CHARGING
+        # self._battery_pub.publish(battery_state)
         
 
         quat_WXYZ = [ 
@@ -122,11 +123,9 @@ class Monitor(SerialWrapper):
         t2.transform.rotation.x = stabilized_q[1]
         t2.transform.rotation.y = stabilized_q[2]
         t2.transform.rotation.z = stabilized_q[3]
+
         self._tf_broadcaster.sendTransform(t1)
         self._tf_broadcaster.sendTransform(t2)
-
-        self._gps_pub.publish(nav_sat_fix)
-        self._battery_pub.publish(battery_state)
 
     def process(self):
         while True:
