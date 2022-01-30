@@ -36,7 +36,6 @@ class Monitor(SerialWrapper):
         self._battery_topic = battery_topic
         self._battery_pub = rospy.Publisher('/battery', BatteryState, queue_size=10)
         self._gps_pub = rospy.Publisher('/gps', NavSatFix, queue_size=10)
-        self._prev_quat = None
 
     def _stabilize_quat(self, q1):
         roll, pitch, yaw = euler_from_quaternion([q1[1], q1[2], q1[3], q1[0]]) # wxyz -> xyzw
@@ -94,35 +93,34 @@ class Monitor(SerialWrapper):
             float(_spitted_raw_data[2]),
             float(_spitted_raw_data[3])
         ]
-        if not self._prev_quat or self._prev_quat != quat_WXYZ:
-            t1 = TransformStamped()
-            t1.header.stamp = rospy_time_now
-            t1.header.frame_id = self._tf2_base_link
-            t1.child_frame_id = self._tf2_output
-            t1.transform.translation.x = 0
-            t1.transform.translation.y = 0
-            t1.transform.translation.z = 0
-            t1.transform.rotation.w = quat_WXYZ[0]
-            t1.transform.rotation.x = quat_WXYZ[1]
-            t1.transform.rotation.y = quat_WXYZ[2]
-            t1.transform.rotation.z = quat_WXYZ[3]
+        
+        t1 = TransformStamped()
+        t1.header.stamp = rospy_time_now
+        t1.header.frame_id = self._tf2_base_link
+        t1.child_frame_id = self._tf2_output
+        t1.transform.translation.x = 0
+        t1.transform.translation.y = 0
+        t1.transform.translation.z = 0
+        t1.transform.rotation.w = quat_WXYZ[0]
+        t1.transform.rotation.x = quat_WXYZ[1]
+        t1.transform.rotation.y = quat_WXYZ[2]
+        t1.transform.rotation.z = quat_WXYZ[3]
 
-            stabilized_q = self._stabilize_quat(quat_WXYZ)
-            
-            t2 = TransformStamped()
-            t2.header.stamp = rospy_time_now
-            t2.header.frame_id = self._tf2_base_link
-            t2.child_frame_id = self._tf2_output_stabilized
-            t2.transform.translation.x = 0
-            t2.transform.translation.y = 0
-            t2.transform.translation.z = 0
-            t2.transform.rotation.w = stabilized_q[0]
-            t2.transform.rotation.x = stabilized_q[1]
-            t2.transform.rotation.y = stabilized_q[2]
-            t2.transform.rotation.z = stabilized_q[3]
-            self._tf_broadcaster.sendTransform(t1)
-            self._tf_broadcaster.sendTransform(t2)
-            self._prev_quat = quat_WXYZ
+        stabilized_q = self._stabilize_quat(quat_WXYZ)
+        
+        t2 = TransformStamped()
+        t2.header.stamp = rospy_time_now
+        t2.header.frame_id = self._tf2_base_link
+        t2.child_frame_id = self._tf2_output_stabilized
+        t2.transform.translation.x = 0
+        t2.transform.translation.y = 0
+        t2.transform.translation.z = 0
+        t2.transform.rotation.w = stabilized_q[0]
+        t2.transform.rotation.x = stabilized_q[1]
+        t2.transform.rotation.y = stabilized_q[2]
+        t2.transform.rotation.z = stabilized_q[3]
+        self._tf_broadcaster.sendTransform(t1)
+        self._tf_broadcaster.sendTransform(t2)
 
         self._gps_pub.publish(nav_sat_fix)
         self._battery_pub.publish(battery_state)
