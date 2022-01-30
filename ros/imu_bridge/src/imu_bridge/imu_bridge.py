@@ -43,7 +43,10 @@ class Monitor(SerialWrapper):
         return [q2[3], q2[0], q2[1], q2[2]] # xyzw -> wxyz
 
     def _parse(self, data):
-        rospy_time_now = rospy.Time.now()
+        rospy_time_now = rospy.get_rostime()
+        if rospy_time_now == 0:
+            rospy.logerr('ROSPY returned time == 0!')
+            return
         _q, _raw_data = data.split(':')
         _spitted_raw_data = [s for s in _raw_data.split(',')]
 
