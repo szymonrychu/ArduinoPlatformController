@@ -6,8 +6,8 @@ class PlatformStatics():
     BL_WHEEL3 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_5952630-if00'
     BR_WHEEL4 = '/dev/serial/by-id/usb-Teensyduino_USB_Serial_6075600-if00'
     SERIAL_BAUDRATE = 115200
-    ROBOT_LENGTH = 0.4725
-    ROBOT_WIDTH  = 0.260
+    ROBOT_LENGTH = 0.665
+    ROBOT_WIDTH  = 0.48
     ANGLE_OFFSETS = [
         0, 0, 0, 0
     ]
