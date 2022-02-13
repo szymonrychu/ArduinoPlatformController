@@ -67,7 +67,7 @@ public:
 
     void reset(void (*optoInterrupt)()){
         state = STATE_ANGLE_ENCODER_NOT_INITIALIZED;
-        #if SLAVE_I2C_ID == 2 || SLAVE_I2C_ID == 4
+        #if WHEEL_ID == FRONT_LEFT || WHEEL_ID == BACK_LEFT
         digitalWrite(ANGL_P1, LOW);
         #else
         digitalWrite(ANGL_P1, HIGH);
