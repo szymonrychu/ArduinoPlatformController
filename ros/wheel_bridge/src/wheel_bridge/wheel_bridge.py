@@ -6,6 +6,7 @@ import tf_conversions
 import tf2_ros
 import signal
 import math
+import time
 
 import os
 _env2log_name = 'ROS_LOG_LEVEL'
@@ -40,6 +41,7 @@ class Wheel(SerialWrapper):
         rospy.Subscriber(input_topic, Vector3, self._topic_callback)
         self._output_pub = rospy.Publisher(output_topic, Pose2D, queue_size=10)
         self._x, self._y = 0.0, 0.0
+        self.__last_error_time = 0
 
     def _topic_callback(self, data):
         distance = data.x
@@ -88,8 +90,12 @@ class Wheel(SerialWrapper):
             distance_angle.y = current_angle/2
             self._output_pub.publish(distance_angle)
             self.__last_distance = current_distance
+            self.__last_error_time = 0
         except ValueError:
-            rospy.logwarn(f"Couldn't parse data '{data}'")
+            float_secs = time.time()
+            if float_secs - self.__last_error_time > 10:
+                self.__last_error_time = float_secs
+                rospy.logwarn(f"Couldn't parse data '{data}'")
 
     def _xyzRPY2TransformStamped(self, x, y, z, R, P, Y):
         t = TransformStamped()
