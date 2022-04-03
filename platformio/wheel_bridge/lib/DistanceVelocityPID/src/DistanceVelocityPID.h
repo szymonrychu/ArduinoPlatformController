@@ -2,7 +2,6 @@
 #define DISTANCEVELOCITYPID_h
 
 #include "PID.h"
-#include "pins.h"
 
 class DistanceVelocityPID{
 private:
@@ -37,12 +36,6 @@ public:
         float distanceSteering = this->distancePID.computeNewSteering(timeDelta, dInput);
         float velocitySteering = this->velocityPID.computeNewSteering(timeDelta, vInput);
         long drive = (long)((float)pow(2, PWM_RESOLUTION) * distanceSteering * velocitySteering);
-        if(drive > 0 && drive < pow(2, PWM_RESOLUTION)*DEADZONE){
-            drive = pow(2, PWM_RESOLUTION)*DEADZONE;
-        }
-        if(drive < 0 && drive > -pow(2, PWM_RESOLUTION)*DEADZONE){
-            drive = -pow(2, PWM_RESOLUTION)*DEADZONE;
-        }
         if(drive > pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER){
             drive = pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER;
         }

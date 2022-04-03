@@ -1,5 +1,3 @@
-
-#include "pins.h"
 #ifndef PID_H
 #define PID_H
 
@@ -18,8 +16,8 @@ private:
     float kP = 1.0f;
     float kI = 0.0f;
     float kD = 0.0f;
-    float minDeadSpace = -DEADZONE;
-    float maxDeadSpace = DEADZONE;
+    // float minDeadSpace = -DEADZONE;
+    // float maxDeadSpace = DEADZONE;
     float lowLimit = -1.0f;
     float highLimit = 1.0f;
     float previousError;
@@ -75,9 +73,9 @@ public:
         this->input = input;
 
         error = input - result;
-        if(abs(error) < PID_DELTA_TOLERANCE){
-            error = 0;
-        }
+        // if(abs(error) < PID_DELTA_TOLERANCE){
+        //     error = 0;
+        // }
 
         integralSteering += kI*error*timeDiff;
         float errorDelta = previousError - error;
@@ -90,8 +88,8 @@ public:
 
         pidSteering = proportionalSteering + integralSteering + deriverativeSteering;
 
-        if(maxDeadSpace > pidSteering && pidSteering > 0) pidSteering = maxDeadSpace;
-        if(minDeadSpace < pidSteering && pidSteering < 0) pidSteering = minDeadSpace;
+        // if(maxDeadSpace > pidSteering && pidSteering > 0) pidSteering = maxDeadSpace;
+        // if(minDeadSpace < pidSteering && pidSteering < 0) pidSteering = minDeadSpace;
         if(pidSteering > this->highLimit) pidSteering = this->highLimit;
         if(pidSteering < this->lowLimit) pidSteering = this->lowLimit;
 
