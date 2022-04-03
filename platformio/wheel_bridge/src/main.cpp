@@ -70,9 +70,18 @@ void G90HandleReset(){
     smartWheel.requestReset();
 }
 
+void zeroDegDebugPrint(float currentDegrees){
+    sprintf(buffer, "zeroRad:%.5f", currentDegrees);
+    Logger::debug(buffer);
+    if(abs(currentDegrees) > PI){
+        smartWheel.detachZeroRadHook();
+    }
+}
+
 void setup(){
     memset(buffer, 0, MEM_LEN);
     Serial.begin(115200);
+    smartWheel.attachZeroRadHook(zeroDegDebugPrint);
     while(Serial){;} // Wait for someone to open Serial port
     command.addDefaultHandler(defaultFunc);
     command.addCommand("G10", G10HandleDistanceAngleTime);

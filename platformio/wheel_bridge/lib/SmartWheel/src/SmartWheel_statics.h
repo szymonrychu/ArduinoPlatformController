@@ -27,17 +27,17 @@
 #endif
 
 #ifndef MAX_RELATIVE_POWER
-#define MAX_RELATIVE_POWER 0.1f
+#define MAX_RELATIVE_POWER 1.0f
 #endif
 #ifndef ZEROING_RELATIVE_POWER
-#define ZEROING_RELATIVE_POWER 0.4f
+#define ZEROING_RELATIVE_POWER 0.5f
 #endif
 
 
 #define MOTOR_DEADZONE 0.05f
 
-#define LARGE_MOTOR_ENCODER_PER_REV 4741.0
-#define SMALL_MOTOR_ENCODER_PER_REV 4741.0
+#define LARGE_MOTOR_ENCODER_PER_REV 6533.0 //https://botland.com.pl/silniki-dc-z-przekladnia-i-enkoderami/13729-silnik-z-przekladnia-25dx67l-lp-471-12v-110rpm-enkoder-cpr-48-pololu-4885-5904422342067.html
+#define SMALL_MOTOR_ENCODER_PER_REV 4741.0 //https://botland.com.pl/silniki-dc-z-przekladnia-i-enkoderami/16480-silnik-z-przekladnia-37dx73l-1001-12v-100rpm-enkoder-cpr-64-pololu-4755-5904422326081.html
 
 #define ENCODER_TO_DISTANCE         1/(DRIVE_WHEEL_RADIUS*TWO_PI*LARGE_MOTOR_ENCODER_PER_REV)
 #define ENCODER_TO_ANGLE            ANGLE_GEARING/(TWO_PI*LARGE_MOTOR_ENCODER_PER_REV)

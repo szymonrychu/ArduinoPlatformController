@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "SmartWheel_statics.h"
+
 #include "HardwareEncoder.h"
 #include "DistanceVelocityPID.h"
 #include "Hbridge.h"
@@ -129,16 +130,21 @@ private:
     Hbridge distanceHBridge;
     bool distanceReached = true;
 
+    void (*zeroDegreesHook)(float) = NULL;
     bool optoPrevState = false;
     void zeroDegreesHandler(){
-        if(optoPrevState && digitalRead(ZERO_DEG_OPTO_PIN) == LOW){
-            angleHBridge.drive(0);
-            detachInterrupt(digitalPinToInterrupt(ZERO_DEG_OPTO_PIN));
-            zeroEncoders();
-            optoPrevState = false;
-            this->currentState = WHEEL_STATE_ACCEPTING_CMDS;
-        }else if(!optoPrevState && digitalRead(ZERO_DEG_OPTO_PIN) == HIGH){
-            optoPrevState = true;
+        if(this->currentState == WHEEL_STATE_RESET_REQUESTED){
+            if(optoPrevState && digitalRead(ZERO_DEG_OPTO_PIN) == LOW){
+                angleHBridge.drive(0);
+                zeroEncoders();
+                optoPrevState = false;
+                this->currentState = WHEEL_STATE_ACCEPTING_CMDS;
+            }else if(!optoPrevState && digitalRead(ZERO_DEG_OPTO_PIN) == HIGH){
+                optoPrevState = true;
+            }
+        }
+        if(zeroDegreesHook != NULL && digitalRead(ZERO_DEG_OPTO_PIN) == HIGH){
+            zeroDegreesHook(this->angleEncoder.getLastPosition());
         }
     }
 
@@ -168,7 +174,6 @@ public:
         distanceEncoder.start();
         zeroEncoders();
     }
-
 
     void zeroEncoders(){
         angleEncoder.zeroFTM();
@@ -261,6 +266,14 @@ public:
             distanceEncoder.getLastPosition(), distancePIDs.getError(), distanceEncoder.getLastVelocity()*1000.0*1000.0, distancePower,
             timeDelta*1000.0);
         return buffer;
+    }
+
+    void attachZeroRadHook(void (zeroDegreesHook)(float)){
+        this->zeroDegreesHook = zeroDegreesHook;
+    }
+
+    void detachZeroRadHook(){
+        this->zeroDegreesHook = NULL;
     }
 
 };
