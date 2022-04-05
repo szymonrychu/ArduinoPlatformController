@@ -16,7 +16,7 @@
 #define DRIVE_WHEEL_RADIUS 0.12
 #endif
 #ifndef ANGLE_GEARING
-#define ANGLE_GEARING 12
+#define ANGLE_GEARING 7.414054771
 #endif
 
 #ifndef PWM_RESOLUTION

@@ -37,14 +37,16 @@ void defaultFunc(char* data){
 
 void G10HandleDistanceAngleTime(){
     /*
-    Rotate 60deg in 1.5s:
-G10 0 0.5235987756 1.5
-    Rotate 90deg in 2s:
-G10 0 0.7853981634 2
-    Rotate -90deg in 2s:
-G10 0 -0.7853981634 4
-    Rotate 180deg in 4s:
-G10 0 1.5707963268 4
+    Rotate 30deg in 1.5s:
+G10 0 0.52359877 1.5
+    Rotate 45deg in 2s:
+G10 0 0.78539816 4
+    Rotate 90deg in 4s:
+G10 0 1.57079632 4
+    Rotate 180deg in 8s:
+G10 0 3.14159265 8
+    Rotate 360deg in 16s:
+G10 0 6.28318530 16
     Move forward 2m in 10s:
 G10 2 0 10
     Move forward 2m in 20s:
