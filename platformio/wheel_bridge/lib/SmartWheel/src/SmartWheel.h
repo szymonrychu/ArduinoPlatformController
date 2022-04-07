@@ -62,7 +62,7 @@ private:
                 optoPrevState = true;
             }
         }
-        if(zeroDegreesHook != NULL && lastAngleRad > PI && digitalRead(ZERO_DEG_OPTO_PIN) == HIGH){
+        if(zeroDegreesHook != NULL && lastAngleRad > PI/4 && digitalRead(ZERO_DEG_OPTO_PIN) == HIGH){
             zeroDegreesHook(lastAngleRad);
         }
     }
@@ -114,7 +114,7 @@ public:
     }
 
     bool isBusy(){
-        return this->currentState == WHEEL_STATE_BUSY;
+        return this->currentState == WHEEL_STATE_BUSY && (!angleReached || !distanceReached);
     }
 
     void compute(){
@@ -123,28 +123,31 @@ public:
         lastLoopTime = currentTime;
         switch(getCurrentState()){
             case WHEEL_STATE_FRESH:
-                // requestReset();
+                requestReset();
                 break;
             case WHEEL_STATE_RESET_REQUESTED:
-                delay(1);
                 break;
             case WHEEL_STATE_ACCEPTING_CMDS:
             case WHEEL_STATE_BUSY:
-                angleEncoder.compute();
-                distanceEncoder.compute();
+                angleEncoder.compute(timeDelta);
+                distanceEncoder.compute(timeDelta);
 
                 distancePower = distancePIDs.computeSteering(distanceTarget, distanceVelocityTarget, timeDelta);
                 anglePower = anglePIDs.computeSteering(angleTarget, angleVelocityTarget, timeDelta);
 
-                distanceHBridge.drive(distancePower);
-                angleHBridge.drive(anglePower);
+                distanceReached = !distanceHBridge.drive(distancePower);
+                angleReached = !angleHBridge.drive(anglePower);
 
                 distancePIDs.setResults(distanceEncoder.getLastPosition(), distanceEncoder.getLastVelocity());
                 anglePIDs.setResults(angleEncoder.getLastPosition(), angleEncoder.getLastVelocity());
 
                 
-                if(!distanceReached) distanceReached = abs(distanceEncoder.getLastPosition() - this->distanceTarget) < DISTANCE_DONE_SENSITIVITY;
-                if(!angleReached) angleReached = abs(angleEncoder.getLastPosition() - this->angleTarget) < ANGLE_DONE_SENSITIVITY;
+                // if(!distanceReached){
+                //     distanceReached = abs(distanceEncoder.getLastPosition() - this->distanceTarget) < DISTANCE_DONE_SENSITIVITY;
+                // }
+                // if(!angleReached){
+                //     angleReached = abs(angleEncoder.getLastPosition() - this->angleTarget) < ANGLE_DONE_SENSITIVITY;
+                // }
 
                 if(distanceReached && angleReached){
                     this->currentState = WHEEL_STATE_ACCEPTING_CMDS;
@@ -152,6 +155,10 @@ public:
                 break;
             default:
                 this->currentState = WHEEL_STATE_FRESH;
+        }
+        while(timeDelta < 0.001){
+            timeDelta += 10.0/1000000.0;
+            delayMicroseconds(10);
         }
     }
 
@@ -168,7 +175,7 @@ public:
         }
         if(m.isAngleSet()){
             this->angleTarget = m.getAbsoluteAngleRad();
-            this->angleVelocityTarget = m.getAngleVelocity(this->angleTarget - this->angleEncoder.getLastPosition());
+            this->angleVelocityTarget = m.getAngleVelocity(this->angleEncoder.getLastPosition());
             angleReached = false;
         }
         this->currentState = WHEEL_STATE_BUSY;
@@ -180,9 +187,9 @@ public:
     }
 
     char* getDiagnostics(){
-        sprintf(buffer, "%d %.4f:%.4f:%.4f:%d %.4f:%.4f:%.4f:%d %.3f", this->currentState,
-            distanceEncoder.getLastPosition(), distancePIDs.getError(), distanceEncoder.getLastVelocity()*1000.0*1000.0, distancePower,
-            angleEncoder.getLastPosition(), anglePIDs.getError(), angleEncoder.getLastVelocity()*1000.0*1000.0, anglePower,
+        sprintf(buffer, "%d %.4f:%.4f:%.4f %d %.4f:%.4f:%.4f %d %.4f", this->currentState,
+            distanceEncoder.getLastPosition(), distancePIDs.getError(), distancePIDs.getVelocityError(), distancePower,
+            angleEncoder.getLastPosition(), anglePIDs.getError(), anglePIDs.getVelocityError(), anglePower,
             timeDelta*1000.0);
         return buffer;
     }

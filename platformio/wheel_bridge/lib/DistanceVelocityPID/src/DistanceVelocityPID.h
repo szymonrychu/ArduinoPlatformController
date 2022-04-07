@@ -8,6 +8,8 @@ private:
     PID distancePID;
     PID velocityPID;
 	unsigned long latestTimestampMicros;
+    float distanceSteering = 0;
+    float velocitySteering = 0;
 public:
     void setup(float dP, float dI, float dD, float vP, float vI, float vD){
         this->distancePID = PID(dP, dI, dD);
@@ -33,8 +35,8 @@ public:
     }
 
     long computeSteering(float dInput, float vInput, float timeDelta){
-        float distanceSteering = this->distancePID.computeNewSteering(timeDelta, dInput);
-        float velocitySteering = this->velocityPID.computeNewSteering(timeDelta, vInput);
+        distanceSteering = this->distancePID.computeNewSteering(timeDelta, dInput);
+        velocitySteering = this->velocityPID.computeNewSteering(timeDelta, vInput);
         long drive = (long)((float)pow(2, PWM_RESOLUTION) * distanceSteering * velocitySteering);
         if(drive > pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER){
             drive = pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER;
@@ -43,6 +45,14 @@ public:
             drive = -pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER;
         }
         return drive;
+    }
+
+    float getDistanceSteering(){
+        return this->distanceSteering;
+    }
+
+    float getVelocitySteering(){
+        return this->velocitySteering;
     }
 
 

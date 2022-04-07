@@ -31,16 +31,19 @@ public:
         pinMode(dir1Pin, OUTPUT);
     }
 
-    void drive(int power){
+    bool drive(int power){
         if(power > (MOTOR_DEADZONE*(double)pow(2, PWM_RESOLUTION))){
             digitalWrite(dir1Pin, HIGH);
             analogWrite(pwmPin, power);
+            return true;
         }else if(power < -(MOTOR_DEADZONE*(double)pow(2, PWM_RESOLUTION))){
             digitalWrite(dir1Pin, LOW);
             analogWrite(pwmPin, -power);
+            return true;
         }else{
             digitalWrite(dir1Pin, LOW);
             analogWrite(pwmPin, 0);
+            return false;
         }
     }
 

@@ -14,7 +14,7 @@ char buffer[MEM_LEN];
 
 void printDiagnostics();
 
-EveryTimer diagnosticsTimer(0.1, printDiagnostics);
+// EveryTimer diagnosticsTimer(0.01, printDiagnostics);
 Command command = Command(" ", "\n");
 SmartWheel smartWheel;
 
@@ -45,12 +45,14 @@ G10 0 0.78539816 4
 G10 0 1.57079632 4
     Rotate 180deg in 8s:
 G10 0 3.14159265 8
-    Rotate 360deg in 16s:
-G10 0 6.28318530 16
+    Rotate 360deg in 5s:
+G10 0 6.28318530 6
+G10 0 0 6
     Move forward 2m in 10s:
 G10 2 0 10
     Move forward 2m in 20s:
 G10 2 0 20
+G10 -2 0 20
 
     */
     // 
@@ -66,24 +68,15 @@ G10 2 0 20
 void G90HandleReset(){
     /*
     Reset wheel to 0 angle:
-        G90
+G90
     */
     Logger::info("Reset");
     smartWheel.requestReset();
 }
 
-void zeroDegDebugPrint(float currentDegrees){
-    sprintf(buffer, "zeroRad:%.5f", currentDegrees);
-    Logger::debug(buffer);
-    if(abs(currentDegrees) > PI){
-        smartWheel.detachZeroRadHook();
-    }
-}
-
 void setup(){
     memset(buffer, 0, MEM_LEN);
     Serial.begin(115200);
-    smartWheel.attachZeroRadHook(zeroDegDebugPrint);
     while(Serial){;} // Wait for someone to open Serial port
     command.addDefaultHandler(defaultFunc);
     command.addCommand("G10", G10HandleDistanceAngleTime);
@@ -94,7 +87,8 @@ void setup(){
 void loop(){
     smartWheel.compute();
     command.parse();
-    // if(smartWheel.isBusy()){
-        diagnosticsTimer.compute();
-    // }
+    if(smartWheel.isBusy()){
+        printDiagnostics();
+    //     diagnosticsTimer.compute();
+    }
 }
