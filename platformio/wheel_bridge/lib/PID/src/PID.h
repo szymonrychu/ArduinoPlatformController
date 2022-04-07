@@ -78,7 +78,7 @@ public:
         // }
 
         integralSteering += kI*error*timeDiff;
-        float errorDelta = previousError - error;
+        float errorDelta = (previousError - error)/timeDiff;
 
         proportionalSteering = kP*error;
         deriverativeSteering = kD*errorDelta;

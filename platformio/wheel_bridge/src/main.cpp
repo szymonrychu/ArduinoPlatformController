@@ -14,7 +14,9 @@ char buffer[MEM_LEN];
 
 void printDiagnostics();
 
-// EveryTimer diagnosticsTimer(0.01, printDiagnostics);
+EveryTimer busyDiagnosticsTimer(0.01, printDiagnostics);
+EveryTimer freeDiagnosticsTimer(1, printDiagnostics);
+
 Command command = Command(" ", "\n");
 SmartWheel smartWheel;
 
@@ -40,19 +42,25 @@ void G10HandleDistanceAngleTime(){
     Rotate 30deg in 1.5s:
 G10 0 0.52359877 1.5
     Rotate 45deg in 2s:
-G10 0 0.78539816 4
+G10 0 0.78539816 2
     Rotate 90deg in 4s:
 G10 0 1.57079632 4
     Rotate 180deg in 8s:
 G10 0 3.14159265 8
     Rotate 360deg in 5s:
+
 G10 0 6.28318530 6
 G10 0 0 6
+G10 0 6.28318530 3
+G10 0 0 3
+G10 2 3.14159265 5
+G10 -2 0 3
+
     Move forward 2m in 10s:
 G10 2 0 10
     Move forward 2m in 20s:
-G10 2 0 20
-G10 -2 0 20
+G10 2 0 10
+G10 -2 0 10
 
     */
     // 
@@ -88,7 +96,8 @@ void loop(){
     smartWheel.compute();
     command.parse();
     if(smartWheel.isBusy()){
-        printDiagnostics();
-    //     diagnosticsTimer.compute();
+        busyDiagnosticsTimer.compute();
+    }else{
+        freeDiagnosticsTimer.compute();
     }
 }

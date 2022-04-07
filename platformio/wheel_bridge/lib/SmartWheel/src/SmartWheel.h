@@ -129,25 +129,35 @@ public:
                 break;
             case WHEEL_STATE_ACCEPTING_CMDS:
             case WHEEL_STATE_BUSY:
+                float latestDistancePosition = distanceEncoder.getLastPosition();
+                float latestAnglePosition = angleEncoder.getLastPosition();
+
                 angleEncoder.compute(timeDelta);
                 distanceEncoder.compute(timeDelta);
 
                 distancePower = distancePIDs.computeSteering(distanceTarget, distanceVelocityTarget, timeDelta);
                 anglePower = anglePIDs.computeSteering(angleTarget, angleVelocityTarget, timeDelta);
 
-                distanceReached = !distanceHBridge.drive(distancePower);
-                angleReached = !angleHBridge.drive(anglePower);
+                distanceHBridge.drive(distancePower);
+                angleHBridge.drive(anglePower);
 
-                distancePIDs.setResults(distanceEncoder.getLastPosition(), distanceEncoder.getLastVelocity());
-                anglePIDs.setResults(angleEncoder.getLastPosition(), angleEncoder.getLastVelocity());
+                distancePIDs.setResults(latestDistancePosition, distanceEncoder.getLastVelocity());
+                anglePIDs.setResults(latestAnglePosition, angleEncoder.getLastVelocity());
 
                 
-                // if(!distanceReached){
-                //     distanceReached = abs(distanceEncoder.getLastPosition() - this->distanceTarget) < DISTANCE_DONE_SENSITIVITY;
-                // }
-                // if(!angleReached){
-                //     angleReached = abs(angleEncoder.getLastPosition() - this->angleTarget) < ANGLE_DONE_SENSITIVITY;
-                // }
+                if(!distanceReached){
+                    distanceReached = abs(latestDistancePosition - this->distanceTarget) < DISTANCE_DONE_SENSITIVITY;
+                }
+                if(!angleReached){
+                    angleReached = abs(latestAnglePosition - this->angleTarget) < ANGLE_DONE_SENSITIVITY;
+                }
+                
+                if(distanceReached){
+                    this->distanceVelocityTarget = 0.0;
+                }
+                if(angleReached){
+                    this->angleVelocityTarget = 0.0;
+                }
 
                 if(distanceReached && angleReached){
                     this->currentState = WHEEL_STATE_ACCEPTING_CMDS;
@@ -187,9 +197,9 @@ public:
     }
 
     char* getDiagnostics(){
-        sprintf(buffer, "%d %.4f:%.4f:%.4f %d %.4f:%.4f:%.4f %d %.4f", this->currentState,
-            distanceEncoder.getLastPosition(), distancePIDs.getError(), distancePIDs.getVelocityError(), distancePower,
-            angleEncoder.getLastPosition(), anglePIDs.getError(), anglePIDs.getVelocityError(), anglePower,
+        sprintf(buffer, "%d %.4f:%.4f:%.4f:%.4f %d %.4f:%.4f:%.4f:%.4f %d %.4f", this->currentState,
+            distanceEncoder.getLastPosition(), distancePIDs.getError(), distancePIDs.getVelocityError(), distancePIDs.getVelocitySteering(), distancePower,
+            angleEncoder.getLastPosition(), anglePIDs.getError(), anglePIDs.getVelocityError(), anglePIDs.getVelocitySteering(), anglePower,
             timeDelta*1000.0);
         return buffer;
     }

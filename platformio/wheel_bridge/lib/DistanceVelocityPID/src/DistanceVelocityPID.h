@@ -1,6 +1,10 @@
 #ifndef DISTANCEVELOCITYPID_h
 #define DISTANCEVELOCITYPID_h
 
+#ifndef MIN_VELOCITY_PID
+#define MIN_VELOCITY_PID 0.0
+#endif
+
 #include "PID.h"
 
 class DistanceVelocityPID{
@@ -13,7 +17,7 @@ private:
 public:
     void setup(float dP, float dI, float dD, float vP, float vI, float vD){
         this->distancePID = PID(dP, dI, dD);
-        this->velocityPID = PID(vP, vI, vD, 0.0, 1.0);
+        this->velocityPID = PID(vP, vI, vD, MIN_VELOCITY_PID, 1.0);
         this->latestTimestampMicros = 0;
     }
 
