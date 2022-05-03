@@ -12,9 +12,6 @@
   <include file="$(find freenect_launch)/launch/examples/freenect-registered-xyzrgb.launch">
   </include>
 
-  <include file="$(find imu_bridge)/launch/imu_bridge.launch">
-  </include>
-
 
   <include file="$(find robot_platform)/launch/rplidar_hector.launch">
   </include>
