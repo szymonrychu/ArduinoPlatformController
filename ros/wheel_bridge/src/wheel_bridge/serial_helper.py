@@ -35,7 +35,7 @@ class SerialWrapper():
         self._fpath = fpath
         self.__baudrate = baudrate
         try:
-            self.serial = serial.Serial(fpath, baudrate)
+            self.serial = serial.Serial(fpath, baudrate, timeout=0.1)
         except Exception:
             tb = traceback.format_exc()
             rospy.loginfo(str(tb))
@@ -54,6 +54,8 @@ class SerialWrapper():
                     if raw_data != '':
                         if raw_data[-1] == '\n':
                             raw_data = raw_data[:-1]
+        except serial.SerialTimeoutException:
+            pass
         except UnicodeDecodeError:
             rospy.loginfo('cannot parse "{}"'.format(raw_data))
             self.repair_serial()
