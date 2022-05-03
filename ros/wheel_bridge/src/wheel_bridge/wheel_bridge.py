@@ -7,8 +7,25 @@ import tf2_ros
 import signal
 import math
 import time
+from dataclasses import dataclass
 
 import os
+
+STATE_FRESH           = 'fresh'
+STATE_RESET_REQUESTED = 'reset_requested'
+STATE_ACCEPTING_CMDS  = 'accepting_cmds'
+STATE_BUSY            = 'busy'
+
+FRONT_WHEEL_IDS = [1, 2]
+BACK_WHEEL_IDS  = [2, 3]
+
+stateID2str = {
+    0: STATE_FRESH,
+    1: STATE_RESET_REQUESTED,
+    2: STATE_ACCEPTING_CMDS,
+    4: STATE_BUSY
+}
+
 _env2log_name = 'ROS_LOG_LEVEL'
 _env2log = {
     'DEBUG': rospy.DEBUG,
@@ -23,10 +40,49 @@ def env2log():
     except Exception:
         return rospy.INFO
 
+def parse_message(raw_message, wheel_id):
+    # 0000000724:INF:2 0.0006:-0.0006:0.0000:0.0250 -1 0.0142:-0.0142:0.0000:0.0250 -18 1.0050
+    try:
+        id_state, distance_data, distance_power, angle_data, angle_power, time_delta = raw_message.split(' ')
+        # 0000000724:INF:2
+        message_id, level, state = id_state.split(':')
+        # 0.0006:-0.0006:0.0000:0.0250
+        distance, distance_error, velocity_distance_error, velocity_distance_steering = distance_data.split(':')
+        # 0.0142:-0.0142:0.0000:0.0250
+        angle, angle_error, velocity_angle_error, velocity_angle_steering = angle_data.split(':')
+        direction = 0
+        if wheel_id in FRONT_WHEEL_IDS:
+            direction = 1
+        elif wheel_id in BACK_WHEEL_IDS:
+            direction = -1
+        return {
+            'id': int(message_id),
+            'level': level,
+            'state': stateID2str[int(state)],
+            'time_delta': float(time_delta)/1000.0,
+            'distance': {
+                'current': direction * float(distance),
+                'error': direction *  float(distance_error),
+                'velocity_error': float(velocity_distance_error),
+                'velocity_steering': float(velocity_distance_steering),
+                'power': float(distance_power)
+            },
+            'angle': {
+                'current': float(angle),
+                'error': float(angle_error),
+                'velocity_error': float(velocity_angle_error),
+                'velocity_steering': float(velocity_angle_steering),
+                'power': float(angle_power)
+            }
+        }
+    except ValueError:
+        return {}
+
+
 class Wheel(SerialWrapper):
 
     def _move_command(self, distance, angle, time):
-        return "G11 {} {} {}".format(distance, angle, time)
+        return "G10 {} {} {}".format(distance, angle, time)
         # G11 0 0 1
 
     def __init__(self, wheel_id, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output):
@@ -56,46 +112,36 @@ class Wheel(SerialWrapper):
 
     def _parse(self, data):
         rospy.logdebug(f"Received '{data}' from {self._fpath}")
-        try:
-            # 35340:INF:-0.0204:0.0204:-0.0000:-76 0.0001:-0.0001:-0.0000:0 0.114
-            data1, data2, timeDelta = data.split(' ')
-            msg_id, msg_level, ang_last_pos, ang_err, ang_last_vel, ang_p = data1.split(':')
-            dst_last_pos, dst_err, dst_last_vel, dst_p = data2.split(':')
-
-            current_distance = float(dst_last_pos)
-            current_distance_v = float(dst_last_vel)
-            current_angle = - float(ang_last_pos) * 2.0 # wheelm raports itself wrongly (current '-' serves as current workaround)
-            current_angle_v = float(ang_last_vel)
+        d = parse_message(data, self.__wheel_id)
+        if d:
+            current_distance = d['distance']['current']
+            current_angle = d['angle']['current']
             if not self.__distance_set:
                 self.__last_distance = current_distance
                 self.__distance_set = True
                 return
-            if self.__wheel_id == 1 or self.__wheel_id == 2:
-                distance_delta = current_distance - self.__last_distance
-            else:
-                distance_delta = self.__last_distance - current_distance
-            
+            distance_delta = current_distance - self.__last_distance
             dx = distance_delta * math.cos(current_angle)
             dy = distance_delta * math.sin(current_angle)
-
             self._x += dx
             self._y += dy
-            
+
             # publish tranform with angles only, so the other node can compute mean position of the platform
             # based on all wheels positions
             self._tf_broadcaster.sendTransform(self._xyzRPY2TransformStamped(0, 0, 0, 0, 0, current_angle))
             # publish position of a wheel including translation and angle, so the mena position can be computed
             distance_angle = Pose2D()
-            distance_angle.x = distance_delta/2
-            distance_angle.y = current_angle/2
+            distance_angle.x = distance_delta
+            distance_angle.y = current_angle
             self._output_pub.publish(distance_angle)
             self.__last_distance = current_distance
             self.__last_error_time = 0
-        except ValueError:
+        else:
             float_secs = time.time()
             if float_secs - self.__last_error_time > 10:
                 self.__last_error_time = float_secs
                 rospy.logwarn(f"Couldn't parse data '{data}'")
+
 
     def _xyzRPY2TransformStamped(self, x, y, z, R, P, Y):
         t = TransformStamped()

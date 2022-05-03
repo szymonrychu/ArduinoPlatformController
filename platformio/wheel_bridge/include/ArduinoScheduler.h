@@ -1,5 +1,3 @@
-#include "pins.h"
-
 #define MEM_LEN 256
 #define SERIAL_DETAILED_STATUS_ERROR "WireError"
 #define SERIAL_RECEIVED_GARBAGE "SerialReceivedGarbage"
