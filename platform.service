@@ -1,0 +1,11 @@
+[Unit]
+Description=ros platform service
+After=network.target
+Requires=network.target
+
+[Service]
+User=szymonri
+ExecStart=/bin/bash /home/szymonri/catkin_ws/src/ArduinoPlatformController/scripts/run.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -180,4 +180,5 @@ def main():
     wheel = Wheel(wheel_id, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output)
 
     signal.signal(signal.SIGINT, wheel.stop)
+    signal.signal(signal.SIGTERM, wheel.stop)
     Wheel(wheel_id, serial_dev, baudrate, input_topic, output_topic, tf2_base_link, tf2_output).process()
