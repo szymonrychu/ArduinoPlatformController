@@ -3,6 +3,9 @@
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
 
+  <include file="$(find wheel_bridge)/launch/wheels.launch">
+  </include>
+
   <node pkg="robot_platform" type="robot_platform" name="robot_platform" output="screen" respawn="true">
 
     <param name="wheel1_input_topic" value="/wheel_1" />
