@@ -179,12 +179,12 @@ class Platform(PlatformMath, Meta):
         angles = list(self.get_in_place_angles())
         distances = list(self.get_in_place_angle2distance(angle))
 
-        rospy.loginfo("Turning wheels to [" + ",".join(angles) + "]")
+        rospy.loginfo("Turning wheels to [" + ",".join([str(a) for a in angles]) + "]")
         for _id, wheel_angle in enumerate(angles):
             self._wheels[_id].send_command(0.0, wheel_angle, 500)
         time.sleep(0.5)
 
-        rospy.loginfo("Moving wheels with [" + ",".join(distances) + "]")
+        rospy.loginfo("Moving wheels with [" + ",".join([str(d) for d in distances]) + "]")
         for _id, (wheel_angle, wheel_distance) in enumerate(zip(angles, distances)):
             self._wheels[_id].send_command(wheel_distance, wheel_angle, turning_time)
         time.sleep(turning_time/1000.0)
