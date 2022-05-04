@@ -145,6 +145,7 @@ class Platform(PlatformMath, Meta):
                 
 
     def _goal_callback(self, data):
+        rospy.loginfo(f"{data.pose.position.x} {data.pose.position.y} {data.pose.position.z}")
         dx = data.pose.position.x - self._platform_transform.transform.translation.x
         dy = data.pose.position.y - self._platform_transform.transform.translation.y
         dz = data.pose.position.z - self._platform_transform.transform.translation.z
