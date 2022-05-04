@@ -200,9 +200,11 @@ class Platform(PlatformMath, Meta):
         if not moving_time:
             moving_time = abs(distance * 2.0)
         
+        distances = [distance, distance, -distance, -distance]
+        
         self.turn_in_place(angle, turning_time)
-        for _id in range(PlatformMath.WHEEL_NUM):
-            self._wheels[_id].send_command(distance, 0.0, moving_time)
+        for _id, wheel_distance in enumerate(distances):
+            self._wheels[_id].send_command(wheel_distance, 0.0, moving_time)
         time.sleep(moving_time)
 
 
