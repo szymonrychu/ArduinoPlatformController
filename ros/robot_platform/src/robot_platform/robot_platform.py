@@ -175,29 +175,32 @@ class Platform(PlatformMath, Meta):
     #         self._wheels[_id].send_command(wheel_distance, wheel_angle, moving_time)
     #     time.sleep(moving_time/1000.0)
 
-    def turn_in_place(self, angle, moving_time):
+    def turn_in_place(self, angle, turning_time):
         angles = list(self.get_in_place_angles())
         distances = list(self.get_in_place_angle2distance(angle))
 
+        rospy.loginfo("Turning wheels to [" + ",".join(angles) + "]")
         for _id, wheel_angle in enumerate(angles):
-            self._wheels[_id].send_command(0.0, wheel_angle, 1000)
-        time.sleep(1)
+            self._wheels[_id].send_command(0.0, wheel_angle, 500)
+        time.sleep(0.5)
 
+        rospy.loginfo("Moving wheels with [" + ",".join(distances) + "]")
         for _id, (wheel_angle, wheel_distance) in enumerate(zip(angles, distances)):
-            self._wheels[_id].send_command(wheel_distance, wheel_angle, moving_time)
-        time.sleep(moving_time/1000.0)
+            self._wheels[_id].send_command(wheel_distance, wheel_angle, turning_time)
+        time.sleep(turning_time/1000.0)
+
+        rospy.loginfo("Turning wheels to [0,0,0,0]")
+        for _id in range(PlatformMath.WHEEL_NUM):
+            self._wheels[_id].send_command(0.0, 0.0, 500)
+        time.sleep(0.5)
 
     def turn_in_place_and_move(self, angle, distance, turning_time=None, moving_time=None):
         if not turning_time:
-            turning_time = abs(angle * 500.0)
+            turning_time = abs(angle * 5000.0)
         if not moving_time:
             moving_time = abs(distance * 5000.0)
         
         self.turn_in_place(angle, turning_time)
-
-        for _id in range(PlatformMath.WHEEL_NUM):
-            self._wheels[_id].send_command(0.0, 0.0, 2000)
-        time.sleep(2)
         # for _id in range(PlatformMath.WHEEL_NUM):
         #     self._wheels[_id].send_command(distance, 0.0, moving_time)
         # time.sleep(moving_time/1000.0)
