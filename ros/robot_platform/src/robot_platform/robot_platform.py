@@ -103,27 +103,33 @@ class Platform(PlatformMath, Meta):
         with self._lock:
             self._distance_angles[_id-1] = distance_angle
             if all(self._distance_angles):
+                debug_str = []
                 sum_distance = 0.0
                 for c in range(Platform.WHEEL_NUM):
                     if c == 0:
+                        debug_str.append("UL:")
+                        sum_distance += self._distance_angles[c].x
                         self._wheel_xy[c].x += self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
                         self._wheel_xy[c].y += self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
                     if c == 1:
+                        debug_str.append("UR:")
+                        sum_distance += self._distance_angles[c].x
                         self._wheel_xy[c].x += self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
                         self._wheel_xy[c].y -= self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
                     if c == 2:
+                        debug_str.append("DL:")
+                        sum_distance -= self._distance_angles[c].x
                         self._wheel_xy[c].x -= self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
                         self._wheel_xy[c].y += self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
                     if c == 3:
+                        debug_str.append("DR:")
+                        sum_distance -= self._distance_angles[c].x
                         self._wheel_xy[c].x -= self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
                         self._wheel_xy[c].y -= self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
-
-                raw_delta_distance = sum_distance/Platform.WHEEL_NUM
-
-                debug_str = []
-                for c in range(Platform.WHEEL_NUM):
+                    
                     debug_str.append(f"{100*self._wheel_xy[c].x:.4f}/{100*self._wheel_xy[c].y:.4f}")
-                    debug_str.append(f"{'U' if self._wheel_xy[c].x > 0 else 'D'}/{'R' if self._wheel_xy[c].y > 0 else 'L'}")
+
+                raw_delta_distance = sum_distance/float(Platform.WHEEL_NUM)
                 rospy.loginfo(' '.join(debug_str))
                 
                 front_back_vector = Pose2D()
