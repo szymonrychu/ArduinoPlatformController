@@ -82,7 +82,7 @@ class PlatformMath(PlatformStatics):
         return result
         
     def get_in_place_angles(self):
-        base_angle = math.atan(PlatformMath.ROBOT_LENGTH/PlatformMath.ROBOT_WIDTH)
+        base_angle = math.atan(PlatformMath.ROBOT_WIDTH/PlatformMath.ROBOT_LENGTH)
         return base_angle-math.pi/2, math.pi/2-base_angle, math.pi/2-base_angle, base_angle-math.pi/2
 
     def get_in_place_angle2distance(self, angle):
@@ -90,7 +90,6 @@ class PlatformMath(PlatformStatics):
         rw2 = PlatformMath.ROBOT_WIDTH/2
         dist_from_center = math.sqrt(rl2*rl2 + rw2*rw2)
         angle_dist = angle*dist_from_center
-        return -angle_dist, angle_dist, -angle_dist, angle_dist
-
+        return angle_dist, angle_dist, angle_dist, angle_dist
 
 
