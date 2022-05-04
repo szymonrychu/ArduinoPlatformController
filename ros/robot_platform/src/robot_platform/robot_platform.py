@@ -103,22 +103,24 @@ class Platform(PlatformMath, Meta):
         with self._lock:
             self._distance_angles[_id-1] = distance_angle
             if all(self._distance_angles):
+                sum_distance = 0.0
                 for c in range(Platform.WHEEL_NUM):
-                    if c == 0 or c == 1:
+                    if c in [0,3]:
+                        sum_distance += self._distance_angles[c].x
                         self._wheel_xy[c].x += self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
                         self._wheel_xy[c].y += self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
-                    else:
+                    elif c in [1,2]:
+                        sum_distance -= self._distance_angles[c].x
                         self._wheel_xy[c].x += -(self._distance_angles[c].x * math.cos(self._distance_angles[c].y))
                         self._wheel_xy[c].y += -(self._distance_angles[c].x * math.sin(self._distance_angles[c].y))
 
-                raw_delta_distance = sum([self._distance_angles[c].x if c==0 or c==1 else -self._distance_angles[c].x for c in range(Platform.WHEEL_NUM)])/Platform.WHEEL_NUM
-                # raw_delta_distance = sum([self._distance_angles[c].x for c in range(Platform.WHEEL_NUM)])
+                raw_delta_distance = sum_distance/Platform.WHEEL_NUM
 
                 debug_str = []
                 for c in range(Platform.WHEEL_NUM):
                     debug_str.append(f"{100*self._wheel_xy[c].x:.4f}/{100*self._wheel_xy[c].y:.4f}")
-                    # debug_str.append(f"{'U' if self._wheel_xy[c].x > 0 else 'D'}/{'R' if self._wheel_xy[c].y > 0 else 'L'}")
-                # rospy.loginfo(' '.join(debug_str))
+                    debug_str.append(f"{'U' if self._wheel_xy[c].x > 0 else 'D'}/{'R' if self._wheel_xy[c].y > 0 else 'L'}")
+                rospy.loginfo(' '.join(debug_str))
                 
                 front_back_vector = Pose2D()
                 front_back_vector.x = (self._wheel_xy[0].x + self._wheel_xy[1].x) - (self._wheel_xy[2].x + self._wheel_xy[3].x)
