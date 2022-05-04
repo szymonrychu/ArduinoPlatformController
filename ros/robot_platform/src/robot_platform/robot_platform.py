@@ -137,7 +137,7 @@ class Platform(PlatformMath, Meta):
                 self._platform_transform.transform.rotation.z = q[2]
                 self._platform_transform.transform.rotation.w = q[3]
 
-                # rospy.loginfo(f"center: {self._platform_transform.transform.translation.x}, {self._platform_transform.transform.translation.y}, {Y}")
+                rospy.loginfo(f"center: {self._platform_transform.transform.translation.x}, {self._platform_transform.transform.translation.y}, {Y}")
                 self._platform_transform.header.stamp = rospy.Time.now()
                 self._tf_broadcaster.sendTransform(self._platform_transform)
                 for wheel in self._wheels:
