@@ -189,7 +189,7 @@ class Platform(PlatformMath, Meta):
 
     def turn_in_place_and_move(self, angle, distance, turning_time=None, moving_time=None):
         if not turning_time:
-            turning_time = abs(angle * 1000.0)
+            turning_time = abs(angle * 500.0)
         if not moving_time:
             moving_time = abs(distance * 5000.0)
         
