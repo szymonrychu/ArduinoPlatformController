@@ -118,7 +118,7 @@ class Platform(PlatformMath, Meta):
                 for c in range(Platform.WHEEL_NUM):
                     debug_str.append(f"{100*self._wheel_xy[c].x:.4f}/{100*self._wheel_xy[c].y:.4f}")
                     # debug_str.append(f"{'U' if self._wheel_xy[c].x > 0 else 'D'}/{'R' if self._wheel_xy[c].y > 0 else 'L'}")
-                rospy.loginfo(' '.join(debug_str))
+                # rospy.loginfo(' '.join(debug_str))
                 
                 front_back_vector = Pose2D()
                 front_back_vector.x = (self._wheel_xy[0].x + self._wheel_xy[1].x) - (self._wheel_xy[2].x + self._wheel_xy[3].x)
@@ -135,7 +135,7 @@ class Platform(PlatformMath, Meta):
                 self._platform_transform.transform.rotation.z = q[2]
                 self._platform_transform.transform.rotation.w = q[3]
 
-                rospy.loginfo(f"center: {self._platform_transform.transform.translation.x}, {self._platform_transform.transform.translation.y}, {Y}")
+                # rospy.loginfo(f"center: {self._platform_transform.transform.translation.x}, {self._platform_transform.transform.translation.y}, {Y}")
                 self._platform_transform.header.stamp = rospy.Time.now()
                 self._tf_broadcaster.sendTransform(self._platform_transform)
                 for wheel in self._wheels:
