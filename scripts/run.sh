@@ -1,5 +1,10 @@
 #!/bin/bash
 
+until ! curl google.com > /dev/null >&1; do
+    echo "Waiting for network!"
+    sleep 1
+done
+
 source /opt/ros/noetic/setup.bash
 ROS_HOSTNAME=robot
 ROS_MASTER_URI=http://robot:11311
