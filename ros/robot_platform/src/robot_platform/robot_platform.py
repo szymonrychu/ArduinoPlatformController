@@ -105,14 +105,18 @@ class Platform(PlatformMath, Meta):
             if all(self._distance_angles):
                 sum_distance = 0.0
                 for c in range(Platform.WHEEL_NUM):
-                    if c in [0,1,2,3]:
-                        sum_distance += self._distance_angles[c].x
+                    if c == 0:
                         self._wheel_xy[c].x += self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
                         self._wheel_xy[c].y += self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
-                    # elif c in [2,3]:
-                    #     sum_distance -= self._distance_angles[c].x
-                    #     self._wheel_xy[c].x += -(self._distance_angles[c].x * math.cos(self._distance_angles[c].y))
-                    #     self._wheel_xy[c].y += -(self._distance_angles[c].x * math.sin(self._distance_angles[c].y))
+                    if c == 1:
+                        self._wheel_xy[c].x += self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
+                        self._wheel_xy[c].y -= self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
+                    if c == 2:
+                        self._wheel_xy[c].x -= self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
+                        self._wheel_xy[c].y += self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
+                    if c == 3:
+                        self._wheel_xy[c].x -= self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
+                        self._wheel_xy[c].y -= self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
 
                 raw_delta_distance = sum_distance/Platform.WHEEL_NUM
 
