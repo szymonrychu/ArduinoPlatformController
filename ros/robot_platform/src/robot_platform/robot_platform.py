@@ -101,6 +101,7 @@ class Platform(PlatformMath, Meta):
 
     def wheel_output_hander(self, _id, distance_angle):
         with self._lock:
+            rospy.loginfo(str(_id))
             self._distance_angles[_id-1] = distance_angle
             if all(self._distance_angles):
                 debug_str = []
