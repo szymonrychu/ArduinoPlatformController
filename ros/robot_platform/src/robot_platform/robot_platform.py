@@ -191,7 +191,7 @@ class Platform(PlatformMath, Meta):
         if not turning_time:
             turning_time = abs(angle * 1000.0)
         if not moving_time:
-            moving_time = abs(distance * 10000.0)
+            moving_time = abs(distance * 5000.0)
         
         self.turn_in_place(angle, turning_time)
 
