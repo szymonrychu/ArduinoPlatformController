@@ -187,7 +187,7 @@ class Platform(PlatformMath, Meta):
         rospy.loginfo("Moving wheels with [" + ",".join([str(d) for d in distances]) + "]")
         for _id, (wheel_angle, wheel_distance) in enumerate(zip(angles, distances)):
             self._wheels[_id].send_command(wheel_distance, wheel_angle, turning_time)
-        time.sleep(turning_time/1.0)
+        time.sleep(turning_time)
 
         rospy.loginfo("Turning wheels to [0,0,0,0]")
         for _id in range(PlatformMath.WHEEL_NUM):
@@ -201,9 +201,9 @@ class Platform(PlatformMath, Meta):
             moving_time = abs(distance * 2.0)
         
         self.turn_in_place(angle, turning_time)
-        # for _id in range(PlatformMath.WHEEL_NUM):
-        #     self._wheels[_id].send_command(distance, 0.0, moving_time)
-        # time.sleep(moving_time/1000.0)
+        for _id in range(PlatformMath.WHEEL_NUM):
+            self._wheels[_id].send_command(distance, 0.0, moving_time)
+        time.sleep(moving_time)
 
 
 
