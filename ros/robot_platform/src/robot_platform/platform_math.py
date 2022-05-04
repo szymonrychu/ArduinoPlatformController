@@ -90,6 +90,6 @@ class PlatformMath(PlatformStatics):
         rw2 = PlatformMath.ROBOT_WIDTH/2
         dist_from_center = math.sqrt(rl2*rl2 + rw2*rw2)
         angle_dist = angle*dist_from_center
-        return -angle_dist, angle_dist, -angle_dist, angle_dist
+        return -angle_dist, angle_dist, angle_dist, -angle_dist
 
 
