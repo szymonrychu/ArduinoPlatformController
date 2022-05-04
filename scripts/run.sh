@@ -1,6 +1,6 @@
 #!/bin/bash
 
-until ! curl google.com > /dev/null >&1; do
+while ! curl google.com > /dev/null >&1; do
     echo "Waiting for network!"
     sleep 1
 done
