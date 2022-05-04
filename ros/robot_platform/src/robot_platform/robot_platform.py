@@ -154,7 +154,9 @@ class Platform(PlatformMath, Meta):
         angle = math.atan2(dy, dx)
         distance = math.sqrt(dx*dx + dy*dy)
 
-        self.turn_in_place_and_move(angle, distance) #, 2000, 3000)
+        rospy.loginfo(f"Rotating {angle} and moving {distance}")
+
+        self.turn_in_place_and_move(angle, distance)
 
     # def turn_and_move(self, distance, moving_time, angle, turning_time):
     #     distances = []
