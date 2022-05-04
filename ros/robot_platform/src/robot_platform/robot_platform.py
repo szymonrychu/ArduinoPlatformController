@@ -101,7 +101,6 @@ class Platform(PlatformMath, Meta):
 
     def wheel_output_hander(self, _id, distance_angle):
         with self._lock:
-            rospy.loginfo(str(_id))
             self._distance_angles[_id-1] = distance_angle
             if all(self._distance_angles):
                 debug_str = []
@@ -128,7 +127,7 @@ class Platform(PlatformMath, Meta):
                         self._wheel_xy[c].x -= self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
                         self._wheel_xy[c].y -= self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
                     
-                    debug_str.append(f"{100*self._wheel_xy[c].x:.4f}/{100*self._wheel_xy[c].y:.4f}")
+                    debug_str.append(f"{100*self._distance_angles[c].x:.4f}/{100*self._distance_angles[c].y:.4f}/{100*self._wheel_xy[c].x:.4f}/{100*self._wheel_xy[c].y:.4f}")
 
                 raw_delta_distance = sum_distance/float(Platform.WHEEL_NUM)
                 rospy.loginfo(' '.join(debug_str))
