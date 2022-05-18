@@ -80,6 +80,13 @@ class Wheel(Meta):
 
 class Platform(PlatformMath, Meta):
 
+    pos2id = {
+        'FL': 0,
+        'FR': 1,
+        'BL': 2,
+        'BR': 3,
+    }
+
     def __init__(self, wheel_input_topics, wheel_output_topics, wheel_translations, wheel_base_links, wheel_links):
         Meta.__init__(self, "/base_link", "/map")
         self._wheels = []
@@ -87,6 +94,7 @@ class Platform(PlatformMath, Meta):
         self._platform_transform.header.frame_id = "/map"
         self._platform_transform.child_frame_id = "/base_link"
         self._distance_angles = [None] * Platform.WHEEL_NUM
+        self._previous_distance_angles = [None] * Platform.WHEEL_NUM
         self._wheel_xy = [Pose2D() for _ in range(Platform.WHEEL_NUM)]
         for c in range(Platform.WHEEL_NUM):
             tr_x, tr_y, tr_z = self.WHEELS_TRANSLATIONS_XYZ[c]
@@ -98,39 +106,30 @@ class Platform(PlatformMath, Meta):
         rospy.Subscriber("/move_base_simple/goal", PoseStamped, self._goal_callback)
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
         self._previous_center_distance = Pose2D()
+        self._wheel_coordinates = []
 
     def wheel_output_hander(self, _id, distance_angle):
         with self._lock:
             self._distance_angles[_id-1] = distance_angle
             if all(self._distance_angles):
                 debug_str = []
-                sum_distance = 0.0
-                for c in range(Platform.WHEEL_NUM):
-                    if c == 0:
-                        debug_str.append("UL:")
-                        sum_distance += self._distance_angles[c].x
-                        self._wheel_xy[c].x += self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
-                        self._wheel_xy[c].y += self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
-                    if c == 1:
-                        debug_str.append("UR:")
-                        sum_distance += self._distance_angles[c].x
-                        self._wheel_xy[c].x += self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
-                        self._wheel_xy[c].y -= self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
-                    if c == 2:
-                        debug_str.append("DL:")
-                        sum_distance -= self._distance_angles[c].x
-                        self._wheel_xy[c].x -= self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
-                        self._wheel_xy[c].y += self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
-                    if c == 3:
-                        debug_str.append("DR:")
-                        sum_distance -= self._distance_angles[c].x
-                        self._wheel_xy[c].x -= self._distance_angles[c].x * math.cos(self._distance_angles[c].y)
-                        self._wheel_xy[c].y -= self._distance_angles[c].x * math.sin(self._distance_angles[c].y)
-                    
-                    debug_str.append(f"{100*self._distance_angles[c].x:.4f}/{100*self._distance_angles[c].y:.4f}/{100*self._wheel_xy[c].x:.4f}/{100*self._wheel_xy[c].y:.4f}")
 
-                raw_delta_distance = sum_distance/float(Platform.WHEEL_NUM)
-                rospy.loginfo(' '.join(debug_str))
+
+                mean_total_distance = [d.x for d in self._distance_angles]/4.0
+                mean_delta_distance = self._previous_center_distance.x - mean_total_distance
+                self._previous_center_distance.x = mean_total_distance
+
+                self._wheel_xy[0].x += self._distance_angles[0].x * math.cos(self._distance_angles[0].y)
+                self._wheel_xy[0].x += self._distance_angles[0].x * math.cos(self._distance_angles[0].y)
+
+                self._wheel_xy[1].x += self._distance_angles[1].x * math.cos(self._distance_angles[1].y)
+                self._wheel_xy[1].x += self._distance_angles[1].x * math.cos(self._distance_angles[1].y)
+
+                self._wheel_xy[2].x += self._distance_angles[2].x * math.cos(self._distance_angles[2].y)
+                self._wheel_xy[2].x += self._distance_angles[2].x * math.cos(self._distance_angles[2].y)
+
+                self._wheel_xy[3].x += self._distance_angles[3].x * math.cos(self._distance_angles[3].y)
+                self._wheel_xy[3].x += self._distance_angles[3].x * math.cos(self._distance_angles[3].y)
                 
                 front_back_vector = Pose2D()
                 front_back_vector.x = (self._wheel_xy[0].x + self._wheel_xy[1].x) - (self._wheel_xy[2].x + self._wheel_xy[3].x)
@@ -138,8 +137,8 @@ class Platform(PlatformMath, Meta):
 
                 Y = 2*math.atan2(-front_back_vector.y, front_back_vector.x)
 
-                self._platform_transform.transform.translation.x += raw_delta_distance * math.cos(Y)
-                self._platform_transform.transform.translation.y += raw_delta_distance * math.sin(Y)
+                self._platform_transform.transform.translation.x += mean_delta_distance * math.cos(Y)
+                self._platform_transform.transform.translation.y += mean_delta_distance * math.sin(Y)
 
                 q = tf_conversions.transformations.quaternion_from_euler(0.0, 0.0, Y)
                 self._platform_transform.transform.rotation.x = q[0]
@@ -152,6 +151,7 @@ class Platform(PlatformMath, Meta):
                 self._tf_broadcaster.sendTransform(self._platform_transform)
                 for wheel in self._wheels:
                     wheel.send_transform()
+                
                 self._distance_angles = [None] * Platform.WHEEL_NUM
                 
                 

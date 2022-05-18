@@ -11,7 +11,6 @@ class PlatformMath(PlatformStatics):
             self._get_br4_angle,
         ]
 
-
     def __get_closer_angle(self, angl_radians):
         return math.atan(PlatformMath.ROBOT_LENGTH/((PlatformMath.ROBOT_LENGTH/math.tan(angl_radians/2))-PlatformMath.ROBOT_WIDTH))
 
@@ -27,37 +26,16 @@ class PlatformMath(PlatformStatics):
         return abs(wheel_radius/center_radius)
 
     def _get_fl1_angle(self, angl_radians):
-        if angl_radians < 0:
-            return PlatformMath.ANGLE_OFFSETS[0] + self.__get_closer_angle(-angl_radians)
-        elif angl_radians > 0:
-            return PlatformMath.ANGLE_OFFSETS[0] + self.__get_closer_angle(-angl_radians)
-        else:
-            return PlatformMath.ANGLE_OFFSETS[0]
-
+        return PlatformMath.ANGLE_OFFSETS[0] + self.__get_closer_angle(-angl_radians)
 
     def _get_fr2_angle(self, angl_radians):
-        if angl_radians < 0:
-            return PlatformMath.ANGLE_OFFSETS[1] + self.__get_farther_angle(angl_radians)
-        elif angl_radians > 0:
-            return PlatformMath.ANGLE_OFFSETS[1] + self.__get_farther_angle(angl_radians)
-        else:
-            return PlatformMath.ANGLE_OFFSETS[1]
+        return PlatformMath.ANGLE_OFFSETS[1] + self.__get_farther_angle(angl_radians)
 
     def _get_bl3_angle(self, angl_radians):
-        if angl_radians < 0:
-            return PlatformMath.ANGLE_OFFSETS[2] - self.__get_closer_angle(-angl_radians)
-        elif angl_radians > 0:
-            return PlatformMath.ANGLE_OFFSETS[2] - self.__get_closer_angle(-angl_radians)
-        else:
-            return PlatformMath.ANGLE_OFFSETS[2]
+        return PlatformMath.ANGLE_OFFSETS[2] - self.__get_closer_angle(-angl_radians)
 
     def _get_br4_angle(self, angl_radians):
-        if angl_radians < 0:
-            return PlatformMath.ANGLE_OFFSETS[3] - self.__get_farther_angle(angl_radians)
-        elif angl_radians > 0:
-            return PlatformMath.ANGLE_OFFSETS[3] - self.__get_farther_angle(angl_radians)
-        else:
-            return PlatformMath.ANGLE_OFFSETS[3]
+        PlatformMath.ANGLE_OFFSETS[3] - self.__get_farther_angle(angl_radians)
 
     def compute_angles_distances(self, angle, distance):
         if abs(angle) > PlatformMath.TURNING_LIMIT:
