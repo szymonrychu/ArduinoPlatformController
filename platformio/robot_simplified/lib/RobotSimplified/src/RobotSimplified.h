@@ -158,10 +158,10 @@ public:
     }
 
     char* getDiagnostics(){
-        sprintf(buffer, "%.4f:%.4f:%.4f:%.4f %d %.4f:%.4f:%.4f:%.4f %d %.4f %d %d %d",
-            E2I_F*leftPIDs.getError(), E2I_F*leftPIDs.getVelocityError(), E2I_F*leftPIDs.getDistanceSteering(), E2I_F*leftPIDs.getVelocitySteering(), leftPower,
-            E2I_F*leftPIDs.getError(), E2I_F*rightPIDs.getVelocityError(), E2I_F*rightPIDs.getDistanceSteering(), E2I_F*rightPIDs.getVelocitySteering(), rightPower,
-            timeDelta*1000.0, int(!leftReached), int(!rightReached), this->state);
+        sprintf(buffer, "%.4f:%d:%d:%.4f:%d:%d:%.4f:%d",
+            E2I_F*leftEncoder.getLastPosition(), leftPower, int(!leftReached),
+            E2I_F*rightEncoder.getLastPosition(), rightPower, int(!rightReached),
+            (timeDelta*1000.0), this->state);
         return buffer;
     }
 
