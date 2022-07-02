@@ -1,0 +1,16 @@
+<launch>
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
+  <env name="ROS_LOG_DIR" value="/tmp/"/>
+
+  <include file="$(find robot_simplified)/launch/robot_simplified.launch">
+  </include>
+
+  <!-- <include file="$(find imu_bridge)/launch/imu_bridge.launch">
+  </include> -->
+
+  <include file="$(find rplidar_ros)/launch/rplidar.launch">
+  </include>
+
+  <node pkg="tf" type="static_transform_publisher" name="laser_translation"  args="0.12   0     0  3.14159265359 0 0 /base_link /laser 100"/>
+
+</launch>

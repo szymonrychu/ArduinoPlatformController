@@ -158,10 +158,10 @@ public:
     }
 
     char* getDiagnostics(){
-        sprintf(buffer, "%.4f:%d:%d:%.4f:%d:%d:%.4f:%d",
-            E2I_F*leftEncoder.getLastPosition(), leftPower, int(!leftReached),
-            E2I_F*rightEncoder.getLastPosition(), rightPower, int(!rightReached),
-            (timeDelta*1000.0), this->state);
+        sprintf(buffer, "%.4f:%d:%.4f:%d:%d",
+            E2I_F*leftEncoder.getLastPosition(), int(!leftReached),
+            E2I_F*rightEncoder.getLastPosition(), int(!rightReached),
+            this->state);
         return buffer;
     }
 

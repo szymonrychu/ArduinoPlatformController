@@ -71,9 +71,9 @@ void setup(){
 void loop(){
     robot.compute();
     command.parse();
-    if(robot.isBusy()){
-        busyDiagnosticsTimer.compute();
-    }else {
-        freeDiagnosticsTimer.compute();
-    }
+    // if(robot.isBusy()){
+    busyDiagnosticsTimer.compute();
+    // }else {
+    //     freeDiagnosticsTimer.compute();
+    // }
 }
