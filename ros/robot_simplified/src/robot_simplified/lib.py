@@ -2,6 +2,7 @@ from threading import Lock
 import time
 
 import rospy
+from geometry_msgs.msg import Quaternion
 
 ROBOT_WIDTH_M = 0.23
 
@@ -59,3 +60,20 @@ class SupressedLog():
         if current_time - self.__last_timestamp > self.__suppresion_time * 1000.0:
             self.__last_timestamp = current_time
             log_handler(message)
+
+
+class RobotQuaternion(Quaternion):
+
+    @staticmethod
+    def from_arr(arr):
+        return RobotQuaternion(arr[0], arr[1], arr[2], arr[3])
+
+    @staticmethod
+    def from_q(q):
+        return RobotQuaternion(q.x, q.y, q.z, q.w)
+
+    def to_arr(self):
+        return [self.x, self.y, self.z, self.w]
+    
+    def q(self):
+        return Quaternion(self.x, self.y, self.z, self.w)

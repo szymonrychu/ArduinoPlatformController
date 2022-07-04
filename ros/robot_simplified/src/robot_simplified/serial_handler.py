@@ -5,11 +5,12 @@ import traceback
 import time
 import math
 import signal
+import tf_conversions
 
-from geometry_msgs.msg import Point, Pose2D
+from geometry_msgs.msg import Point, Pose, Quaternion
 from std_srvs.srv import SetBool, Trigger, TriggerRequest
 
-from .lib import Rate, SupressedLog, env2log, ROBOT_WIDTH_M
+from .lib import Rate, SupressedLog, RobotQuaternion, env2log, ROBOT_WIDTH_M
 
 class SerialWrapper():
 
@@ -43,7 +44,7 @@ class SerialWrapper():
         except serial.SerialTimeoutException:
             pass
         except UnicodeDecodeError:
-            rospy.loginfo('cannot parse "{}"'.format(raw_data))
+            rospy.logwarn('cannot parse "{}"'.format(raw_data))
             self.repair_serial()
         return raw_data
 
@@ -88,28 +89,36 @@ class RobotSerialHandler(SerialWrapper):
         output_topic_queue_size = rospy.get_param("~output_topic_queue_size")
         self.__hector_pause_mapping_sname = rospy.get_param("~hector_mapping_pause_sname")
         self.__hector_reset_mapping_sname = rospy.get_param("~hector_mapping_reset_sname")
-        self._output_pub = rospy.Publisher(output_topic_name, Pose2D, queue_size=output_topic_queue_size)
+        self._output_pub = rospy.Publisher(output_topic_name, Pose, queue_size=output_topic_queue_size)
         rospy.Subscriber(input_topic_name, Point, self._input_callback)
         SerialWrapper.__init__(self, serial_dev, baudrate)
-        self.__pose = Pose2D()
+        self.__pose = Pose()
         self.__running = True
         self.__suppresed_log = SupressedLog(1)
         self.__incoming_serial_rate = Rate()
 
         self.__deltas_initialized = False
-        self.__previous_left_distance = None
-        self.__previous_right_distance = None
+        self.__previous_left_distance = 0.0
+        self.__previous_right_distance = 0.0
 
         self.__delta_distance = 0.0
-        self.__delta_theta = 0.0
+        self.__q = RobotQuaternion()
+        self.__previous_q = RobotQuaternion()
+
+        self.__primed = False
 
         while self.__running and rospy.Time.now() == 0:
             rospy.logwarn(f"Client didn't receive time on /time topic yet!")
             time.sleep(1)
         self.reset_hector_mapping()
 
-    def is_moving(self, delta_distance_limit=0.01, delta_yaw_limit=0.001):
-        return abs(self.__delta_distance) > delta_distance_limit or abs(self.__delta_theta) > delta_yaw_limit
+    def is_moving(self, delta_distance_limit=0.01, delta_yaw_limit=0.0001):
+        r, p, y = tf_conversions.transformations.euler_from_quaternion(self.__delta_q.to_arr())
+        dD, dR, dP, dY = abs(self.__delta_distance), abs(r), abs(p), abs(y)
+        result = dD > delta_distance_limit or dY > delta_yaw_limit #  or dR > delta_yaw_limit or dP > delta_yaw_limit
+        if result:
+            rospy.loginfo(f"Moving [dD,dR,dP,dY] [{dD},{dR},{dP},{dY}]")
+        return result
 
     def reset_hector_mapping(self):
         try:
@@ -132,10 +141,12 @@ class RobotSerialHandler(SerialWrapper):
         left_distance, right_distance, time_s = data.x, data.y, data.z
         move_command = "G10 {} {} {}".format(left_distance, right_distance, time_s)
         self.write_data(move_command)
+        rospy.loginfo(f"Waiting for robot to finish command '{move_command}'")
         while True:
-            time.sleep(time_s/10.0)
+            time.sleep(time_s/2.0)
             if not self.is_moving():
                 break
+        rospy.loginfo(f"Command '{move_command}' finished")
         self.reset_hector_mapping()
         # self.toggle_hector_mapping(True)
 
@@ -148,43 +159,57 @@ class RobotSerialHandler(SerialWrapper):
 
         while self.__running:
             raw_data = self.read_data()
-            try:
-                message_id, level, l_position, l_reached, r_position, r_reached, state = raw_data.split(':')
 
-                message_id, level = int(message_id), level
-                left_distance, left_reached = float(l_position)/100.0, True if l_reached == '0' else False
-                right_distance, right_reached = float(r_position)/100.0, True if r_reached == '0' else False
+            if raw_data:
+                try:
+                    message_id, level, l_position, l_reached, r_position, r_reached, state, w, x, y, z, temp = raw_data.split(':')
 
-                state = RobotSerialHandler.stateID2str[int(state)]
+                    message_id, level, state = int(message_id), level, RobotSerialHandler.stateID2str[int(state)]
+                    left_distance, left_reached = float(l_position)/100.0, True if l_reached == '0' else False
+                    right_distance, right_reached = float(r_position)/100.0, True if r_reached == '0' else False
 
-                if self.__previous_left_distance and self.__previous_right_distance:
-                    delta_left = left_distance - self.__previous_left_distance
-                    delta_right = right_distance - self.__previous_right_distance
-
-                    self.__delta_distance = (delta_left + delta_right) / 2
-                    self.__delta_theta = (delta_right - delta_left) / ROBOT_WIDTH_M
-
-                    distance_traveled_x = math.cos(self.__delta_theta) * self.__delta_distance
-                    distance_traveled_y = -math.sin(self.__delta_theta) * self.__delta_distance
-
-                    delta_x = distance_traveled_x * math.cos(self.__pose.theta) - distance_traveled_y * math.sin(self.__pose.theta)
-                    delta_y = distance_traveled_x * math.sin(self.__pose.theta) + distance_traveled_y * math.cos(self.__pose.theta)
-
-                    self.__pose.x += delta_x
-                    self.__pose.y += delta_y
-                    self.__pose.theta += self.__delta_theta
-
-                    self.__incoming_serial_rate.update()
-                    self.__suppresed_log.handler(rospy.loginfo, f"Last Pose2D [{self.__pose.x}:{self.__pose.y}:{self.__pose.theta}] ({self.__incoming_serial_rate.mean_rate}ms)")
                     
-                    self._output_pub.publish(self.__pose)
-                
-                self.__previous_left_distance = left_distance
-                self.__previous_right_distance = right_distance
-            except ValueError:
-                rospy.logwarn(f"Unparsable '{raw_data}'")
-            except AttributeError:
-                pass
+                    self.__q = RobotQuaternion(float(x), float(y), float(z), float(w))
+                    
+                    if self.__primed:
+                        r, p, y = tf_conversions.transformations.euler_from_quaternion(self.__q.to_arr())
+                            
+                        delta_left = left_distance - self.__previous_left_distance
+                        delta_right = right_distance - self.__previous_right_distance
+                        self.__delta_distance = (delta_left + delta_right) / 2
+
+                        pq_inv = RobotQuaternion.from_arr(tf_conversions.transformations.quaternion_inverse(self.__previous_q.to_arr()))
+
+                        self.__delta_q = RobotQuaternion.from_arr(tf_conversions.transformations.quaternion_multiply(self.__q.to_arr(), pq_inv.to_arr()))
+                        
+                        dr, dp, dy = tf_conversions.transformations.euler_from_quaternion(self.__delta_q.to_arr())
+
+                        # self.__delta_theta = (delta_right - delta_left) / ROBOT_WIDTH_M
+
+                        distance_traveled_x = math.cos(dy) * self.__delta_distance
+                        distance_traveled_y = -math.sin(dy) * self.__delta_distance
+
+                        delta_x = distance_traveled_x * math.cos(y) - distance_traveled_y * math.sin(y)
+                        delta_y = distance_traveled_x * math.sin(y) + distance_traveled_y * math.cos(y)
+
+                        self.__pose.position.x += delta_x
+                        self.__pose.position.y += delta_y
+                        self.__pose.orientation = self.__q.q()
+
+                        self.__incoming_serial_rate.update()
+                        # rospy.loginfo(f"Last Pose XYZ=[{self.__pose.position.x},{self.__pose.position.y},{self.__pose.position.y}] RPY=[{r},{p},{y}] ({self.__incoming_serial_rate.mean_rate}ms)")
+                        # self.__suppresed_log.handler(rospy.loginfo, f"Last Pose XYZ=[{self.__pose.position.x},{self.__pose.position.y},{self.__pose.position.y}] RPY=[{r},{p},{y}] ({self.__incoming_serial_rate.mean_rate}ms)")
+                        
+                        self._output_pub.publish(self.__pose)
+                        
+                    self.__previous_q = self.__q
+                    self.__previous_left_distance = left_distance
+                    self.__previous_right_distance = right_distance
+                    self.__primed = True
+                except ValueError:
+                    rospy.logwarn(f"Unparsable '{raw_data}'")
+                # except AttributeError:
+                #     pass
             
             time.sleep(0.001)
 

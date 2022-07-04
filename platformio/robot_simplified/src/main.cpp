@@ -4,6 +4,11 @@
 #include "SerialLogger.h"
 #include "RobotSimplified.h"
 #include "EveryTimer.h"
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>
+#include <Adafruit_GPS.h>
 
 #define MEM_LEN 256
 
@@ -11,6 +16,8 @@ long loopCounter = 0;
 unsigned long lastLoopTime = 0;
 unsigned long lastPrintTime = 0;
 char buffer[MEM_LEN];
+imu::Quaternion quat;
+int8_t temp;
 
 void printDiagnostics();
 
@@ -19,6 +26,7 @@ EveryTimer freeDiagnosticsTimer(0.25, printDiagnostics);
 
 Command command = Command(" ", "\n");
 RobotSimplified robot;
+Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x28);
 
 void serialEvent() {
     while (Serial.available()) {
@@ -30,7 +38,17 @@ void serialEvent() {
 
 void printDiagnostics(){
     char* data = robot.getDiagnostics();
-    Logger::info(data);
+    Logger::info(data, false);
+    Serial.print(":");
+    Serial.print(quat.w(), 4);
+    Serial.print(":");
+    Serial.print(quat.x(), 4);
+    Serial.print(":");
+    Serial.print(quat.y(), 4);
+    Serial.print(":");
+    Serial.print(quat.z(), 4);
+    Serial.print(":");
+    Serial.println(temp);
 }
 
 void defaultFunc(char* data){
@@ -66,11 +84,18 @@ void setup(){
     command.addDefaultHandler(defaultFunc);
     command.addCommand("G10", G10HandleLeftRightSteering);
     
+    while(!bno.begin())  {
+        delay(1000);
+    }
+    bno.setExtCrystalUse(true);
+    Wire.setClock(400000); // 400KHz
 }
 
 void loop(){
     robot.compute();
     command.parse();
+    quat = bno.getQuat();
+    temp = bno.getTemp();
     // if(robot.isBusy()){
     busyDiagnosticsTimer.compute();
     // }else {

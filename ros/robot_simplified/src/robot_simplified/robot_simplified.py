@@ -3,12 +3,12 @@ import time
 import math
 import signal
 
-from geometry_msgs.msg import PoseStamped, Pose2D, TransformStamped, Point
+from geometry_msgs.msg import PoseStamped, Pose, TransformStamped, Point
 from tf2_ros import TransformBroadcaster
 import tf_conversions
 
 
-from .lib import env2log, ROBOT_WIDTH_M, Rate, SupressedLog
+from .lib import env2log, ROBOT_WIDTH_M, Rate, SupressedLog, RobotQuaternion
 
 class RobotPlatform():
 
@@ -22,34 +22,29 @@ class RobotPlatform():
         self._tf2_link_child = rospy.get_param("~tf2_map_link")
 
         rospy.Subscriber(goal_topic_name, PoseStamped, self._goal_callback)
-        rospy.Subscriber(input_topic_name, Pose2D, self._pose2d_callback)
+        rospy.Subscriber(input_topic_name, Pose, self._pose_callback)
         self.__output_pub = rospy.Publisher(output_topic_name, Point, queue_size=10)
         self.__tf_broadcaster = TransformBroadcaster()
 
         self.__tf2_suppressed_log = SupressedLog(1)
         self.__tf2_rate = Rate()
+
+        self.__pose = Pose()
         
-        self.__pose2d = Pose2D()
         self.__running = True
         while self.__running and rospy.Time.now() == 0:
             rospy.logwarn(f"Client didn't receive time on /time topic yet!")
             time.sleep(1)
 
-    def _pose2d_callback(self, data):
+    def _pose_callback(self, data):
         platform_transform = TransformStamped()
         platform_transform.header.stamp = rospy.Time.now()
         platform_transform.header.frame_id = self._tf2_link_child
         platform_transform.child_frame_id = self._tf2_link_base
-        platform_transform.transform.translation.x = data.x
-        platform_transform.transform.translation.y = data.y
-        platform_transform.transform.translation.z = 0.0
-        q = tf_conversions.transformations.quaternion_from_euler(0.0, 0.0, data.theta)
-        platform_transform.transform.rotation.x = q[0]
-        platform_transform.transform.rotation.y = q[1]
-        platform_transform.transform.rotation.z = q[2]
-        platform_transform.transform.rotation.w = q[3]
+        platform_transform.transform.rotation = data.orientation
+        platform_transform.transform.translation = data.position
         self.__tf_broadcaster.sendTransform(platform_transform)
-        self.__pose2d = data
+        self.__pose = data
         self.__tf2_rate.update()
         self.__tf2_suppressed_log.handler(rospy.loginfo, f"TF2 update rate {self.__tf2_rate.mean_rate}ms")
     
@@ -60,12 +55,15 @@ class RobotPlatform():
     def _goal_callback(self, data):
         rospy.loginfo(f"Started processing goal {data.pose.position.x} {data.pose.position.y} {data.pose.position.z}")
 
-        dx = data.pose.position.x - self.__pose2d.x
-        dy = data.pose.position.y - self.__pose2d.y
+        dx = data.pose.position.x - self.__pose.position.x  
+        dy = data.pose.position.y - self.__pose.position.y
 
-        r, p, y = tf_conversions.transformations.euler_from_quaternion([data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w])
+        orientation = RobotQuaternion.from_q(self.__pose.orientation)
+        # r, p, y = tf_conversions.transformations.euler_from_quaternion([data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w])
+        r, p, y = tf_conversions.transformations.euler_from_quaternion(orientation.to_arr())
         
-        angle = math.atan2(dy, dx) - self.__pose2d.theta
+
+        angle = math.atan2(dy, dx) - y
         if angle > math.pi:
             angle = math.pi - angle
         if angle < -math.pi:
