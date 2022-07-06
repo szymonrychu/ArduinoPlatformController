@@ -6,8 +6,12 @@ import time
 import math
 import signal
 import tf_conversions
+import numpy as np
 
-from geometry_msgs.msg import Point, Pose, Quaternion
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
+
+from geometry_msgs.msg import Point, Pose2D, Quaternion
 from std_srvs.srv import SetBool, Trigger, TriggerRequest
 
 from .lib import Rate, SupressedLog, RobotQuaternion, env2log, ROBOT_WIDTH_M
@@ -85,39 +89,42 @@ class RobotSerialHandler(SerialWrapper):
         serial_dev = rospy.get_param("~serial_dev")
         baudrate = rospy.get_param("~baudrate")
         input_topic_name = rospy.get_param("~input_topic")
-        output_topic_name = rospy.get_param("~output_topic")
-        output_topic_queue_size = rospy.get_param("~output_topic_queue_size")
         self.__hector_pause_mapping_sname = rospy.get_param("~hector_mapping_pause_sname")
         self.__hector_reset_mapping_sname = rospy.get_param("~hector_mapping_reset_sname")
-        self._output_pub = rospy.Publisher(output_topic_name, Pose, queue_size=output_topic_queue_size)
+
+        output_topic_name = rospy.get_param("~output_topic")
+        output_topic_queue_size = rospy.get_param("~output_topic_queue_size")
+        self._output_pub = rospy.Publisher(output_topic_name, Pose2D, queue_size=output_topic_queue_size)
+
+        odometry_queue_size = rospy.get_param("~odometry_queue_size")
+        odometry_topic_name = rospy.get_param("~odometry_topic_name")
+        self._odometry_pub = rospy.Publisher(odometry_topic_name, Odometry, queue_size=odometry_queue_size)
+
+        imu_queue_size = rospy.get_param("~imu_queue_size")
+        imu_topic_name = rospy.get_param("~imu_topic_name")
+        self._imu_pub = rospy.Publisher(imu_topic_name, Imu, queue_size=imu_queue_size)
+
+        self._link_base = rospy.get_param("~base_link")
+        self._link_child = rospy.get_param("~map_link")
+
         rospy.Subscriber(input_topic_name, Point, self._input_callback)
         SerialWrapper.__init__(self, serial_dev, baudrate)
-        self.__pose = Pose()
         self.__running = True
-        self.__suppresed_log = SupressedLog(1)
-        self.__incoming_serial_rate = Rate()
-
-        self.__deltas_initialized = False
-        self.__previous_left_distance = 0.0
-        self.__previous_right_distance = 0.0
-
-        self.__delta_distance = 0.0
-        self.__q = RobotQuaternion()
-        self.__previous_q = RobotQuaternion()
-
-        self.__primed = False
+        self.__theta = 0.0
+        self.__x = 0.0
+        self.__y = 0.0
+        self.__delta_left = 0.0
+        self.__delta_right = 0.0
 
         while self.__running and rospy.Time.now() == 0:
             rospy.logwarn(f"Client didn't receive time on /time topic yet!")
             time.sleep(1)
         self.reset_hector_mapping()
 
-    def is_moving(self, delta_distance_limit=0.01, delta_yaw_limit=0.0001):
-        r, p, y = tf_conversions.transformations.euler_from_quaternion(self.__delta_q.to_arr())
-        dD, dR, dP, dY = abs(self.__delta_distance), abs(r), abs(p), abs(y)
-        result = dD > delta_distance_limit or dY > delta_yaw_limit #  or dR > delta_yaw_limit or dP > delta_yaw_limit
+    def is_moving(self, delta_distance_limit=0.001):
+        result = abs(self.__delta_left) > delta_distance_limit or abs(self.__delta_right) > delta_distance_limit
         if result:
-            rospy.loginfo(f"Moving [dD,dR,dP,dY] [{dD},{dR},{dP},{dY}]")
+            rospy.loginfo(f"Moving [dX,dY] [{self.__delta_x},{self.__delta_y}]")
         return result
 
     def reset_hector_mapping(self):
@@ -153,63 +160,131 @@ class RobotSerialHandler(SerialWrapper):
     def stop(self, *args, **kwargs):
         rospy.loginfo(f"Stopping gracefully.")
         self.__running = False
+    
+    def __parse_raw_message(self, raw_message):
+        _ints = [ 0 ]
+        _strings = [ 1 ] # level
+        _bools = [2, 3, 4] # id, state, left_reached, right_reached
+        _floats = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] # delta_L, delta_R, qw, qx, qy, qz, agVx, agVy, agVz, lAcx, lAcy, lAcz
+        try:
+            splitted_string = raw_message.split(':')
+            result = tuple()
+            for id, item in enumerate(splitted_string):
+                if id in _ints:
+                    result = result + (int(item), )
+                elif id in _strings:
+                    result = result + (item, )
+                elif id in _bools:
+                    result = result + (True if item == '0' else False, )
+                elif id in _floats:
+                    result = result + (float(item), )
+            if len(result) - (len(_ints) + len(_strings) + len(_bools) + len(_floats)) != 0:
+                raise ValueError()
+            result += (True, )
+            return result
+        except ValueError:
+            rospy.logwarn(f"Unparsable '{raw_message}'")
+        except AttributeError:
+            pass
+        tmp = tuple([None] * (len(_ints) + len(_strings) + len(_bools) + len(_floats)))
+        tmp += (False,)
+        return tmp
 
     def process(self):
         self.__running = True
-
         while self.__running:
-            raw_data = self.read_data()
+            m_id, level, state, l_reached, r_reached, \
+                self.__delta_left, self.__delta_right, \
+                qW, qX, qY, qZ, \
+                angVX, angVY, angVZ, \
+                lAccX, lAccY, lAccZ, success = self.__parse_raw_message(self.read_data())
+            
+            if success:
+                # based on https://github.com/jfstepha/differential-drive/blob/master/scripts/diff_tf.py
+                # and on: http://docs.ros.org/en/melodic/api/robot_localization/html/preparing_sensor_data.html
+                # and on: https://github.com/Sollimann/CleanIt/blob/main/autonomy/src/slam/README.md
+                ds = (self.__delta_right + self.__delta_left) / 2
+                ds_2b = ds/ (2*ROBOT_WIDTH_M)
+                dyaw = (self.__delta_right - self.__delta_left) / ROBOT_WIDTH_M
+                c_yaw = math.cos(self.__theta + (dyaw / 2.0))
+                s_yaw = math.sin(self.__theta + (dyaw / 2.0))
 
-            if raw_data:
-                try:
-                    message_id, level, l_position, l_reached, r_position, r_reached, state, w, x, y, z, temp = raw_data.split(':')
+                dx = ds * c_yaw
+                dy = ds * s_yaw
 
-                    message_id, level, state = int(message_id), level, RobotSerialHandler.stateID2str[int(state)]
-                    left_distance, left_reached = float(l_position)/100.0, True if l_reached == '0' else False
-                    right_distance, right_reached = float(r_position)/100.0, True if r_reached == '0' else False
+                # p_old = np.array([self.__x, self.__y, self.__theta])
+                # delta = np.array([dx, dy, dyaw])
+                # p_new = np.add(p_old, delta)
 
-                    
-                    self.__q = RobotQuaternion(float(x), float(y), float(z), float(w))
-                    
-                    if self.__primed:
-                        r, p, y = tf_conversions.transformations.euler_from_quaternion(self.__q.to_arr())
-                            
-                        delta_left = left_distance - self.__previous_left_distance
-                        delta_right = right_distance - self.__previous_right_distance
-                        self.__delta_distance = (delta_left + delta_right) / 2
+                self.__theta += dyaw
+                self.__x += dx
+                self.__y += dy
 
-                        pq_inv = RobotQuaternion.from_arr(tf_conversions.transformations.quaternion_inverse(self.__previous_q.to_arr()))
+                odom_q = Quaternion()
+                odom_q.x = 0.0
+                odom_q.y = 0.0
+                odom_q.z = math.sin(self.__theta / 2)
+                odom_q.w = math.cos(self.__theta / 2)
 
-                        self.__delta_q = RobotQuaternion.from_arr(tf_conversions.transformations.quaternion_multiply(self.__q.to_arr(), pq_inv.to_arr()))
-                        
-                        dr, dp, dy = tf_conversions.transformations.euler_from_quaternion(self.__delta_q.to_arr())
+                odometry = Odometry()
+                odometry.header.stamp = rospy.Time.now()
+                odometry.header.frame_id = self._link_child
+                odometry.child_frame_id = self._link_base
+                odometry.pose.pose.orientation = odom_q
+                odometry.pose.pose.position.x = self.__x
+                odometry.pose.pose.position.y = self.__y
+                odometry.pose.covariance = np.array(   [1,   0,   0,   0,   0,   0,
+                                                        0,   1,   0,   0,   0,   0,
+                                                        0,   0,   1,   0,   0,   0,
+                                                        0,   0,   0,   1,   0,   0,
+                                                        0,   0,   0,   0,   1,   0,
+                                                        0,   0,   0,   0,   0,   .7])**2
 
-                        # self.__delta_theta = (delta_right - delta_left) / ROBOT_WIDTH_M
+                # kr, kl = 1.0, 1.0
+                # i_00, i_11 = kr * abs(self.__delta_left), kl * abs(self.__delta_right)
+                # vel_covar = np.matrix([[i_00, 0],[0, i_11]])
 
-                        distance_traveled_x = math.cos(dy) * self.__delta_distance
-                        distance_traveled_y = -math.sin(dy) * self.__delta_distance
+                # i_00 = (c_yaw / 2.0) - (ds_2b * s_yaw)
+                # i_01 = (c_yaw / 2.0) + (ds_2b * s_yaw)
+                # i_10 = (s_yaw / 2.0) + (ds_2b * c_yaw)
+                # i_11 = (s_yaw / 2.0) - (ds_2b * c_yaw)
+                # i_20 = 1.0 / ROBOT_WIDTH_M
+                # i_21 = -i_20
+                # vel_jacob = np.matrix([[i_00, i_01], [i_10, i_11], [i_20, i_21]])
 
-                        delta_x = distance_traveled_x * math.cos(y) - distance_traveled_y * math.sin(y)
-                        delta_y = distance_traveled_x * math.sin(y) + distance_traveled_y * math.cos(y)
+                # vel_covar_matrix_est = vel_jacob.dot(vel_covar).dot(vel_jacob.transpose())
 
-                        self.__pose.position.x += delta_x
-                        self.__pose.position.y += delta_y
-                        self.__pose.orientation = self.__q.q()
+                # i_00 = 1.0
+                # i_01 = 0.0
+                # i_02 = -dy
+                # i_10 = 0.0
+                # i_11 = 1.0
+                # i_12 = dx
+                # i_20 = 0.0
+                # i_21 = 0.0
+                # i_22 = 1.0
+                # pose_jacob = np.matrix([[i_00, i_01, i_02], [i_10, i_11, i_12], [i_20, i_21, i_22]])
 
-                        self.__incoming_serial_rate.update()
-                        # rospy.loginfo(f"Last Pose XYZ=[{self.__pose.position.x},{self.__pose.position.y},{self.__pose.position.y}] RPY=[{r},{p},{y}] ({self.__incoming_serial_rate.mean_rate}ms)")
-                        # self.__suppresed_log.handler(rospy.loginfo, f"Last Pose XYZ=[{self.__pose.position.x},{self.__pose.position.y},{self.__pose.position.y}] RPY=[{r},{p},{y}] ({self.__incoming_serial_rate.mean_rate}ms)")
-                        
-                        self._output_pub.publish(self.__pose)
-                        
-                    self.__previous_q = self.__q
-                    self.__previous_left_distance = left_distance
-                    self.__previous_right_distance = right_distance
-                    self.__primed = True
-                except ValueError:
-                    rospy.logwarn(f"Unparsable '{raw_data}'")
-                # except AttributeError:
-                #     pass
+                # pose_covar 
+
+
+                imu = Imu()
+                imu.orientation = Quaternion(qW, qX, qY, qZ)
+                imu.angular_velocity.x = angVX
+                imu.angular_velocity.y = angVY
+                imu.angular_velocity.z = angVZ
+                imu.linear_acceleration.x = lAccX
+                imu.linear_acceleration.y = lAccY
+                imu.linear_acceleration.z = lAccZ
+
+                pose2d = Pose2D()
+                pose2d.x = self.__x
+                pose2d.y = self.__y
+                pose2d.theta = self.__theta
+
+                self._imu_pub.publish(imu)
+                self._odometry_pub.publish(odometry)
+                self._output_pub.publish(pose2d)
             
             time.sleep(0.001)
 

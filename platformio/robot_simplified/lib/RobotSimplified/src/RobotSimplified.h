@@ -37,6 +37,7 @@ private:
 
     float leftTarget = 0;
     float leftVelocityTarget = 0;
+    float lastLeftPosition = 0;
     long leftPower = 0;
     long previousLeftPower = 0;
     HardwareEncoder<1> leftEncoder;
@@ -46,6 +47,7 @@ private:
 
     float rightTarget = 0;
     float rightVelocityTarget = 0;
+    float lastRightPosition = 0;
     long rightPower = 0;
     long previousRightPower = 0;
     HardwareEncoder<2> rightEncoder;
@@ -158,10 +160,17 @@ public:
     }
 
     char* getDiagnostics(){
-        sprintf(buffer, "%.4f:%d:%.4f:%d:%d",
-            E2I_F*leftEncoder.getLastPosition(), int(!leftReached),
-            E2I_F*rightEncoder.getLastPosition(), int(!rightReached),
-            this->state);
+        float left = E2I_F*leftEncoder.getLastPosition();
+        float deltaLeft = left - lastLeftPosition;
+        lastLeftPosition = left;
+
+        float right = E2I_F*rightEncoder.getLastPosition();
+        float deltaRight = right - lastRightPosition;
+        lastRightPosition = right;
+
+        sprintf(buffer, "%d:%d:%d:%.4f:%.4f",
+            this->state, int(!leftReached), int(!rightReached),
+            deltaLeft, deltaRight);
         return buffer;
     }
 

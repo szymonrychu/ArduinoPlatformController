@@ -16,8 +16,6 @@ long loopCounter = 0;
 unsigned long lastLoopTime = 0;
 unsigned long lastPrintTime = 0;
 char buffer[MEM_LEN];
-imu::Quaternion quat;
-int8_t temp;
 
 void printDiagnostics();
 
@@ -37,18 +35,17 @@ void serialEvent() {
 
 
 void printDiagnostics(){
+    sensors_event_t angVelocityData , linearAccelData;
+    bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
+    bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+    imu::Quaternion quat = bno.getQuat();
     char* data = robot.getDiagnostics();
+    sprintf(buffer, ":%.4f:%.4f:%.4f:%.4f:%.4f:%.4f:%.4f:%.4f:%.4f:%.4f",
+            quat.w(), quat.x(), quat.y(), quat.z(),
+            angVelocityData.gyro.x, angVelocityData.gyro.y, angVelocityData.gyro.z,
+            linearAccelData.acceleration.x, linearAccelData.acceleration.y, linearAccelData.acceleration.z);
     Logger::info(data, false);
-    Serial.print(":");
-    Serial.print(quat.w(), 4);
-    Serial.print(":");
-    Serial.print(quat.x(), 4);
-    Serial.print(":");
-    Serial.print(quat.y(), 4);
-    Serial.print(":");
-    Serial.print(quat.z(), 4);
-    Serial.print(":");
-    Serial.println(temp);
+    Serial.println(buffer);
 }
 
 void defaultFunc(char* data){
@@ -94,8 +91,6 @@ void setup(){
 void loop(){
     robot.compute();
     command.parse();
-    quat = bno.getQuat();
-    temp = bno.getTemp();
     // if(robot.isBusy()){
     busyDiagnosticsTimer.compute();
     // }else {
