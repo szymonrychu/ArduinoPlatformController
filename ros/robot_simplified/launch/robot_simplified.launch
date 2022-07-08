@@ -1,40 +1,17 @@
 <launch>
-  <arg name="robot2serial_internal_topic" default="/platform/leftrighttimeimput"/>
-  <arg name="serial2robot_internal_topic" default="/platform/pose2d"/>
+  <arg name="robot2serial_internal_topic" default="/robot2serial"/>
+  <arg name="serial2robot_internal_topic" default="/serial2robot"/>
   <arg name="serial_dev" default="/dev/serial/by-id/usb-Teensyduino_USB_Serial_9936370-if00"/>
 
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
-  <env name="ROS_LOG_DIR" value="/tmp/"/>
   
-  <!-- <node pkg="robot_simplified" type="robot_simplified" name="robot_simplified" output="screen" respawn="true">
+  <node pkg="robot_simplified" type="robot_simplified" name="robot_simplified" output="screen" respawn="true">
     <param name="goal_topic" value="/move_base_simple/goal" />
     <param name="tf2_base_link" value="/base_link" />
     <param name="tf2_map_link" value="/map" />
     <param name="output_topic" value="$(arg robot2serial_internal_topic)" />
     <param name="input_topic" value="$(arg serial2robot_internal_topic)" />
     
-  </node> -->
-  
-  <node pkg="robot_simplified" type="serial_handler" name="serial_handler" output="screen" respawn="true">
-    <param name="serial_dev" value="$(arg serial_dev)" />
-    <param name="baudrate" type="int" value="115200"/>
-
-    <param name="input_topic" value="$(arg robot2serial_internal_topic)" />
-
-    <param name="hector_mapping_pause_sname" value="pause_mapping" />
-    <param name="hector_mapping_reset_sname" value="reset_map" />
-
-    <param name="output_topic" value="$(arg serial2robot_internal_topic)" />
-    <param name="output_topic_queue_size" type="int" value="10"/>
-
-    <param name="odometry_topic_name" value="/platform/odom" />
-    <param name="odometry_queue_size" type="int" value="10"/>
-
-    <param name="imu_topic_name" value="/platform/imu" />
-    <param name="imu_queue_size" type="int" value="10"/>
-
-    <param name="base_link" value="/baselink" />
-    <param name="map_link" value="/map" />
   </node>
 
 </launch>

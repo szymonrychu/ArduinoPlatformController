@@ -43,7 +43,7 @@
 #define ENCODER_TO_ANGLE            ANGLE_GEARING/(TWO_PI*LARGE_MOTOR_ENCODER_PER_REV)
 
 #define DISTANCE_DONE_SENSITIVITY   0.01 // 1 cm
-#define ANGLE_DONE_SENSITIVITY      0.0025 * TWO_PI // 1/400th of rotation
+#define ANGLE_DONE_SENSITIVITY      0.005 * TWO_PI // 1/400th of rotation
 
 
 #define DISTANCE_DPID_GAIN 5.0

@@ -1,5 +1,7 @@
+from mimetypes import init
 from threading import Lock
 import time
+import os
 
 import rospy
 from geometry_msgs.msg import Quaternion
@@ -77,3 +79,42 @@ class RobotQuaternion(Quaternion):
     
     def q(self):
         return Quaternion(self.x, self.y, self.z, self.w)
+
+class Latch():
+
+    def __init__(self, initial_state = True):
+        self.__lock = Lock()
+        with self.__lock:
+            self.__primed = False
+            self.__initial_state = initial_state
+            self.__state = initial_state
+            self.__last_state = self.__initial_state
+
+    def set_True(self):
+        self.__primed = True
+        self.__state = self.__initial_state
+    
+    def reset(self):
+        with self.__lock:
+            self.__primed = False
+            self.__state = self.__initial_state
+            self.__last_state = self.__initial_state
+
+    def state(self):
+        with self.__lock:
+            return self.__primed and self.__initial_state == self.__state
+    
+    def update(self, new_state):
+        '''
+        Will return True only if:
+            1. there was a change in new_state vs initial_state
+            2. the new_state was set back to it's initial state
+        '''
+        with self.__lock:
+            if self.__initial_state != new_state:
+                self.__primed = True
+
+            if self.__primed:
+                self.__state = new_state
+                
+        return self.state()

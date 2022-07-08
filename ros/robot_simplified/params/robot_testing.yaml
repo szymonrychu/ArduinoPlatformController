@@ -1,0 +1,2 @@
+goal_topic: /move_base_simple/goal
+goal_reached: /platform/goal_reached

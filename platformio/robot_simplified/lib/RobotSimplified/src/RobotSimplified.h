@@ -22,7 +22,7 @@
 #define ROBOT_STATE_BUSY_MOVING_BACKWARD 2
 #define ROBOT_STATE_BUSY_MOVING_TURNING 3
 
-#define E2I_F 10.0
+#define E2I_F 0.1
 
 
 class RobotSimplified;
@@ -44,6 +44,7 @@ private:
     DistanceVelocityPID leftPIDs;
     Hbridge leftHBridge;
     bool leftReached = true;
+    float deltaLeft = 0;
 
     float rightTarget = 0;
     float rightVelocityTarget = 0;
@@ -54,6 +55,7 @@ private:
     DistanceVelocityPID rightPIDs;
     Hbridge rightHBridge;
     bool rightReached = true;
+    float deltaRight = 0;
 
 public:
 
@@ -110,15 +112,8 @@ public:
 
 
 
-
-        if(!leftReached){
-            leftReached = abs(this->previousLeftPower > this->leftPower) && abs(this->leftPIDs.getError()) < 0.02;
-            if(leftReached) this->leftVelocityTarget = 0.0f;
-        }
-        if(!rightReached){
-            rightReached = abs(this->previousRightPower > this->rightPower) && abs(this->rightPIDs.getError()) < 0.02;
-            if(rightReached) this->rightVelocityTarget = 0.0f;
-        }
+        leftReached = deltaLeft < 1;
+        rightReached = deltaRight < 1;
         
         if(leftReached && rightReached){
             this->state = ROBOT_STATE_READY;
@@ -138,12 +133,10 @@ public:
         if(m.isLeftSet()){
             this->leftTarget = m.getRelativeLeftDistance(E2I_F*this->leftEncoder.getLastPosition())/E2I_F;
             this->leftVelocityTarget = m.getRelativeLeftVelocity()/E2I_F;
-            leftReached = false;
         }
         if(m.isRightSet()){
             this->rightTarget = m.getRelativeRightDistance(E2I_F*this->rightEncoder.getLastPosition())/E2I_F;
             this->rightVelocityTarget = m.getRelativeRightVelocity()/E2I_F;
-            rightReached = false;
         }
         if(m.isMovingForward()){
             this->state = ROBOT_STATE_BUSY_MOVING_FORWARD;
@@ -154,18 +147,18 @@ public:
         }
         
         sprintf(buffer, "requestMove:%.4f:%.4f:%.4f:%.4f", 
-            this->leftTarget, this->leftVelocityTarget,
-            this->rightTarget, this->rightVelocityTarget);
+            m.getRelativeLeftDistance(), this->leftVelocityTarget,
+            m.getRelativeRightDistance(), this->rightVelocityTarget);
         return buffer;
     }
 
     char* getDiagnostics(){
         float left = E2I_F*leftEncoder.getLastPosition();
-        float deltaLeft = left - lastLeftPosition;
+        deltaLeft = left - lastLeftPosition;
         lastLeftPosition = left;
 
         float right = E2I_F*rightEncoder.getLastPosition();
-        float deltaRight = right - lastRightPosition;
+        deltaRight = right - lastRightPosition;
         lastRightPosition = right;
 
         sprintf(buffer, "%d:%d:%d:%.4f:%.4f",
