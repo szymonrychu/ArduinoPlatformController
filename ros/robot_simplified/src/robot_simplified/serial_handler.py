@@ -13,15 +13,14 @@ import tf2_ros
 
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Bool
-from sensor_msgs.msg import Imu
 import numpy as np
 import queue
 
 from dataclasses import dataclass
 
-from geometry_msgs.msg import Point, Pose2D, Quaternion, PoseStamped, TransformStamped
+from geometry_msgs.msg import Quaternion, PoseStamped, TransformStamped, Vector3
+from sensor_msgs.msg import Imu
 from std_srvs.srv import SetBool, Trigger, TriggerRequest
-
 from .lib import Rate, Latch, RobotQuaternion, env2log, ROBOT_WIDTH_M, time_ms
 
 class MessageState(Enum):
@@ -127,26 +126,18 @@ class RobotSerialHandler(SerialWrapper):
         self.__last_odometry = None
         self.__odometry_lock = Lock()
 
-
-        self.__hector_pause_mapping_sname = rospy.get_param("~hector_mapping_pause_sname")
-        self.__hector_reset_mapping_sname = rospy.get_param("~hector_mapping_reset_sname")
-
-        goal_topic_name = rospy.get_param("~goal_topic")
-        rospy.Subscriber(goal_topic_name, PoseStamped, self._goal_callback)
-
-        odometry_input_topic_name = rospy.get_param("~odometry_input_topic_name")
-        rospy.Subscriber(odometry_input_topic_name, Odometry, self.__odometry_callback)
-
-        goal_reached_topic_name = rospy.get_param("~goal_reached")
-        self._goal_reached_pub = rospy.Publisher(goal_reached_topic_name, Bool, queue_size=10)
-
         odometry_output_queue_size = rospy.get_param("~odometry_output_queue_size")
         odometry_output_topic_name = rospy.get_param("~odometry_output_topic_name")
         self._odometry_pub = rospy.Publisher(odometry_output_topic_name, Odometry, queue_size=odometry_output_queue_size)
 
-        imu_queue_size = rospy.get_param("~imu_queue_size")
-        imu_topic_name = rospy.get_param("~imu_topic_name")
+        imu_queue_size = rospy.get_param("~imu_output_queue_size")
+        imu_topic_name = rospy.get_param("~imu_output_topic_name")
         self._imu_pub = rospy.Publisher(imu_topic_name, Imu, queue_size=imu_queue_size)
+
+
+        pose_delta_input_topic_name = rospy.get_param("~pose_delta_input_topic_name")
+        rospy.Subscriber(pose_delta_input_topic_name, PoseStamped, self._input_pose_delta_handler)
+
 
         self._link_base = rospy.get_param("~base_link")
         self._link_child = rospy.get_param("~map_link")
@@ -163,27 +154,50 @@ class RobotSerialHandler(SerialWrapper):
             time.sleep(1)
         self.reset_hector_mapping()
 
-    def reset_hector_mapping(self):
-        try:
-            rospy.loginfo(f"Triggering Hector mapping service's reset '{self.__hector_reset_mapping_sname}'")
-            hector_mapping_service = rospy.ServiceProxy(self.__hector_reset_mapping_sname, Trigger)
-            return hector_mapping_service(TriggerRequest())
-        except rospy.ServiceException as e:
-            rospy.logwarn(f"Hector mapping service '{self.__hector_reset_mapping_sname}' call failed: {e}")
-
-    def toggle_hector_mapping(self, state_on=True):
-        try:
-            rospy.loginfo(f"Toggling Hector mapping service '{self.__hector_pause_mapping_sname}' with value '{'true' if state_on else 'false'}'")
-            hector_mapping_service = rospy.ServiceProxy(self.__hector_pause_mapping_sname, SetBool)
-            return hector_mapping_service(state_on)
-        except rospy.ServiceException as e:
-            rospy.logwarn(f"Hector mapping service '{self.__hector_pause_mapping_sname}' call failed: {e}")
+    def _input_pose_delta_handler(self, data: PoseStamped):
+        pass
 
     def stop(self, *args, **kwargs):
         rospy.loginfo(f"Stopping gracefully.")
         self.__running = False
     
-    def __parse_raw_message(self, raw_message: str) -> ReceivedMessage:
+    def __parse_raw_message(self, raw_message: str):
+        rospy_Time_now = rospy.Time.now()
+        # 0000002544:INF:0:0:0:0.0000:0.0000:0.9979:0.0190:-0.0615:-0.0018:0.0000:0.0175:-0.0033:-0.1600:0.0400:-0.6200
+        message_id, level, \
+            state, left_reached, right_reached, delta_left, delta_right, \
+            qW, qX, qY, qZ, gX, gY, gZ, aX, aY, aZ = raw_message.split(':')
+        message_id = int(message_id)
+        raw_state_map = {
+            0: 'READY',
+            1: 'MOVING_FORWARD',
+            2: 'MOVING_BACKWARD',
+            3: 'TURNING',
+        }
+        state = raw_state_map[state]
+        left_reached, right_reached = left_reached == 0, right_reached == 0
+        delta_left, delta_right = float(delta_left), float(delta_right)
+
+        imu = Imu()
+        imu.header.stamp = rospy_Time_now
+        imu.orientation = Quaternion(float(qW), float(qX), float(qY), float(qZ))
+        imu.orientation_covariance[0] = 1e-9
+        imu.orientation_covariance[4] = 1e-9
+        imu.orientation_covariance[8] = 1e-9
+        imu.angular_velocity = Vector3(float(gX), float(gY), float(gZ))
+        imu.angular_velocity_covariance[0] = 1e-9
+        imu.angular_velocity_covariance[4] = 1e-9
+        imu.angular_velocity_covariance[8] = 1e-9
+        imu.linear_acceleration = Vector3(float(aX), float(aY), float(aZ))
+        imu.linear_acceleration_covariance[0] = 1e-9
+        imu.linear_acceleration_covariance[4] = 1e-9
+        imu.linear_acceleration_covariance[8] = 1e-9
+
+        pose_stamped = PoseStamped()
+
+        return imu, pose_stamped
+
+            
         _ints = [ 0, 2 ]
         _strings = [ 1 ] # level
         _bools = [3, 4] # id, state, left_reached, right_reached

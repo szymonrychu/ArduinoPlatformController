@@ -17,7 +17,7 @@ private:
 public:
     void setup(float dP, float dI, float dD, float vP, float vI, float vD){
         this->distancePID = PID(dP, dI, dD);
-        this->velocityPID = PID(vP, vI, vD, -0.5, 0.5);
+        this->velocityPID = PID(vP, vI, vD, MIN_VELOCITY_PID, 1.0);
         this->latestTimestampMicros = 0;
     }
 
@@ -40,7 +40,7 @@ public:
 
     long computeSteering(float dInput, float vInput, float timeDelta){
         distanceSteering = this->distancePID.computeNewSteering(timeDelta, dInput);
-        velocitySteering = 0.5 + this->velocityPID.computeNewSteering(timeDelta, vInput);
+        velocitySteering = this->velocityPID.computeNewSteering(timeDelta, vInput);
         long drive = (long)((float)pow(2, PWM_RESOLUTION) * distanceSteering * velocitySteering);
         if(drive > pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER){
             drive = pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER;

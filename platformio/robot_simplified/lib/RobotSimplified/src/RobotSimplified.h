@@ -11,11 +11,11 @@
 
 #define LEFT_PWM_PIN 22
 #define LEFT_PIN_A   20
-#define LEFT_PIN_B   18
+#define LEFT_PIN_B   14
 
 #define RIGHT_PWM_PIN 23
 #define RIGHT_PIN_A   21
-#define RIGHT_PIN_B   19
+#define RIGHT_PIN_B   15
 
 #define ROBOT_STATE_READY 0
 #define ROBOT_STATE_BUSY_MOVING_FORWARD 1
@@ -79,20 +79,16 @@ public:
     void compute(){
         unsigned long currentTime = micros();
         timeDelta = (float)(currentTime - lastLoopTime)/1000000.0;
+        if(timeDelta < 0.01){
+            return;
+        }
         lastLoopTime = currentTime;
 
         float latestLeftPosition = leftEncoder.getLastPosition();
         float latestRightPosition = rightEncoder.getLastPosition();
-
-
-        float differentialError = this->leftPIDs.getError() - this->rightPIDs.getError();
-        if(this->state == ROBOT_STATE_BUSY_MOVING_FORWARD){
-            leftVelocityTarget = leftVelocityTarget + DIFFERENTIAL_P * differentialError;
-            rightVelocityTarget = rightVelocityTarget - DIFFERENTIAL_P * differentialError;
-        }else if(this->state == ROBOT_STATE_BUSY_MOVING_BACKWARD){
-            leftVelocityTarget = leftVelocityTarget - DIFFERENTIAL_P * differentialError;
-            rightVelocityTarget = rightVelocityTarget + DIFFERENTIAL_P * differentialError;
-        }
+        
+        leftEncoder.compute(timeDelta);
+        rightEncoder.compute(timeDelta);
 
         this->leftPower = leftPIDs.computeSteering(leftTarget, leftVelocityTarget, timeDelta);
         this->rightPower = rightPIDs.computeSteering(rightTarget, rightVelocityTarget, timeDelta);
@@ -100,33 +96,23 @@ public:
         leftHBridge.drive(leftPower);
         rightHBridge.drive(rightPower);
 
-        leftEncoder.compute(timeDelta);
-        rightEncoder.compute(timeDelta);
-
-        float latestLeftVelocity = leftEncoder.getLastVelocity();
-        float latestRightVelocity = rightEncoder.getLastVelocity();
-
-        leftPIDs.setResults(latestLeftPosition, latestLeftVelocity);
-        rightPIDs.setResults(latestRightPosition, latestRightVelocity);
+        leftPIDs.setResults(latestLeftPosition, leftEncoder.getLastVelocity());
+        rightPIDs.setResults(latestRightPosition, rightEncoder.getLastVelocity());
 
 
+        // float differentialError = this->leftPIDs.getError() - this->rightPIDs.getError();
+        // if(this->state == ROBOT_STATE_BUSY_MOVING_FORWARD){
+        //     leftVelocityTarget = leftVelocityTarget + DIFFERENTIAL_P * differentialError;
+        //     rightVelocityTarget = rightVelocityTarget - DIFFERENTIAL_P * differentialError;
+        // }else if(this->state == ROBOT_STATE_BUSY_MOVING_BACKWARD){
+        //     leftVelocityTarget = leftVelocityTarget - DIFFERENTIAL_P * differentialError;
+        //     rightVelocityTarget = rightVelocityTarget + DIFFERENTIAL_P * differentialError;
+        // }
 
-
-        leftReached = deltaLeft < 1;
-        rightReached = deltaRight < 1;
-        
-        if(leftReached && rightReached){
-            this->state = ROBOT_STATE_READY;
-        }
-
-
-        this->previousLeftPower = this->leftPower;
-        this->previousRightPower = this->rightPower;
-
-        while(timeDelta < 0.001){
-            timeDelta += 10.0/1000000.0;
-            delayMicroseconds(10);
-        }
+        // while(timeDelta < 0.01){
+        //     timeDelta += 10.0/1000000.0;
+        // }
+        // delayMicroseconds(100);
     }
 
     char* requestMove(MoveRequest m){
@@ -161,9 +147,9 @@ public:
         deltaRight = right - lastRightPosition;
         lastRightPosition = right;
 
-        sprintf(buffer, "%d:%d:%d:%.4f:%.4f",
-            this->state, int(!leftReached), int(!rightReached),
-            deltaLeft, deltaRight);
+        sprintf(buffer, "%d:%ld:%ld:%.4f:%.4f:%.4f:%.4f",
+            this->state, leftPower, rightPower,
+            left, right, leftPIDs.getError(), rightPIDs.getError());
         return buffer;
     }
 

@@ -14,7 +14,7 @@ catkin_package(
 )
 
 catkin_install_python(
-  PROGRAMS nodes/robot_simplified
+  PROGRAMS nodes/robot_simplified nodes/serial_handler nodes/robot_testing
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

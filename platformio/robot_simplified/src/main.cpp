@@ -44,8 +44,8 @@ void printDiagnostics(){
             quat.w(), quat.x(), quat.y(), quat.z(),
             angVelocityData.gyro.x, angVelocityData.gyro.y, angVelocityData.gyro.z,
             linearAccelData.acceleration.x, linearAccelData.acceleration.y, linearAccelData.acceleration.z);
-    Logger::info(data, false);
-    Serial.println(buffer);
+    Logger::info(data); //, false);
+    // Serial.println(buffer);
 }
 
 void defaultFunc(char* data){
@@ -61,6 +61,14 @@ G10 24 24 20
 G10 -24 -24 20
 G10 2 0 1.5
 G10 0 1 2
+G10 0.1 0.1 3
+G10 -0.1 -0.1 1
+
+G10 0 -0.1 5
+G10 0 0.1 5
+
+G10 -0.1 0 5
+G10 0.1 0 5
 
     */
     // 
@@ -91,9 +99,9 @@ void setup(){
 void loop(){
     robot.compute();
     command.parse();
-    // if(robot.isBusy()){
-    busyDiagnosticsTimer.compute();
-    // }else {
-    //     freeDiagnosticsTimer.compute();
-    // }
+    if(robot.isBusy()){
+        busyDiagnosticsTimer.compute();
+    }else {
+        freeDiagnosticsTimer.compute();
+    }
 }
