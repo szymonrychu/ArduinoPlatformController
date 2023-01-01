@@ -134,9 +134,6 @@ class RobotSerialHandler(SerialWrapper):
         goal_topic_name = rospy.get_param("~goal_topic")
         rospy.Subscriber(goal_topic_name, PoseStamped, self._goal_callback)
 
-        odometry_input_topic_name = rospy.get_param("~odometry_input_topic_name")
-        rospy.Subscriber(odometry_input_topic_name, Odometry, self.__odometry_callback)
-
         goal_reached_topic_name = rospy.get_param("~goal_reached")
         self._goal_reached_pub = rospy.Publisher(goal_reached_topic_name, Bool, queue_size=10)
 
@@ -210,15 +207,6 @@ class RobotSerialHandler(SerialWrapper):
             pass
         return None
 
-    def _send_goal_reached(self, state: bool):
-        b = Bool()
-        b.data = state
-        self._goal_reached_pub.publish(b)
-
-    def __odometry_callback(self, data):
-        with self.__odometry_lock:
-            self.__last_odometry = data
-
     def __wait_for_goal_with_timeout(self, timeout, loop_time=0.1):
         for _ in range(round(timeout/loop_time)):
             time.sleep(loop_time)
@@ -281,6 +269,7 @@ class RobotSerialHandler(SerialWrapper):
 
             message = self.__parse_raw_message(self.read_data())
             if message:
+                b = Bool()
                 odometry = Odometry()
                 t = TransformStamped()
 
@@ -309,9 +298,11 @@ class RobotSerialHandler(SerialWrapper):
                 t.transform.rotation.y = odometry.pose.pose.orientation.y
                 t.transform.rotation.z = odometry.pose.pose.orientation.z
                 t.transform.rotation.w = odometry.pose.pose.orientation.w
+
+                b.data = abs(delta_translation) < 0.01
                 
                 self._odometry_pub.publish(odometry)
-                self._send_goal_reached(abs(delta_translation) < 0.01)
+                self._goal_reached_pub.publish(b)
                 self.__tf2_broadcaster.sendTransform(t)
 
                 with self.__odometry_lock:
