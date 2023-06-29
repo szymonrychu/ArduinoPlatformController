@@ -12,36 +12,36 @@ private:
     PID distancePID;
     PID velocityPID;
 	unsigned long latestTimestampMicros;
-    float distanceSteering = 0;
-    float velocitySteering = 0;
+    double distanceSteering = 0;
+    double velocitySteering = 0;
 public:
-    void setup(float dP, float dI, float dD, float vP, float vI, float vD){
+    void setup(double dP, double dI, double dD, double vP, double vI, double vD){
         this->distancePID = PID(dP, dI, dD);
         this->velocityPID = PID(vP, vI, vD, MIN_VELOCITY_PID, 1.0);
         this->latestTimestampMicros = 0;
     }
 
-    long computeSteering(float dInput, float vInput){
+    long computeSteering(double dInput, double vInput){
         if(latestTimestampMicros==0){
             latestTimestampMicros = micros();
             return 0.0;
         }
-        float timeDelta = (float)(latestTimestampMicros - micros())/1000000.0;
+        double timeDelta = (double)(latestTimestampMicros - micros())/1000000.0;
         return computeSteering(dInput, vInput, timeDelta);
     }
 
-    float getError(){
+    double getError(){
         return this->distancePID.getError();
     }
 
-    float getVelocityError(){
+    double getVelocityError(){
         return this->velocityPID.getError();
     }
 
-    long computeSteering(float dInput, float vInput, float timeDelta){
+    long computeSteering(double dInput, double vInput, double timeDelta){
         distanceSteering = this->distancePID.computeNewSteering(timeDelta, dInput);
         velocitySteering = this->velocityPID.computeNewSteering(timeDelta, vInput);
-        long drive = (long)((float)pow(2, PWM_RESOLUTION) * distanceSteering * velocitySteering);
+        long drive = (long)((double)pow(2, PWM_RESOLUTION) * distanceSteering * velocitySteering);
         if(drive > pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER){
             drive = pow(2, PWM_RESOLUTION)*MAX_RELATIVE_POWER;
         }
@@ -51,16 +51,16 @@ public:
         return drive;
     }
 
-    float getDistanceSteering(){
+    double getDistanceSteering(){
         return this->distanceSteering;
     }
 
-    float getVelocitySteering(){
+    double getVelocitySteering(){
         return this->velocitySteering;
     }
 
 
-    void setResults(float dResult, float vResult){
+    void setResults(double dResult, double vResult){
         this->distancePID.setResult(dResult);
         this->velocityPID.setResult(vResult);
     }

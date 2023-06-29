@@ -4,7 +4,7 @@
 class Logger{
 private:
     static void log(char* level, char* data, bool endl){
-        num = (num + 1) % 1000000000;
+        num = (num + 1) % 4294967295;
         Serial.printf("%010lu:%s:%s", num, level, data);
         if(endl) Serial.print("\n");
     }
