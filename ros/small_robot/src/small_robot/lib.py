@@ -32,14 +32,14 @@ class SerialWrapper():
 
     def __init__(self, fpath, baudrate=115200):
         self._fpath = fpath
-        try:
-            self.serial = serial.Serial(fpath, baudrate, timeout=0.1)
-        except Exception:
-            tb = traceback.format_exc()
-            rospy.loginfo(str(tb))
+        self._baudrate = baudrate
+        self.serial = serial.Serial(self._fpath, self._baudrate, timeout=0.1)
 
     def data_available(self):
-        return self.serial.inWaiting()
+        if self.serial:
+            return self.serial.inWaiting()
+        else:
+            return False
 
     def read_data(self):
         raw_data = None
@@ -56,7 +56,6 @@ class SerialWrapper():
             pass
         except UnicodeDecodeError:
             rospy.logwarn('cannot parse "{}"'.format(raw_data))
-            self.repair_serial()
         return raw_data
 
     def write_data(self, raw_data):
@@ -67,16 +66,8 @@ class SerialWrapper():
         except TypeError:
             tb = traceback.format_exc()
             rospy.loginfo(str(tb))
-            self._repair_serial()
-
-    def repair_serial(self):
-        try:
-            self.serial.close()
-            self.serial = None
-        except Exception:
-            tb = traceback.format_exc()
-            rospy.loginfo(str(tb))
-        SerialWrapper.__init__(self, self._fpath, self.__baudrate)
+            return False
+            
 
 class Rate():
 

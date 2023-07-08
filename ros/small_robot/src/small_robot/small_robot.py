@@ -16,13 +16,13 @@ class RobotPlatform():
         rospy.init_node('robot', log_level=env2log())
 
         self.__serial_dev = rospy.get_param('~serial_dev')
-        self.__serial_baudrate = rospy.get_param('~serial_dev')
+        self.__serial_baudrate = rospy.get_param('~serial_baudrate')
 
         self.__serial = SerialWrapper(self.__serial_dev, self.__serial_baudrate)
         rospy.Timer(rospy.Duration(0.001), self.parse_serial)
 
-    def parse_serial(self):
-        raw_data = self.read_data()
+    def parse_serial(self, *args, **kwargs):
+        raw_data = self.__serial.read_data()
         if not raw_data:
             return
         rospy.loginfo(raw_data)
@@ -37,4 +37,4 @@ def main():
     robot = RobotPlatform()
     signal.signal(signal.SIGINT, robot.stop)
     signal.signal(signal.SIGTERM, robot.stop)
-    robot.process()
+    robot.start()
