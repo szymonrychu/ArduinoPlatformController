@@ -22,7 +22,7 @@ class RobotPlatform():
         self.__serial_baudrate = rospy.get_param('~serial_baudrate')
 
         self.__state_ready_publisher = rospy.Publisher(rospy.get_param("~state_ready_topic"), Bool, queue_size=10)
-        self.__battery_state_publisher = rospy.Publisher(rospy.get_param("~battery_state_topic"), Bool, queue_size=10)
+        self.__battery_state_publisher = rospy.Publisher(rospy.get_param("~battery_state_topic"), BatteryState, queue_size=10)
 
         self.__serial = SerialWrapper(self.__serial_dev, self.__serial_baudrate)
         rospy.Timer(rospy.Duration(0.001), self.parse_serial)
