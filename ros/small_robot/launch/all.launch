@@ -4,6 +4,7 @@
   <arg name="serial_dev" default="/dev/serial/by-id/usb-Teensyduino_USB_Serial_13671670-if00"/>
   <arg name="state_ready_topic" default="robot/state/ready"/>
   <arg name="battery_state_topic" default="robot/battery"/>
+  <arg name="raw_input_topic" default="robot/raw_input"/>
 
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
@@ -13,6 +14,8 @@
     <param name="serial_baudrate" type="int" value="115200"/>
     <param name="state_ready_topic" value="$(arg state_ready_topic)" />
     <param name="battery_state_topic" value="$(arg battery_state_topic)" />
+    <param name="raw_input_topic" value="$(arg raw_input_topic)" />
+    
     
   </node>
 
