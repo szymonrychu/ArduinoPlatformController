@@ -123,23 +123,26 @@ class RobotPlatform():
         if not raw_data:
             return
         data = json.loads(raw_data)
+        try:
         
-        state = Bool()
-        state.data = data['status']
-        self.__state_ready_publisher.publish(state)
-        battery = BatteryState()
-        battery.voltage = data['battery']['voltage']
-        battery.present = True
-        battery.power_supply_technology = 2
-        battery.power_supply_status = 2 # 1=charging 2=discharging 3=not_charging 4=full
-        self.__battery_state_publisher.publish(battery)
+            rospy.loginfo(raw_data)
+            state = Bool()
+            state.data = data['status']
+            self.__state_ready_publisher.publish(state)
+            battery = BatteryState()
+            battery.voltage = data['battery']['voltage']
+            battery.present = True
+            battery.power_supply_technology = 2
+            battery.power_supply_status = 2 # 1=charging 2=discharging 3=not_charging 4=full
+            self.__battery_state_publisher.publish(battery)
 
-        self._motor1.refresh(data['motor1'])
-        self._motor2.refresh(data['motor2'])
-        self._motor3.refresh(data['motor3'])
-        self._motor4.refresh(data['motor4'])
-
-        rospy.loginfo(raw_data)
+            self._motor1.refresh(data['motor1'])
+            self._motor2.refresh(data['motor2'])
+            self._motor3.refresh(data['motor3'])
+            self._motor4.refresh(data['motor4'])
+        except KeyError:
+            rospy.logwarn(raw_data)
+        
 
     def start(self):
         rospy.spin()
