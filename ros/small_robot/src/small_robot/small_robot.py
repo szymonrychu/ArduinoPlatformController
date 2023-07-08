@@ -147,7 +147,7 @@ class RobotPlatform():
     def start(self):
         rospy.spin()
 
-    def stop(self):
+    def stop(self, *args, **kwargs):
         rospy.signal_shutdown()
 
 def main():
