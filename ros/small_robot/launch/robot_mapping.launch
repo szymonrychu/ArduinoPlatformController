@@ -13,7 +13,7 @@
   <arg name="map_size" default="2048"/>
   <arg name="geotiff_map_file_path" default="/tmp/maps"/>
   
-  <include file="$(find robot_simplified)/launch/robot_lidar.launch">
+  <include file="$(find small_robot)/launch/robot_lidar.launch">
   </include>
 
   <include file="$(find hector_geotiff_launch)/launch/geotiff_mapper.launch">

@@ -2,7 +2,7 @@
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
 
-  <include file="$(find robot_simplified)/launch/robot_simplified.launch">
+  <include file="$(find small_robot)/launch/small_robot.launch">
   </include>
 
   <!-- <include file="$(find imu_bridge)/launch/imu_bridge.launch">

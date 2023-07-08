@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>robot_simplified</name>
+  <name>small_robot</name>
   <version>0.0.1</version>
-  <description>The robot_simplified package</description>
+  <description>The small_robot package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -27,7 +27,7 @@ $ roslaunch simple_drive cmd_v/maintainer> -->
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/robot_simplified</url> -->
+  <!-- <url type="website">http://wiki.ros.org/small_robot</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->

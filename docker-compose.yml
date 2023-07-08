@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  roscore:
+    image: ros:noetic-ros-core-focal
+    restart: always
+    command: /opt/ros/noetic/bin/roscore
+    # platform: linux/amd64
+    network_mode: host
+    environment:
+      ROS_HOSTNAME: roscore
+      ROS_MASTER_URI: http://roscore:11311
+    extra_hosts:
+      roscore: 127.0.0.1
+  # serial_bridge:
+  #   build:
+  #     context: ./ros/
+  #     dockerfile: Dockerfile.serial_bridge
+  #   network_mode: host
+    # environment:
+    #   ROS_HOSTNAME: serial_bridge
+    #   ROS_MASTER_URI: http://roscore:11311
+    # privileged: true
+    # depends_on:
+    #   - roscore
+    # devices:
+    #   - "/dev/cu.usbmodem136716701:/dev/serial1"

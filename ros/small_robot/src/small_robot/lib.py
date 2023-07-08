@@ -2,6 +2,8 @@ from mimetypes import init
 from threading import Lock
 import time
 import os
+import serial
+import traceback
 
 import rospy
 from geometry_msgs.msg import Quaternion
@@ -24,6 +26,57 @@ def env2log():
 
 def time_ms():
     return round(time.time() * 1000)
+
+
+class SerialWrapper():
+
+    def __init__(self, fpath, baudrate=115200):
+        self._fpath = fpath
+        try:
+            self.serial = serial.Serial(fpath, baudrate, timeout=0.1)
+        except Exception:
+            tb = traceback.format_exc()
+            rospy.loginfo(str(tb))
+
+    def data_available(self):
+        return self.serial.inWaiting()
+
+    def read_data(self):
+        raw_data = None
+        try:
+            if self.data_available():
+                raw_line = self.serial.readline()
+                if raw_line is not None:
+                    raw_data = raw_line.decode('ascii')
+                    if raw_data != '':
+                        if raw_data[-1] == '\n':
+                            raw_data = raw_data[:-1]
+            rospy.logdebug(f"Reading from serial: '{raw_data}'")
+        except serial.SerialTimeoutException:
+            pass
+        except UnicodeDecodeError:
+            rospy.logwarn('cannot parse "{}"'.format(raw_data))
+            self.repair_serial()
+        return raw_data
+
+    def write_data(self, raw_data):
+        try:
+            rospy.loginfo(f"Writing to serial: '{raw_data}'")
+            self.serial.write('{}\n'.format(raw_data).encode())
+            return True
+        except TypeError:
+            tb = traceback.format_exc()
+            rospy.loginfo(str(tb))
+            self._repair_serial()
+
+    def repair_serial(self):
+        try:
+            self.serial.close()
+            self.serial = None
+        except Exception:
+            tb = traceback.format_exc()
+            rospy.loginfo(str(tb))
+        SerialWrapper.__init__(self, self._fpath, self.__baudrate)
 
 class Rate():
 

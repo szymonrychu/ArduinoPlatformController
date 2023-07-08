@@ -1,0 +1,22 @@
+FROM ros:noetic-ros-base-focal
+
+COPY ./small_robot /root/small_robot
+
+RUN set -xe;\
+    useradd -m -s /bin/bash -G sudo,dialout ros;\
+    echo 'ros ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ros;\
+    mkdir -p /home/ros/build/catkin_ws/src;\
+    cp -Rf /root/small_robot /home/ros/build/catkin_ws/src/small_robot;\
+    chown -R ros /home/ros/build;\
+    chown -R ros /opt/ros
+
+USER ros
+
+RUN set -xe;\
+    cd /home/ros/build/catkin_ws;\
+    bash -c "\
+        source /opt/ros/${ROS_DISTRO}/setup.bash;\
+        catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/${ROS_DISTRO} install"
+
+ENTRYPOINT [ "/bin/bash", "-ce", "source /opt/ros/${ROS_DISTRO}/setup.bash; /opt/ros/noetic/bin/roslaunch small_robot all.launch"]
+

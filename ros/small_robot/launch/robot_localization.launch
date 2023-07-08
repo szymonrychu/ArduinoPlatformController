@@ -1,7 +1,7 @@
 <launch>
   <!-- <node pkg="tf" type="static_transform_publisher" name="bl_imu" args="0 0 0 0 0 0 1 /base_link /imu 20" /> -->
 
-  <include file="$(find robot_simplified)/launch/robot_serial_bridge.launch">
+  <include file="$(find small_robot)/launch/robot_serial_bridge.launch">
   </include>
 
 
