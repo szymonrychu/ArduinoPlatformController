@@ -36,7 +36,7 @@ class RobotPlatform():
         
         
         state = Bool()
-        state.data = data['state']
+        state.data = data['status']
         self.__state_ready_publisher.publish(state)
         battery = BatteryState()
         battery.voltage = data['battery']['voltage']
