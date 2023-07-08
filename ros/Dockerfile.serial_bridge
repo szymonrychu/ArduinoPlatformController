@@ -18,5 +18,5 @@ RUN set -xe;\
         source /opt/ros/${ROS_DISTRO}/setup.bash;\
         catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/${ROS_DISTRO} install"
 
-ENTRYPOINT [ "/bin/bash", "-ce", "source /opt/ros/${ROS_DISTRO}/setup.bash; /opt/ros/noetic/bin/roslaunch small_robot all.launch"]
+ENTRYPOINT [ "/bin/bash", "-ce", "source /opt/ros/${ROS_DISTRO}/setup.bash; /opt/ros/noetic/bin/roslaunch robot all.launch"]
 
