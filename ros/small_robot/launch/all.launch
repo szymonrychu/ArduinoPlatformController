@@ -2,6 +2,7 @@
   <arg name="robot2serial_internal_topic" default="/platform/leftrighttimeimput"/>
   <arg name="serial2robot_internal_topic" default="/platform/pose2d"/>
   <arg name="serial_dev" default="/dev/serial/by-id/usb-Teensyduino_USB_Serial_13671670-if00"/>
+  <arg name="state_ready_topic" default="robot/state/ready"/>
 
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
@@ -9,23 +10,8 @@
   <node pkg="small_robot" type="robot" name="robot" output="screen" respawn="true">
     <param name="serial_dev" value="$(arg serial_dev)" />
     <param name="serial_baudrate" type="int" value="115200"/>
-
-    <param name="input_topic" value="$(arg robot2serial_internal_topic)" />
-
-    <param name="hector_mapping_pause_sname" value="pause_mapping" />
-    <param name="hector_mapping_reset_sname" value="reset_map" />
-
-    <param name="output_topic" value="$(arg serial2robot_internal_topic)" />
-    <param name="output_topic_queue_size" type="int" value="10"/>
-
-    <param name="odometry_topic_name" value="platform/raw_odom" />
-    <param name="odometry_queue_size" type="int" value="10"/>
-
-    <param name="imu_topic_name" value="platform/imu/data" />
-    <param name="imu_queue_size" type="int" value="10"/>
-
-    <param name="base_link" value="base_link" />
-    <param name="map_link" value="map" />
+    <param name="state_ready_topic" value="$(arg state_ready_topic)" />
+    
   </node>
 
 </launch>
