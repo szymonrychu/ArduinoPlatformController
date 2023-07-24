@@ -2,9 +2,6 @@ from mimetypes import init
 from threading import Lock
 import time
 import os
-import serial
-import traceback
-import math
 
 import rospy
 from geometry_msgs.msg import Quaternion
@@ -27,92 +24,6 @@ def env2log():
 
 def time_ms():
     return round(time.time() * 1000)
-
-class RobotMotor():
-
-    def __init__(self):
-        self.__ready = False
-        self.__servo = 0
-        self.__servo_delta = 0
-        self.__distance = 0
-        self.__distance_delta = 0
-        self.__distance_error = 0
-        self.__distance_steering = 0
-        self.__distance_error = 0
-        self.__velocity = 0
-        self.__velocity_error = 0
-        self.__velocity_steering = 0
-        self.__steering = 0
-        self.__x = 0
-        self.__y = 0
-    
-    def refresh(self, motor_dict:dict):
-        self.__ready = motor_dict['ready']
-        self.__servo = motor_dict['servo']
-        self.__distance_delta = self.__distance - motor_dict['distance']
-        self.__distance = motor_dict['distance']
-        self.__distance_error = motor_dict['distance_error']
-        self.__distance_steering = motor_dict['distance_steering']
-        self.__distance_error = motor_dict['distance_error']
-        self.__velocity = motor_dict['velocity']
-        self.__velocity_error = motor_dict['velocity_error']
-        self.__velocity_steering = motor_dict['velocity_steering']
-        self.__steering = motor_dict['steering']
-        self.__x += self.distance_delta * math.acos(self.__servo)
-        self.__y += self.distance_delta * math.asin(self.__servo)
-    
-    @property
-    def distance_delta(self):
-        return self.__distance_delta
-    
-    @property
-    def x(self):
-        return self.__x
-    
-    @property
-    def y(self):
-        return self.__y
-
-class SerialWrapper():
-
-    def __init__(self, fpath, baudrate=115200):
-        self._fpath = fpath
-        self._baudrate = baudrate
-        self.serial = serial.Serial(self._fpath, self._baudrate, timeout=0.1)
-
-    def data_available(self):
-        if self.serial:
-            return self.serial.inWaiting()
-        else:
-            return False
-
-    def read_data(self):
-        raw_data = None
-        try:
-            if self.data_available():
-                raw_line = self.serial.readline()
-                if raw_line is not None:
-                    raw_data = raw_line.decode('ascii')
-                    if raw_data != '':
-                        if raw_data[-1] == '\n':
-                            raw_data = raw_data[:-1]
-            rospy.logdebug(f"Reading from serial: '{raw_data}'")
-        except serial.SerialTimeoutException:
-            pass
-        except UnicodeDecodeError:
-            rospy.logwarn('cannot parse "{}"'.format(raw_data))
-        return raw_data
-
-    def write_data(self, raw_data):
-        try:
-            rospy.loginfo(f"Writing to serial: '{raw_data}'")
-            self.serial.write('{}\n'.format(raw_data).encode())
-            return True
-        except TypeError:
-            tb = traceback.format_exc()
-            rospy.loginfo(str(tb))
-            return False
-            
 
 class Rate():
 

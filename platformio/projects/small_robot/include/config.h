@@ -1,5 +1,5 @@
-#ifndef PINS_H
-#define PINS_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #define PI               3.1415926535897932384626433832795
 #define HALF_PI          1.5707963267948966192313216916398

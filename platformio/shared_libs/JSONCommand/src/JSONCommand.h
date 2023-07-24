@@ -46,13 +46,12 @@ public:
 	}
 
 	void inputString(char* data){
-		for(int c=0; c<strlen(data); c++){
+		for(uint16_t c=0; c<strlen(data); c++){
 				inputChar(data[c]);
 		}
 	}
 
 	void parse(){
-		char *tmp;
 		if(termFound){
 			termFound = false;
 			(*handler)(receiveCache);
