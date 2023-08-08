@@ -11,13 +11,13 @@ RUN set -xe;\
         vim \
         curl \
         udev \
+        libfreenect-dev \
         python3-pip \
         python3-tf2-ros \
         python3-tf-conversions \
         ros-noetic-xacro \
         ros-noetic-camera-info-manager \
         ros-noetic-diagnostic-updater \
-        libfreenect-dev \
         ;\
     rm -rf /var/lib/apt/lists/*;\
     useradd -m -s /bin/bash -G sudo,dialout ros;\
