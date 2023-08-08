@@ -1,7 +1,7 @@
 version: "3.3"
 
 services:
-  serial_bridge:
+  ros:
     build:
       context: .
     command:

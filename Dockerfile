@@ -39,7 +39,7 @@ RUN set -xe;\
         source /opt/ros/${ROS_DISTRO}/setup.bash;\
         cd /home/ros/catkin_ws;\
         sudo chown -R ros .;\
-        find ./src/ -name requirements.txt -depth 2 -exec pip3 install -r {} \; ;\
+        find ./src/ -maxdepth 2 -name requirements.txt -exec pip3 install -r {} \; ;\
         catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/${ROS_DISTRO} install"
 
 # RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt-get install -y nodejs;\
