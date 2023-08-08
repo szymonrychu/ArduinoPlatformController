@@ -1,9 +1,9 @@
-from pydantic import BaseModel, Field, validator, ValidationError
+from pydantic import BaseModel, Field, validator, ValidationError, ConfigDict
 from typing import Optional, List
 import json
 
-class Response():
-    pass
+class Response(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
 class BatteryStatus(BaseModel):
     voltage: float
@@ -51,18 +51,17 @@ class GPSStatus(BaseModel):
 
 class StatusResponse(Response):
     micros: int
-    message_type: Field(alias='type')
+    message_type: str
     status: str
-    ready: bool
     queue_l: int
-    int_temperature: int
+    int_temp: int
     battery: BatteryStatus
     imu: IMUStatus
-    gps: Optional[GPSStatus]
-    motor1: Optional[MotorStatus]
-    motor2: Optional[MotorStatus]
-    motor3: Optional[MotorStatus]
-    motor4: Optional[MotorStatus]
+    gps: Optional[GPSStatus] = None
+    motor1: Optional[MotorStatus] = None
+    motor2: Optional[MotorStatus] = None
+    motor3: Optional[MotorStatus] = None
+    motor4: Optional[MotorStatus] = None
 
     @validator('message_type')
     def type_is_success_or_error(cls, v):
@@ -72,7 +71,7 @@ class StatusResponse(Response):
 
 class AckResponse(Response):
     micros: int
-    message_type: Field(alias='type')
+    message_type: str
     message: str
 
     @validator('message_type')
@@ -85,7 +84,7 @@ class AckResponse(Response):
 
 
 class Request(BaseModel):
-    pass
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
 class MotorRequest(BaseModel):
     distance: float
@@ -93,51 +92,51 @@ class MotorRequest(BaseModel):
     angle: float
 
 class RawRequest(Request):
-    message_type: Field(alias='type', default='raw_move')
+    message_type: str = Field(default='raw_move')
     motor1: Optional[MotorRequest]
     motor2: Optional[MotorRequest]
     motor3: Optional[MotorRequest]
     motor4: Optional[MotorRequest]
 
 class ResetRequest(Request):
-    message_type: Field(alias='type', default='reset')
+    message_type: str = Field(default='reset')
 
 class ResetQueueRequest(Request):
-    message_type: Field(alias='type', default='reset_queue')
+    message_type: str = Field(default='reset_queue')
 
 class StopRequest(Request):
-    message_type: Field(alias='type', default='stop')
+    message_type: str = Field(default='stop')
 
 class MoveRequest(Request):
     pass
 
 class TurnRequest(MoveRequest):
-    message_type: Field(alias='type', default='turn')
+    message_type: str = Field(default='turn')
     turn_angle: float
     turn_velocity: float
-    turn_x: Field(type=float, default=0)
-    turn_y: Field(type=float, default=0)
+    turn_x: float = Field(default=0)
+    turn_y: float = Field(default=0)
 
 class ForwardRequest(MoveRequest):
-    message_type: Field(alias='type', default='forward')
+    message_type: str = Field(default='forward')
     move_distance: float
     move_velocity: float
-    move_angle: Field(type=float, default=0)
+    move_angle: float = Field(default=0)
 
 class SequentionalMove(Request):
-    message_type: Field(alias='type', default='sequentional_move')
+    message_type: str = Field(default='sequentional_move')
     moves: List[MoveRequest]
 
 
 
-def parseResponse(raw_input:str) -> Response:
+def parse_response(raw_input:str) -> Response:
     message_json = json.loads(raw_input)
-    message_type = message_json["type"]
+    message_type = message_json["message_type"]
 
     if message_type == 'STATUS':
-        return StatusResponse.parse_raw(message_json)
+        return StatusResponse.parse_obj(message_json)
     if message_type in ['ERROR', 'SUCCESS']:
-        return AckResponse.parse_raw(message_json)
+        return AckResponse.parse_obj(message_json)
     
-def encodeRequest(req:Request) -> str:
+def encode_request(req:Request) -> str:
     return req.json()

@@ -1,13 +1,14 @@
-version: '3.3'
+version: "3.3"
+
 services:
   serial_bridge:
     build:
-      context: ./ros/
-      dockerfile: Dockerfile.serial_bridge
+      context: .
+    command:
+      - roslaunch
+      - robot_platform
+      - robot_platform.launch
     network_mode: host
-    environment:
-      ROS_HOSTNAME: robot
-      ROS_MASTER_URI: http://robot:11311
     privileged: true
     devices:
-      - "/dev/serial/by-id/usb-Teensyduino_USB_Serial_13671670-if00:/dev/serial1"
+      - "/dev/serial/by-id/usb-Teensyduino_USB_Serial_13671670-if00:/dev/serial/by-id/usb-Teensyduino_USB_Serial_13671670-if00"

@@ -63,6 +63,15 @@ struct XYCoordinates{
   double Y=0;
 };
 
+struct MotorConfig {
+  uint8_t encoderChannel = 0;
+  uint8_t encoderAPin = 0;
+  uint8_t encoderBPin = 0;
+  uint8_t hBridgeAPin = 0;
+  uint8_t hBridgeBPin = 0;
+  uint8_t servoPin = 0;
+};
+
 
 class ServoWheel{
 private:
@@ -112,6 +121,12 @@ public:
     this->encoder = QuadEncoder(encChannel, encoderAPin, encoderBPin);
     this->hbridge = MDD3AHbridge(hBridgeAPin, hBridgeBPin);
     this->servoPin = servoPin;
+  }
+  
+  ServoWheel(MotorConfig config){
+    this->encoder = QuadEncoder(config.encoderChannel, config.encoderAPin, config..encoderBPin);
+    this->hbridge = MDD3AHbridge(config.hBridgeAPin, config.hBridgeBPin);
+    this->servoPin = config.servoPin;
   }
 
   void setup(double dP=15.0, double dI=0, double dD=0.8, double vP=3.0, double vI=0.2, double vD=0.01){
@@ -166,6 +181,11 @@ public:
       this->lastServoTarget = this->servoTarget;
     }
     this->servoReady_ = this->servoReadyAfterMicros < currentTimeMicros;
+
+    double deltaX = this->lastDistanceDelta * cos(this->servoTarget);
+    double deltaY = this->lastDistanceDelta * sin(this->servoTarget);
+    this->currentCoordinates.X += deltaX;
+    this->currentCoordinates.Y += deltaY;
   }
 
   void drive(double velocity, double distanceDelta=0){
@@ -182,10 +202,6 @@ public:
   }
 
   XYCoordinates deadReconingGetCurrentCoordinates(){
-    double deltaX = this->lastDistanceDelta * cos(this->servoTarget);
-    double deltaY = this->lastDistanceDelta * sin(this->servoTarget);
-    this->currentCoordinates.X += deltaX;
-    this->currentCoordinates.Y += deltaY;
     return this->currentCoordinates;
   }
 
@@ -282,6 +298,7 @@ public:
     this->distancePID.reset();
     this->velocityPID.reset();
     this->isFresh_ = true;
+    this->distanceTargetSet = false;
   }
 };
 

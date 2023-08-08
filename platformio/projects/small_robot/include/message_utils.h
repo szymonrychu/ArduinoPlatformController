@@ -45,13 +45,13 @@ public:
     out["micros"] = micros();
     switch(this->type){
     case OUTPUT_SUCCESS:
-        out["type"] = "SUCCESS";
+        out["message_type"] = "SUCCESS";
         break;
     case OUTPUT_ERROR:
-        out["type"] = "ERROR";
+        out["message_type"] = "ERROR";
         break;
     default:
-        out["type"] = "UNDEFINED";
+        out["message_type"] = "UNDEFINED";
         break;
     }
     
@@ -74,18 +74,18 @@ private:
     ServoWheel* motor4;
 
     InputMessageType parseInputMessageType(JsonObject& obj){
-        if(obj["type"] == "reset") return INPUT_RESET;
-        if(obj["type"] == "reset_queue") return INPUT_RESET_QUEUE;
-        if(obj["type"] == "stop") return INPUT_STOP;
-        if(obj["type"] == "raw_move") return INPUT_RAW_MOVE;
-        if(obj["type"] == "turn") return INPUT_TURN_MOVE;
-        if(obj["type"] == "forward") return INPUT_FORWARD_MOVE;
-        if(obj["type"] == "sequentional_move") return INPUT_SEQUENTIONAL_MOVE;
+        if(obj["message_type"] == "reset") return INPUT_RESET;
+        if(obj["message_type"] == "reset_queue") return INPUT_RESET_QUEUE;
+        if(obj["message_type"] == "stop") return INPUT_STOP;
+        if(obj["message_type"] == "raw_move") return INPUT_RAW_MOVE;
+        if(obj["message_type"] == "turn") return INPUT_TURN_MOVE;
+        if(obj["message_type"] == "forward") return INPUT_FORWARD_MOVE;
+        if(obj["message_type"] == "sequentional_move") return INPUT_SEQUENTIONAL_MOVE;
         return INPUT_UNDEFINED;
     }
 
     /*
-{"type":"reset_queue"}
+{"message_type":"reset_queue"}
     */
     OutputMessage resetQueue(){
         while(!moveQueue->isEmpty()){
@@ -95,7 +95,7 @@ private:
     }
 
     /*
-{"type":"stop"}
+{"message_type":"stop"}
     */
     OutputMessage resetMotors(){
         motor1->resetDistanceVelocity();
@@ -106,7 +106,7 @@ private:
     }
 
     /*
-{"type":"reset"}
+{"message_type":"reset"}
     */
     OutputMessage resetAll(){
         this->resetQueue();
@@ -116,25 +116,25 @@ private:
 
     /*
 
-{"type":"raw_move","motor1":{"distance":0.2,"velocity":0.5},"motor2":{"distance":0.2,"velocity":0.5},"motor3":{"distance":0.2,"velocity":0.5},"motor4":{"distance":0.2,"velocity":0.5}}
-{"type":"raw_move","motor1":{"distance":-0.2,"velocity":0.5},"motor2":{"distance":-0.2,"velocity":0.5},"motor3":{"distance":-0.2,"velocity":0.5},"motor4":{"distance":-0.2,"velocity":0.5}}
-{"type":"raw_move","motor1":{"distance":0,"velocity":0},"motor2":{"distance":0,"velocity":0},"motor3":{"distance":0,"velocity":0},"motor4":{"distance":0,"velocity":0}}
-{"type":"raw_move","motor1":{"distance":1.0,"velocity":0.5},"motor2":{"distance":1.0,"velocity":0.5},"motor3":{"distance":1.0,"velocity":0.5},"motor4":{"distance":1.0,"velocity":0.5}}
+{"message_type":"raw_move","motor1":{"distance":0.2,"velocity":0.5},"motor2":{"distance":0.2,"velocity":0.5},"motor3":{"distance":0.2,"velocity":0.5},"motor4":{"distance":0.2,"velocity":0.5}}
+{"message_type":"raw_move","motor1":{"distance":-0.2,"velocity":0.5},"motor2":{"distance":-0.2,"velocity":0.5},"motor3":{"distance":-0.2,"velocity":0.5},"motor4":{"distance":-0.2,"velocity":0.5}}
+{"message_type":"raw_move","motor1":{"distance":0,"velocity":0},"motor2":{"distance":0,"velocity":0},"motor3":{"distance":0,"velocity":0},"motor4":{"distance":0,"velocity":0}}
+{"message_type":"raw_move","motor1":{"distance":1.0,"velocity":0.5},"motor2":{"distance":1.0,"velocity":0.5},"motor3":{"distance":1.0,"velocity":0.5},"motor4":{"distance":1.0,"velocity":0.5}}
 
-{"type":"raw_move","motor1":{"distance":1.0,"velocity":0.5}}
-{"type":"raw_move","motor2":{"distance":1.0,"velocity":0.5}}
-{"type":"raw_move","motor3":{"distance":1.0,"velocity":0.5}}
-{"type":"raw_move","motor4":{"distance":1.0,"velocity":0.5}}
+{"message_type":"raw_move","motor1":{"distance":1.0,"velocity":0.5}}
+{"message_type":"raw_move","motor2":{"distance":1.0,"velocity":0.5}}
+{"message_type":"raw_move","motor3":{"distance":1.0,"velocity":0.5}}
+{"message_type":"raw_move","motor4":{"distance":1.0,"velocity":0.5}}
 
-{"type":"raw_move","motor1":{"angle":0.7853},"motor2":{"angle":0.7853},"motor3":{"angle":0.7853},"motor4":{"angle":0.7853}}
-{"type":"raw_move","motor1":{"angle":-0.7853},"motor2":{"angle":-0.7853},"motor3":{"angle":-0.7853},"motor4":{"angle":-0.7853}}
-{"type":"raw_move","motor1":{"angle":1.5706},"motor2":{"angle":1.5706},"motor3":{"angle":1.5706},"motor4":{"angle":1.5706}}
-{"type":"raw_move","motor1":{"angle":0},"motor2":{"angle":0},"motor3":{"angle":0},"motor4":{"angle":0}}
+{"message_type":"raw_move","motor1":{"angle":0.7853},"motor2":{"angle":0.7853},"motor3":{"angle":0.7853},"motor4":{"angle":0.7853}}
+{"message_type":"raw_move","motor1":{"angle":-0.7853},"motor2":{"angle":-0.7853},"motor3":{"angle":-0.7853},"motor4":{"angle":-0.7853}}
+{"message_type":"raw_move","motor1":{"angle":1.5706},"motor2":{"angle":1.5706},"motor3":{"angle":1.5706},"motor4":{"angle":1.5706}}
+{"message_type":"raw_move","motor1":{"angle":0},"motor2":{"angle":0},"motor3":{"angle":0},"motor4":{"angle":0}}
 
-{"type":"raw_move","pan":{"angle":0.7853},"tilt":{"angle":0.7853}}
-{"type":"raw_move","pan":{"angle":0},"tilt":{"angle":0}}
+{"message_type":"raw_move","pan":{"angle":0.7853},"tilt":{"angle":0.7853}}
+{"message_type":"raw_move","pan":{"angle":0},"tilt":{"angle":0}}
 
-{"type":"raw_move","motor1":{"distance":0.2,"velocity":0.5,"angle":0.7853},"motor2":{"distance":0.2,"velocity":0.5,"angle":0.7853},"motor3":{"distance":0.2,"velocity":0.5,"angle":0.7853},"motor4":{"distance":0.2,"velocity":0.5,"angle":0.7853},{"pan":{"angle":0.7853},"tilt":{"angle":0.7853}}}
+{"message_type":"raw_move","motor1":{"distance":0.2,"velocity":0.5,"angle":0.7853},"motor2":{"distance":0.2,"velocity":0.5,"angle":0.7853},"motor3":{"distance":0.2,"velocity":0.5,"angle":0.7853},"motor4":{"distance":0.2,"velocity":0.5,"angle":0.7853},{"pan":{"angle":0.7853},"tilt":{"angle":0.7853}}}
 
     */
     
@@ -189,22 +189,22 @@ private:
 
 
     /*
-{"type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5}
-{"type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5}
-{"type":"turn", "turn_angle":0.7853, "turn_velocity": 0.4}
-{"type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.4}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.4}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.4}
 
-{"type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.6, "turn_x": 0.2, "turn_y": 0.2}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.6, "turn_x": 0.2, "turn_y": 0.2}
 
-{"type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": 0.4}
-{"type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": 0.4}
-{"type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": -0.4}
-{"type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": -0.4}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": 0.4}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": 0.4}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": -0.4}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": -0.4}
 
-{"type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "turn_y": 0.4}
-{"type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "turn_y": 0.4}
-{"type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "turn_y": 0.4}
-{"type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "turn_y": 0.4}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "turn_y": 0.4}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "turn_y": 0.4}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "turn_y": 0.4}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "turn_y": 0.4}
     */
     OutputMessage parseTurnMove(JsonObject& obj){
         double turnCenterX = obj["turn_x"];
@@ -222,10 +222,10 @@ private:
     }
 
     /*
-{"type":"forward", "move_distance":0.25, "move_velocity": 0.5}
-{"type":"forward", "move_distance":-0.25, "move_velocity": 0.5}
-{"type":"forward", "move_distance":0.25, "move_velocity": 0.5, "move_angle":0.7853}
-{"type":"forward", "move_distance":0.25, "move_velocity": 0.5, "move_angle":-0.7853}
+{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5}
+{"message_type":"forward", "move_distance":-0.25, "move_velocity": 0.5}
+{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "move_angle":0.7853}
+{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "move_angle":-0.7853}
     */
     OutputMessage parseForwardMove(JsonObject& obj){
         double moveDistance = obj["move_distance"];
@@ -256,7 +256,7 @@ private:
     }
 
     /*
-{"type":"sequentional_move","moves":[{"type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5},{"type":"forward", "move_distance":0.25, "move_velocity": 0.5}]}
+{"message_type":"sequentional_move","moves":[{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5},{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5}]}
     */
 
     OutputMessage parseSequentionalMove(JsonObject& obj){
@@ -272,6 +272,15 @@ private:
                 break;
             case INPUT_FORWARD_MOVE:
                 tmp = this->parseForwardMove(move_obj);
+                break;
+            case INPUT_STOP:
+                tmp = this->resetMotors();
+                break;
+            case INPUT_RESET:
+                tmp = this->resetAll();
+                break;
+            case INPUT_RESET_QUEUE:
+                tmp = this->resetQueue();
                 break;
             default:
                 break;
@@ -318,21 +327,6 @@ public:
     }
 };
 
-class Battery {
-private:
-    uint8_t batteryPin = 0;
-public:
-
-    void setup(uint8_t batteryPin){
-        this->batteryPin = batteryPin;
-        pinMode(this->batteryPin, INPUT);
-    }
-
-    double readVoltage(){
-        return 10.82*((float)analogRead(this->batteryPin))/498.0;
-    }
-};
-
 class SensorHandler {
 private:
     ArduinoQueue<Move>* moveQueue = NULL;
@@ -346,6 +340,7 @@ private:
     Servo servoPan;
     Servo servoTilt;
     uint32_t loopCount = 0;
+    XYCoordinates currentPlatformCoordinates;
 
 public:
     SensorHandler(ArduinoQueue<Move>* mQueue, Adafruit_BNO055* bno, Adafruit_GPS* gps,
@@ -378,7 +373,10 @@ public:
 
         servoPan.attach(servoPanPin);
         servoTilt.attach(servoTiltPin);
+    }
 
+    XYCoordinates getPlatformCoordinates(){
+        return currentPlatformCoordinates;
     }
 
     void printOutput(){
@@ -394,7 +392,7 @@ public:
         if(loopCount == 0 || !mReady){
             StaticJsonDocument<1536> doc;
             doc["micros"] = micros();
-            doc["type"] = "STATUS";
+            doc["message_type"] = "STATUS";
             if(mReady){
                 doc["status"] = "ready";
             }else{
@@ -442,7 +440,7 @@ public:
                 gps["dec_longitude"] = gpsDecimalLongitude;
             }
             if(!mReady){
-                 JsonObject motor1JSON = doc.createNestedObject("motor1");
+                JsonObject motor1JSON = doc.createNestedObject("motor1");
                 motor1JSON["ready"] = motor1->ready();
                 motor1JSON["servo"] = motor1->readServo();
                 motor1JSON["distance"] = motor1->currentDistance();
