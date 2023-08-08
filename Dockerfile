@@ -2,12 +2,15 @@ FROM ros:noetic-ros-base-focal
 
 env DEBIAN_FRONTEND=noninteractive
 
+COPY ./ros_entrypoint.sh /ros_entrypoint.sh 
+
 RUN set -xe;\
     apt-get update;\
     apt-get install -y \
         git \
         vim \
         curl \
+        udev \
         python3-pip \
         python3-tf2-ros \
         python3-tf-conversions \
@@ -20,7 +23,8 @@ RUN set -xe;\
     useradd -m -s /bin/bash -G sudo,dialout ros;\
     echo 'ros ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ros;\
     mkdir -p /home/ros/catkin_ws/src;\
-    chown -R ros /opt/ros
+    chown -R ros /opt/ros;\
+    chmod +x /ros_entrypoint.sh
 
 USER ros
 
