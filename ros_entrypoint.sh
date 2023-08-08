@@ -11,4 +11,6 @@ set -e
 set -o nounset
 set -o pipefail
 
+sleep 5
+
 bash -ce "$@"
