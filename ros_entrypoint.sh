@@ -13,4 +13,4 @@ set -o pipefail
 
 sleep 5
 
-bash -ce "$@"
+exec "$@"
