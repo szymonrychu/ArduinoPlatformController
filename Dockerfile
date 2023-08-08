@@ -17,9 +17,6 @@ RUN set -xe;\
         libfreenect-dev \
         ;\
     rm -rf /var/lib/apt/lists/*;\
-    pip3 install \
-        pyserial \
-        ;\
     useradd -m -s /bin/bash -G sudo,dialout ros;\
     echo 'ros ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ros;\
     mkdir -p /home/ros/catkin_ws/src;\
