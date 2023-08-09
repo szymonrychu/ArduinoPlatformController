@@ -209,11 +209,11 @@ public:
     if(!this->wheelReady()){
       double startingDistance = this->distanceTarget - this->lastDistanceTargetDelta;
       double moveRawProgress = this->lastDistance - startingDistance;
-      return moveRawProgress/this->lastDistanceTargetDelta;
+      return abs(moveRawProgress/this->lastDistanceTargetDelta);
     }else if(!this->servoReady()){
       double servoStartingMicros = this->servoReadyAfterMicros - SERVO_FULL_ROTATION_UPDATE_SPEED*1000000.0;
       double servoRawProgress = micros() - servoStartingMicros;
-      return servoRawProgress/(SERVO_FULL_ROTATION_UPDATE_SPEED*1000000.0);
+      return abs(servoRawProgress/(SERVO_FULL_ROTATION_UPDATE_SPEED*1000000.0));
     }else{
       return 1.0;
     }
