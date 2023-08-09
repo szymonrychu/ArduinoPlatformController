@@ -10,7 +10,6 @@ RUN set -xe;\
         git \
         vim \
         curl \
-        udev \
         libfreenect-dev \
         python3-pip \
         python3-tf2-ros \
