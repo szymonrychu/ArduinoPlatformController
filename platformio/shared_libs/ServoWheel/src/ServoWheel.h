@@ -215,7 +215,7 @@ public:
 
   double moveProgress(){
     if(!this->wheelReady()){
-      return this->distanceRelativeProgress();
+      return this->distanceRelativeProgress()/0.95;
     }else if(!this->servoReady()){
       double servoStartingMicros = this->servoReadyAfterMicros - SERVO_FULL_ROTATION_UPDATE_SPEED*1000000.0;
       double servoRawProgress = micros() - servoStartingMicros;
