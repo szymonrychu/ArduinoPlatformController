@@ -14,17 +14,15 @@ git reset --hard
 git clean -xfd
 
 docker build \
-  --tag ros .
+  --tag "ros:${GIT_REPO_SHORT_SHA}" .
 
 docker run \
   --rm \
   --privileged \
   --add-host overlord:192.168.1.10 \
   --network host \
-  -e "GIT_COMMIT=${GIT_REPO_SHORT_SHA}" \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
-  -v ${HOME}/ros_tmp:/tmp/ \
-  ros:latest roslaunch robot_platform robot_platform.launch
+  "ros:${GIT_REPO_SHORT_SHA}" roslaunch robot_platform robot_platform.launch
 
 
