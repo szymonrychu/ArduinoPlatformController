@@ -88,12 +88,14 @@ private:
   double velocity = 0;
   uint64_t lastComputeTimeMicros = 0;
 
+  double lastDriveInputStartingDistance = 0;
+  double lastDriveInputDistanceDelta = 0;
+
   uint64_t servoReadyAfterMicros = 0;
   double servoTarget = PI/4;
   double lastServoTarget = PI/4;
 
   double distanceTarget = 0;
-  double lastDistanceTargetDelta = 0;
   double distanceSteering = 0;
   double lastMinimumDistanceError = 0;
 
@@ -192,7 +194,9 @@ public:
     this->distanceTargetSet = distanceDelta != 0;
 
     if(this->distanceTargetSet){
-      this->lastDistanceTargetDelta = distanceDelta;
+      this->lastDriveInputStartingDistance = this->distanceTarget;
+      this->lastDriveInputDistanceDelta = distanceDelta;
+
       this->distanceTarget += distanceDelta;
       this->lastMinimumDistanceError = 1000000.0;
     }
@@ -207,9 +211,8 @@ public:
 
   double moveProgress(){
     if(!this->wheelReady()){
-      double startingDistance = this->distanceTarget - this->lastDistanceTargetDelta;
-      double moveRawProgress = this->lastDistance - startingDistance;
-      return abs(moveRawProgress/this->lastDistanceTargetDelta);
+      double currentDistanceProgress = this->currentDistance() - this->lastDriveInputStartingDistance;
+      return abs(currentDistanceProgress/this->lastDriveInputDistanceDelta);
     }else if(!this->servoReady()){
       double servoStartingMicros = this->servoReadyAfterMicros - SERVO_FULL_ROTATION_UPDATE_SPEED*1000000.0;
       double servoRawProgress = micros() - servoStartingMicros;
