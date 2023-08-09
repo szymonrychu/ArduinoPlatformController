@@ -165,7 +165,7 @@ public:
     if(this->distanceTargetSet){
       if(abs(this->steering) < abs(this->currentVelocitySteering())){
         double absDistanceError = abs(this->distancePID.getError());
-        if(this->distanceRelativeProgress() > 0.99){
+        if(this->distanceRelativeProgress() > 0.95){
           this->distanceTargetSet = false;
           this->distancePID.reset();
           this->velocityTarget = 0.0;
