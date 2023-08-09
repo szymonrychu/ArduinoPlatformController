@@ -40,7 +40,6 @@ RUN set -xe;\
         source /opt/ros/${ROS_DISTRO}/setup.bash;\
         cd /home/ros/catkin_ws;\
         sudo chown -R ros .;\
-        find ./src/ -maxdepth 2 -name udev -type d -exec cp -f {}/* /etc/udev/rules.d/ \; ;\
         find ./src/ -maxdepth 2 -name requirements.txt -exec pip3 install -r {} \; ;\
         catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/${ROS_DISTRO} install"
 

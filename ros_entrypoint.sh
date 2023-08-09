@@ -11,7 +11,4 @@ set -e
 set -o nounset
 set -o pipefail
 
-sudo chmod 666 /dev/serial/by-id/*
-sudo chown ros /dev/serial/by-id/*
-
 exec "$@"
