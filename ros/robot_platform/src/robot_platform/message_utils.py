@@ -130,13 +130,16 @@ class SequentionalMove(Request):
 
 
 def parse_response(raw_input:str) -> Response:
-    message_json = json.loads(raw_input)
-    message_type = message_json["message_type"]
+    try:
+        message_json = json.loads(raw_input)
+        message_type = message_json["message_type"]
 
-    if message_type == 'STATUS':
-        return StatusResponse.parse_obj(message_json)
-    if message_type in ['ERROR', 'SUCCESS']:
-        return AckResponse.parse_obj(message_json)
+        if message_type == 'STATUS':
+            return StatusResponse.parse_obj(message_json)
+        if message_type in ['ERROR', 'SUCCESS']:
+            return AckResponse.parse_obj(message_json)
+    except json.decoder.JSONDecodeError as _json_error:
+        return None
     
 def encode_request(req:Request) -> str:
     return req.json()
