@@ -165,7 +165,7 @@ public:
     if(this->distanceTargetSet){
       if(abs(this->steering) < abs(this->currentVelocitySteering())){
         double absDistanceError = abs(this->distancePID.getError());
-        if(abs(this->lastMinimumDistanceError - absDistanceError) < 0.01){
+        if(this->distanceRelativeProgress() > 0.99){
           this->distanceTargetSet = false;
           this->distancePID.reset();
           this->velocityTarget = 0.0;
@@ -209,9 +209,13 @@ public:
     return this->currentCoordinates;
   }
 
+  double distanceRelativeProgress(){
+    return 1 - abs(this->currentDistanceError()/this->lastDriveInputDistanceDelta);
+  }
+
   double moveProgress(){
     if(!this->wheelReady()){
-      return 1 - abs(this->currentDistanceError()/this->lastDriveInputDistanceDelta);
+      return this->distanceRelativeProgress();
     }else if(!this->servoReady()){
       double servoStartingMicros = this->servoReadyAfterMicros - SERVO_FULL_ROTATION_UPDATE_SPEED*1000000.0;
       double servoRawProgress = micros() - servoStartingMicros;
