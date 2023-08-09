@@ -1,6 +1,0 @@
-#!/usr/bin/env python3
-
-from robot_simplified import serial_handler
-
-if __name__ == '__main__':
-    serial_handler.main()

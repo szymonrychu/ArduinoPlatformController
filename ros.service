@@ -1,0 +1,13 @@
+[Unit]
+Description=ros platform service
+After=network.target
+Requires=network.target
+
+[Service]
+User=szymonri
+ExecStart=SCRIPT_FULL_PATH
+
+[Install]
+WantedBy=multi-user.target
+
+

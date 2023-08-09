@@ -25,13 +25,18 @@
 #define VELOCITY_ERROR_ACCUMULATED_MAX_ABS 1.0f
 #endif
 
+#ifndef MIN_COMMAND_MICROS
+#define MIN_COMMAND_MICROS 250
+#endif
+
 #define SERVO_FULL_ROTATION_UPDATE_SPEED 1.2
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <Servo.h>
-#include "Cytron_MDD3A.h"
-#include "HWQuadEncoder.h"
-#include "PID.h"
+#include <Cytron_MDD3A.h>
+#include <HWQuadEncoder.h>
+#include <PID.h>
+#include <math.h>
 
 struct MotorMove {
   bool distanceSet = false;
@@ -53,6 +58,20 @@ struct Move {
   ServoMove tilt;
 };
 
+struct XYCoordinates{
+  double X=0;
+  double Y=0;
+};
+
+struct MotorConfig {
+  uint8_t encoderChannel = 0;
+  uint8_t encoderAPin = 0;
+  uint8_t encoderBPin = 0;
+  uint8_t hBridgeAPin = 0;
+  uint8_t hBridgeBPin = 0;
+  uint8_t servoPin = 0;
+};
+
 
 class ServoWheel{
 private:
@@ -65,6 +84,7 @@ private:
 
   double distance = 0;
   double lastDistance = 0;
+  double lastDistanceDelta = 0;
   double velocity = 0;
   uint64_t lastComputeTimeMicros = 0;
 
@@ -73,6 +93,7 @@ private:
   double lastServoTarget = PI/4;
 
   double distanceTarget = 0;
+  double lastDistanceTargetDelta = 0;
   double distanceSteering = 0;
   double lastMinimumDistanceError = 0;
 
@@ -83,6 +104,9 @@ private:
   bool distanceTargetSet = false;
   bool servoReady_ = true;
   bool isFresh_ = true;
+  uint64_t lastCommandTimestampMicros = 0;
+
+  XYCoordinates currentCoordinates;
 
   double computeDistance(){
     int32_t currentEncoderTicks = this->encoder.read();
@@ -97,6 +121,12 @@ public:
     this->encoder = QuadEncoder(encChannel, encoderAPin, encoderBPin);
     this->hbridge = MDD3AHbridge(hBridgeAPin, hBridgeBPin);
     this->servoPin = servoPin;
+  }
+  
+  ServoWheel(MotorConfig config){
+    this->encoder = QuadEncoder(config.encoderChannel, config.encoderAPin, config..encoderBPin);
+    this->hbridge = MDD3AHbridge(config.hBridgeAPin, config.hBridgeBPin);
+    this->servoPin = config.servoPin;
   }
 
   void setup(double dP=15.0, double dI=0, double dD=0.8, double vP=3.0, double vI=0.2, double vD=0.01){
@@ -117,8 +147,8 @@ public:
 
     this->distance = computeDistance();
     double timeDeltaSeconds =((double)currentTimeMicros - (double)this->lastComputeTimeMicros)/1000000.0;
-    double currentDistanceDelta = this->distance - this->lastDistance;
-    this->velocity = abs(currentDistanceDelta/timeDeltaSeconds);
+    this->lastDistanceDelta = this->distance - this->lastDistance;
+    this->velocity = abs(lastDistanceDelta/timeDeltaSeconds);
   
     this->distancePID.setResult(this->distance);
     this->velocityPID.setResult(this->velocity);
@@ -151,18 +181,42 @@ public:
       this->lastServoTarget = this->servoTarget;
     }
     this->servoReady_ = this->servoReadyAfterMicros < currentTimeMicros;
+
+    double deltaX = this->lastDistanceDelta * cos(this->servoTarget);
+    double deltaY = this->lastDistanceDelta * sin(this->servoTarget);
+    this->currentCoordinates.X += deltaX;
+    this->currentCoordinates.Y += deltaY;
   }
 
   void drive(double velocity, double distanceDelta=0){
     this->distanceTargetSet = distanceDelta != 0;
 
     if(this->distanceTargetSet){
+      this->lastDistanceTargetDelta = distanceDelta;
       this->distanceTarget += distanceDelta;
       this->lastMinimumDistanceError = 1000000.0;
     }
 
     this->velocityTarget = velocity;
     this->isFresh_ = false;
+  }
+
+  XYCoordinates deadReconingGetCurrentCoordinates(){
+    return this->currentCoordinates;
+  }
+
+  double moveProgress(){
+    if(this->wheelReady()){
+      double startingDistance = this->distanceTarget - this->lastDistanceTargetDelta;
+      double moveRawProgress = this->lastDistance - startingDistance;
+      return moveRawProgress/this->lastDistanceTargetDelta;
+    }else if(!this->servoReady()){
+      double servoStartingMicros = this->servoReadyAfterMicros - SERVO_FULL_ROTATION_UPDATE_SPEED*1000000.0;
+      double servoRawProgress = micros() - servoStartingMicros;
+      return servoRawProgress/(SERVO_FULL_ROTATION_UPDATE_SPEED*1000000.0);
+    }else{
+      return 1.0;
+    }
   }
 
   void drive(MotorMove move){
@@ -172,6 +226,7 @@ public:
     if(move.distanceSet){
       this->drive(move.velocity, move.distanceDelta);
     }
+    this->lastCommandTimestampMicros = micros();
   }
 
   bool servoReady(){
@@ -183,7 +238,11 @@ public:
   }
 
   bool ready(){
-    return this->wheelReady() && this->servoReady();
+    return this->wheelReady() && this->servoReady() && this->minCommandTimePassed();
+  }
+
+  bool minCommandTimePassed(){
+    return this->lastCommandTimestampMicros + MIN_COMMAND_MICROS < micros();
   }
 
   void writeServo(double angle){
@@ -239,6 +298,7 @@ public:
     this->distancePID.reset();
     this->velocityPID.reset();
     this->isFresh_ = true;
+    this->distanceTargetSet = false;
   }
 };
 
