@@ -5,7 +5,9 @@ Requires=network.target
 
 [Service]
 User=szymonri
-ExecStart=/bin/bash /home/szymonri/catkin_ws/src/ArduinoPlatformController/scripts/run.sh
+ExecStart=SCRIPT_FULL_PATH
 
 [Install]
 WantedBy=multi-user.target
+
+
