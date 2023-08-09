@@ -49,7 +49,9 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
     def __init__(self):
         SerialROSNode.__init__(self)
         raw_input_topic = rospy.get_param('~raw_input_topic')
+        raw_output_topic = rospy.get_param('~raw_output_topic')
         rospy.Subscriber(raw_input_topic, String, self._write_raw_data)
+        self._raw_log_publisher = rospy.Publisher(raw_output_topic, String)
 
     def _write_raw_data(self, ros_data):
         raw_string = ros_data.data
@@ -59,14 +61,17 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         response = parse_response(raw_data)
         if not response:
             return
+        
         if response.message_type == 'ERROR':
             rospy.logerr(response)
         elif response.message_type == 'SUCCESS':
             rospy.loginfo(response)
         else:
             rospy.logdebug(response)
-
-
+        
+        raw_string = String()
+        raw_string.data = raw_data
+        self._raw_log_publisher.publish(raw_string)
 
 
 def main():

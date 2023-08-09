@@ -124,7 +124,7 @@ public:
   }
   
   ServoWheel(MotorConfig config){
-    this->encoder = QuadEncoder(config.encoderChannel, config.encoderAPin, config..encoderBPin);
+    this->encoder = QuadEncoder(config.encoderChannel, config.encoderAPin, config.encoderBPin);
     this->hbridge = MDD3AHbridge(config.hBridgeAPin, config.hBridgeBPin);
     this->servoPin = config.servoPin;
   }

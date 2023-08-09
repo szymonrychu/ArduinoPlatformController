@@ -9,8 +9,7 @@
     <param name="serial_baudrate" type="int" value="115200" />
 
     <param name="raw_input_topic" value="/robot_platform/raw_serial_request" />
-
-    
+    <param name="raw_output_topic" value="/robot_platform/raw_serial_response" />
 
   </node>
 

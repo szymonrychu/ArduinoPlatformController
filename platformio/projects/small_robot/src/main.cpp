@@ -16,7 +16,7 @@
 
 
 #define QUEUE_SIZE_ITEMS 10
-
+ 
 #define BNO055_SAMPLERATE_DELAY_MS (10)
 #define MEM_LEN 256
 char buffer[MEM_LEN];

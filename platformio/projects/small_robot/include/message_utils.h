@@ -10,6 +10,7 @@
 #include <Adafruit_BNO055.h>
 #include <Adafruit_GPS.h>
 #include <Servo.h>
+#include <Battery.h>
 
 #include "move_utils.h"
 
@@ -115,80 +116,6 @@ private:
     }
 
     /*
-
-{"message_type":"raw_move","motor1":{"distance":0.2,"velocity":0.5},"motor2":{"distance":0.2,"velocity":0.5},"motor3":{"distance":0.2,"velocity":0.5},"motor4":{"distance":0.2,"velocity":0.5}}
-{"message_type":"raw_move","motor1":{"distance":-0.2,"velocity":0.5},"motor2":{"distance":-0.2,"velocity":0.5},"motor3":{"distance":-0.2,"velocity":0.5},"motor4":{"distance":-0.2,"velocity":0.5}}
-{"message_type":"raw_move","motor1":{"distance":0,"velocity":0},"motor2":{"distance":0,"velocity":0},"motor3":{"distance":0,"velocity":0},"motor4":{"distance":0,"velocity":0}}
-{"message_type":"raw_move","motor1":{"distance":1.0,"velocity":0.5},"motor2":{"distance":1.0,"velocity":0.5},"motor3":{"distance":1.0,"velocity":0.5},"motor4":{"distance":1.0,"velocity":0.5}}
-
-{"message_type":"raw_move","motor1":{"distance":1.0,"velocity":0.5}}
-{"message_type":"raw_move","motor2":{"distance":1.0,"velocity":0.5}}
-{"message_type":"raw_move","motor3":{"distance":1.0,"velocity":0.5}}
-{"message_type":"raw_move","motor4":{"distance":1.0,"velocity":0.5}}
-
-{"message_type":"raw_move","motor1":{"angle":0.7853},"motor2":{"angle":0.7853},"motor3":{"angle":0.7853},"motor4":{"angle":0.7853}}
-{"message_type":"raw_move","motor1":{"angle":-0.7853},"motor2":{"angle":-0.7853},"motor3":{"angle":-0.7853},"motor4":{"angle":-0.7853}}
-{"message_type":"raw_move","motor1":{"angle":1.5706},"motor2":{"angle":1.5706},"motor3":{"angle":1.5706},"motor4":{"angle":1.5706}}
-{"message_type":"raw_move","motor1":{"angle":0},"motor2":{"angle":0},"motor3":{"angle":0},"motor4":{"angle":0}}
-
-{"message_type":"raw_move","pan":{"angle":0.7853},"tilt":{"angle":0.7853}}
-{"message_type":"raw_move","pan":{"angle":0},"tilt":{"angle":0}}
-
-{"message_type":"raw_move","motor1":{"distance":0.2,"velocity":0.5,"angle":0.7853},"motor2":{"distance":0.2,"velocity":0.5,"angle":0.7853},"motor3":{"distance":0.2,"velocity":0.5,"angle":0.7853},"motor4":{"distance":0.2,"velocity":0.5,"angle":0.7853},{"pan":{"angle":0.7853},"tilt":{"angle":0.7853}}}
-
-    */
-    
-    OutputMessage parseRawMove(JsonObject& obj){
-        bool panAngleSet = obj.containsKey("pan") && obj["pan"].containsKey("angle");
-        bool tiltAngleSet = obj.containsKey("tilt") && obj["tilt"].containsKey("angle");
-        bool motor1AngleSet = obj.containsKey("motor1") && obj["motor1"].containsKey("angle");
-        bool motor2AngleSet = obj.containsKey("motor2") && obj["motor2"].containsKey("angle");
-        bool motor3AngleSet = obj.containsKey("motor3") && obj["motor3"].containsKey("angle");
-        bool motor4AngleSet = obj.containsKey("motor4") && obj["motor4"].containsKey("angle");
-        bool motor1DistanceVelocitySet = obj.containsKey("motor1") && obj["motor1"].containsKey("distance") && obj["motor1"].containsKey("velocity");
-        bool motor2DistanceVelocitySet = obj.containsKey("motor2") && obj["motor2"].containsKey("distance") && obj["motor2"].containsKey("velocity");
-        bool motor3DistanceVelocitySet = obj.containsKey("motor3") && obj["motor3"].containsKey("distance") && obj["motor3"].containsKey("velocity");
-        bool motor4DistanceVelocitySet = obj.containsKey("motor4") && obj["motor4"].containsKey("distance") && obj["motor4"].containsKey("velocity");
-        
-        Move move;
-        move.pan.angleSet = panAngleSet;
-        move.pan.angle = obj["pan"]["angle"];
-
-        move.tilt.angleSet = tiltAngleSet;
-        move.tilt.angle = obj["tilt"]["angle"];
-
-        move.motor1.angleSet = motor1AngleSet;
-        move.motor1.angle = obj["motor1"]["angle"];
-        move.motor2.angleSet = motor2AngleSet;
-        move.motor2.angle = obj["motor2"]["angle"];
-        move.motor3.angleSet = motor3AngleSet;
-        move.motor3.angle = obj["motor3"]["angle"];
-        move.motor4.angleSet = motor4AngleSet;
-        move.motor4.angle = obj["motor4"]["angle"];
-
-        move.motor1.distanceSet = motor1DistanceVelocitySet;
-        move.motor1.distanceDelta = obj["motor1"]["distance"];
-        move.motor1.velocity = obj["motor1"]["velocity"];
-        
-        move.motor2.distanceSet = motor2DistanceVelocitySet;
-        move.motor2.distanceDelta = obj["motor2"]["distance"];
-        move.motor2.velocity = obj["motor2"]["velocity"];
-        
-        move.motor3.distanceSet = motor3DistanceVelocitySet;
-        move.motor3.distanceDelta = obj["motor3"]["distance"];
-        move.motor3.velocity = obj["motor3"]["velocity"];
-        
-        move.motor4.distanceSet = motor4DistanceVelocitySet;
-        move.motor4.distanceDelta = obj["motor4"]["distance"];
-        move.motor4.velocity = obj["motor4"]["velocity"];
-        
-        moveQueue->enqueue(move);
-
-        return OutputMessage(OUTPUT_SUCCESS, "raw_move ok");
-    }
-
-
-    /*
 {"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5}
 {"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5}
 {"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.4}
@@ -264,8 +191,6 @@ private:
         for(JsonObject move_obj : raw_moves){
             OutputMessage tmp(OUTPUT_SUCCESS, "placeholder");
             switch(this->parseInputMessageType(move_obj)){
-            case INPUT_RAW_MOVE:
-                tmp = this->parseRawMove(move_obj);
                 break;
             case INPUT_TURN_MOVE:
                 tmp = this->parseTurnMove(move_obj);
@@ -313,8 +238,6 @@ public:
             return this->resetMotors();
         case INPUT_RESET_QUEUE:
             return this->resetQueue();
-        case INPUT_RAW_MOVE:
-            return this->parseRawMove(obj);
         case INPUT_TURN_MOVE:
             return this->parseTurnMove(obj);
         case INPUT_FORWARD_MOVE:
@@ -439,48 +362,74 @@ public:
                 gps["dec_latitude"] = gpsDecimalLatitude;
                 gps["dec_longitude"] = gpsDecimalLongitude;
             }
-            if(!mReady){
-                JsonObject motor1JSON = doc.createNestedObject("motor1");
-                motor1JSON["ready"] = motor1->ready();
-                motor1JSON["servo"] = motor1->readServo();
-                motor1JSON["distance"] = motor1->currentDistance();
-                motor1JSON["distance_error"] = motor1->currentDistanceError();
-                motor1JSON["distance_steering"] = motor1->currentDistanceSteering();
-                motor1JSON["velocity"] = motor1->currentVelocity();
-                motor1JSON["velocity_error"] = motor1->currentDistanceError();
-                motor1JSON["velocity_steering"] = motor1->currentVelocityError();
-                motor1JSON["steering"] = motor1->currentSteering();
-                JsonObject motor2JSON = doc.createNestedObject("motor2");
-                motor2JSON["ready"] = motor2->ready();
-                motor2JSON["servo"] = motor2->readServo();
-                motor2JSON["distance"] = motor2->currentDistance();
-                motor2JSON["distance_error"] = motor2->currentDistanceError();
-                motor2JSON["distance_steering"] = motor2->currentDistanceSteering();
-                motor2JSON["velocity"] = motor2->currentVelocity();
-                motor2JSON["velocity_error"] = motor2->currentDistanceError();
-                motor2JSON["velocity_steering"] = motor2->currentVelocityError();
-                motor2JSON["steering"] = motor2->currentSteering();
-                JsonObject motor3JSON = doc.createNestedObject("motor3");
-                motor3JSON["ready"] = motor3->ready();
-                motor3JSON["servo"] = motor3->readServo();
-                motor3JSON["distance"] = motor3->currentDistance();
-                motor3JSON["distance_error"] = motor3->currentDistanceError();
-                motor3JSON["distance_steering"] = motor3->currentDistanceSteering();
-                motor3JSON["velocity"] = motor3->currentVelocity();
-                motor3JSON["velocity_error"] = motor3->currentDistanceError();
-                motor3JSON["velocity_steering"] = motor3->currentVelocityError();
-                motor3JSON["steering"] = motor3->currentSteering();
-                JsonObject motor4JSON = doc.createNestedObject("motor4");
-                motor4JSON["ready"] = motor4->ready();
-                motor4JSON["servo"] = motor4->readServo();
-                motor4JSON["distance"] = motor4->currentDistance();
-                motor4JSON["distance_error"] = motor4->currentDistanceError();
-                motor4JSON["distance_steering"] = motor4->currentDistanceSteering();
-                motor4JSON["velocity"] = motor4->currentVelocity();
-                motor4JSON["velocity_error"] = motor4->currentDistanceError();
-                motor4JSON["velocity_steering"] = motor4->currentVelocityError();
-                motor4JSON["steering"] = motor4->currentSteering();
-            }
+
+            double motor1Progress = motor1->moveProgress();
+            double motor2Progress = motor2->moveProgress();
+            double motor3Progress = motor3->moveProgress();
+            double motor4Progress = motor4->moveProgress();
+
+            doc["progress"] = (motor1Progress + motor2Progress + motor3Progress + motor4Progress)/4.0;
+
+            JsonObject motor1JSON = doc.createNestedObject("motor1");
+            motor1JSON["ready"] = motor1->ready();
+            motor1JSON["progress"] = motor1Progress;
+
+            JsonObject motor2JSON = doc.createNestedObject("motor2");
+            motor2JSON["ready"] = motor2->ready();
+            motor2JSON["progress"] = motor2Progress;
+
+            JsonObject motor3JSON = doc.createNestedObject("motor3");
+            motor3JSON["ready"] = motor3->ready();
+            motor3JSON["progress"] = motor3Progress;
+
+            JsonObject motor4JSON = doc.createNestedObject("motor4");
+            motor4JSON["ready"] = motor4->ready();
+            motor4JSON["progress"] = motor4Progress;
+
+
+
+            // if(!mReady){
+            //     JsonObject motor1JSON = doc.createNestedObject("motor1");
+            //     motor1JSON["ready"] = motor1->ready();
+            //     motor1JSON["servo"] = motor1->readServo();
+            //     motor1JSON["distance"] = motor1->currentDistance();
+            //     motor1JSON["distance_error"] = motor1->currentDistanceError();
+            //     motor1JSON["distance_steering"] = motor1->currentDistanceSteering();
+            //     motor1JSON["velocity"] = motor1->currentVelocity();
+            //     motor1JSON["velocity_error"] = motor1->currentDistanceError();
+            //     motor1JSON["velocity_steering"] = motor1->currentVelocityError();
+            //     motor1JSON["steering"] = motor1->currentSteering();
+            //     JsonObject motor2JSON = doc.createNestedObject("motor2");
+            //     motor2JSON["ready"] = motor2->ready();
+            //     motor2JSON["servo"] = motor2->readServo();
+            //     motor2JSON["distance"] = motor2->currentDistance();
+            //     motor2JSON["distance_error"] = motor2->currentDistanceError();
+            //     motor2JSON["distance_steering"] = motor2->currentDistanceSteering();
+            //     motor2JSON["velocity"] = motor2->currentVelocity();
+            //     motor2JSON["velocity_error"] = motor2->currentDistanceError();
+            //     motor2JSON["velocity_steering"] = motor2->currentVelocityError();
+            //     motor2JSON["steering"] = motor2->currentSteering();
+            //     JsonObject motor3JSON = doc.createNestedObject("motor3");
+            //     motor3JSON["ready"] = motor3->ready();
+            //     motor3JSON["servo"] = motor3->readServo();
+            //     motor3JSON["distance"] = motor3->currentDistance();
+            //     motor3JSON["distance_error"] = motor3->currentDistanceError();
+            //     motor3JSON["distance_steering"] = motor3->currentDistanceSteering();
+            //     motor3JSON["velocity"] = motor3->currentVelocity();
+            //     motor3JSON["velocity_error"] = motor3->currentDistanceError();
+            //     motor3JSON["velocity_steering"] = motor3->currentVelocityError();
+            //     motor3JSON["steering"] = motor3->currentSteering();
+            //     JsonObject motor4JSON = doc.createNestedObject("motor4");
+            //     motor4JSON["ready"] = motor4->ready();
+            //     motor4JSON["servo"] = motor4->readServo();
+            //     motor4JSON["distance"] = motor4->currentDistance();
+            //     motor4JSON["distance_error"] = motor4->currentDistanceError();
+            //     motor4JSON["distance_steering"] = motor4->currentDistanceSteering();
+            //     motor4JSON["velocity"] = motor4->currentVelocity();
+            //     motor4JSON["velocity_error"] = motor4->currentDistanceError();
+            //     motor4JSON["velocity_steering"] = motor4->currentVelocityError();
+            //     motor4JSON["steering"] = motor4->currentSteering();
+            // }
             serializeJson(doc, Serial);
             Serial.println("");
         }
