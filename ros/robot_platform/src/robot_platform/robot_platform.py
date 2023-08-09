@@ -57,6 +57,8 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
 
     def parse_serial(self, raw_data):
         response = parse_response(raw_data)
+        if not response:
+            return
         if response.message_type == 'ERROR':
             rospy.logerr(response)
         elif response.message_type == 'SUCCESS':
