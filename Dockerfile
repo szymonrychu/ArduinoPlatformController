@@ -27,8 +27,6 @@ RUN set -xe;\
     chown -R ros /opt/ros;\
     chmod +x /ros_entrypoint.sh
 
-COPY ./update_teensy.sh /usr/bin/update_teensy
-
 USER ros
 
 RUN set -xe;\
