@@ -211,8 +211,7 @@ public:
 
   double moveProgress(){
     if(!this->wheelReady()){
-      double currentDistanceProgress = this->currentDistance() - this->lastDriveInputStartingDistance;
-      return abs(currentDistanceProgress/this->lastDriveInputDistanceDelta);
+      return 1 - abs(this->currentDistanceError()/this->lastDriveInputDistanceDelta);
     }else if(!this->servoReady()){
       double servoStartingMicros = this->servoReadyAfterMicros - SERVO_FULL_ROTATION_UPDATE_SPEED*1000000.0;
       double servoRawProgress = micros() - servoStartingMicros;
