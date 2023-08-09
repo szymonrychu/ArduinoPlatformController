@@ -206,7 +206,7 @@ public:
   }
 
   double moveProgress(){
-    if(this->wheelReady()){
+    if(!this->wheelReady()){
       double startingDistance = this->distanceTarget - this->lastDistanceTargetDelta;
       double moveRawProgress = this->lastDistance - startingDistance;
       return moveRawProgress/this->lastDistanceTargetDelta;
