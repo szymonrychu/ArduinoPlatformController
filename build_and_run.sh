@@ -22,9 +22,9 @@ docker run \
   --add-host overlord:192.168.1.10 \
   --network host \
   -e "GIT_COMMIT=${GIT_REPO_SHORT_SHA}" \
-  -e "ROS_HOSTNAME=robot" \""
+  -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
-  -v ${HOME}/ros_tmp:/tmp/
+  -v ${HOME}/ros_tmp:/tmp/ \
   ros:latest roslaunch robot_platform robot_platform.launch
 
 
