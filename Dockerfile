@@ -19,6 +19,7 @@ RUN set -xe;\
         ros-noetic-diagnostic-updater \
         ;\
     rm -rf /var/lib/apt/lists/*;\
+    pip3 install platformio;\
     useradd -m -s /bin/bash -G sudo,dialout ros;\
     echo 'ros ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ros;\
     mkdir -p /home/ros/catkin_ws/src;\
