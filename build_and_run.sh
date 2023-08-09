@@ -13,8 +13,11 @@ git reset "origin/${GIT_CURRENT_BRANCH}"
 git reset --hard
 git clean -xfd
 
-sudo sed "s/SCRIPT_FULL_PATH/${THIS_FULL_PATH}/g" ${GIT_REPO_ROOT}/ros.service > /etc/systemd/system/ros.service
-sudo systemctl daemon-reload
+sed "s/SCRIPT_FULL_PATH/${THIS_FULL_PATH}/g" ${GIT_REPO_ROOT}/ros.service > /tmp/ros.service
+if ! diff /tmp/ros.service /etc/systemd/system/ros.service; then
+  sudo mv /tmp/ros.service /etc/systemd/system/ros.service
+  sudo systemctl daemon-reload
+fi
 
 docker build -t ros .
 
