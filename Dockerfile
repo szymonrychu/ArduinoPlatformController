@@ -23,8 +23,11 @@ RUN set -xe;\
     useradd -m -s /bin/bash -G sudo,dialout ros;\
     echo 'ros ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ros;\
     mkdir -p /home/ros/catkin_ws/src;\
+    mkdir -p /home/ros/arduino;\
     chown -R ros /opt/ros;\
     chmod +x /ros_entrypoint.sh
+
+COPY ./update_teensy.sh /usr/bin/update_teensy
 
 USER ros
 
@@ -34,6 +37,8 @@ RUN set -xe;\
         rosdep update"
 
 COPY ./ros/ /home/ros/catkin_ws/src/
+COPY ./platformio.ini /home/ros/arduino/
+COPY ./platformio/ /home/ros/arduino/
 
 RUN set -xe;\
     bash -c "\
