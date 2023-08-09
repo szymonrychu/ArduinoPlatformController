@@ -33,7 +33,6 @@ docker run \
   -e "ROS_HOSTNAME=robot" \
   -e "ROS_MASTER_URI=http://robot:11311/" \
   -v /dev:/dev \
-  -it ros:latest \
-    roslaunch robot_platform robot_platform.launch
+  ros:latest roslaunch robot_platform robot_platform.launch
 
 
