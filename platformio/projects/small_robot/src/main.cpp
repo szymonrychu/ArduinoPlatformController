@@ -79,17 +79,18 @@ void serialEvent4() {
 
 void loop(void){
   command.parse();
-  sensorHandler.printOutput();
 
   if(sensorHandler.motorsReady()){
       if(!moveQueue.isEmpty()){
           Move m = moveQueue.dequeue();
+          sensorHandler.updateCurrentMove(m);
 
           motor1.drive(m.motor1);
           motor2.drive(m.motor2);
           motor3.drive(m.motor3);
           motor4.drive(m.motor4);
       }else{
+          sensorHandler.currentMoveDone();
           if(!motor1.isFresh()){
               motor1.resetDistanceVelocity();
           }
@@ -104,6 +105,7 @@ void loop(void){
           }
       }
   }
+  sensorHandler.printOutput();
 
   motor1.loop();
   motor2.loop();

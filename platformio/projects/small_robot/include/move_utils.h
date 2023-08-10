@@ -5,7 +5,7 @@
 #include <ServoWheel.h>
 #include "config.h"
 
-Move zeroAngles(double angle=0){
+Move zeroAngles(double angle=0, uint8_t movePart=0, uint8_t maxMoveParts=1){
   MotorMove m;
   m.angle = angle;
   m.angleSet = true;
@@ -14,10 +14,12 @@ Move zeroAngles(double angle=0){
   move.motor2 = m;
   move.motor3 = m;
   move.motor4 = m;
+  move.movePart = movePart;
+  move.maxMoveParts = maxMoveParts;
   return move;
 }
 
-Move filterAngles(Move m){
+Move filterAngles(Move m, uint8_t movePart=0, uint8_t maxMoveParts=1){
   Move r;
   r.motor1.angleSet = m.motor1.angleSet;
   r.motor2.angleSet = m.motor2.angleSet;
@@ -27,10 +29,13 @@ Move filterAngles(Move m){
   r.motor2.angle = m.motor2.angle;
   r.motor3.angle = m.motor3.angle;
   r.motor4.angle = m.motor4.angle;
+  r.moveUUID = m.moveUUID;
+  r.movePart = movePart;
+  r.maxMoveParts = maxMoveParts;
   return r;
 }
 
-Move filterDistanceVelocity(Move m){
+Move filterDistanceVelocity(Move m, uint8_t movePart=0, uint8_t maxMoveParts=1){
   Move r;
   r.motor1.distanceSet = m.motor1.distanceSet;
   r.motor2.distanceSet = m.motor2.distanceSet;
@@ -44,6 +49,9 @@ Move filterDistanceVelocity(Move m){
   r.motor2.velocity = m.motor2.velocity;
   r.motor3.velocity = m.motor3.velocity;
   r.motor4.velocity = m.motor4.velocity;
+  r.moveUUID = m.moveUUID;
+  r.movePart = movePart;
+  r.maxMoveParts = maxMoveParts;
   return r;
 }
 

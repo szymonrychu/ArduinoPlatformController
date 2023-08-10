@@ -29,6 +29,10 @@
 #define MIN_COMMAND_MICROS 250
 #endif
 
+#ifndef ADDITIONA_MOVE_DELTA
+#define ADDITIONA_MOVE_DELTA 0.01
+#endif
+
 #define SERVO_FULL_ROTATION_UPDATE_SPEED 1.2
 
 #include <Arduino.h>
@@ -56,6 +60,9 @@ struct Move {
   MotorMove motor4;
   ServoMove pan;
   ServoMove tilt;
+  String moveUUID = NULL;
+  uint8_t movePart = 0;
+  uint8_t maxMoveParts = 1;
 };
 
 struct XYCoordinates{
@@ -90,6 +97,7 @@ private:
 
   double lastDriveInputStartingDistance = 0;
   double lastDriveInputDistanceDelta = 0;
+  double lastAdditionalDelta = 0;
 
   uint64_t servoReadyAfterMicros = 0;
   double servoTarget = PI/4;
@@ -165,7 +173,7 @@ public:
     if(this->distanceTargetSet){
       if(abs(this->steering) < abs(this->currentVelocitySteering())){
         double absDistanceError = abs(this->distancePID.getError());
-        if(this->distanceRelativeProgress() > 0.95){
+        if(abs(this->lastMinimumDistanceError - absDistanceError) < ADDITIONA_MOVE_DELTA){
           this->distanceTargetSet = false;
           this->distancePID.reset();
           this->velocityTarget = 0.0;
@@ -194,10 +202,16 @@ public:
     this->distanceTargetSet = distanceDelta != 0;
 
     if(this->distanceTargetSet){
+      if(distanceDelta > 0){
+        this->lastAdditionalDelta = ADDITIONA_MOVE_DELTA;
+      }else{
+        this->lastAdditionalDelta = -ADDITIONA_MOVE_DELTA;
+      }
+
       this->lastDriveInputStartingDistance = this->distanceTarget;
       this->lastDriveInputDistanceDelta = distanceDelta;
 
-      this->distanceTarget += distanceDelta;
+      this->distanceTarget += distanceDelta + this->lastAdditionalDelta;
       this->lastMinimumDistanceError = 1000000.0;
     }
 
@@ -210,7 +224,7 @@ public:
   }
 
   double distanceRelativeProgress(){
-    return 1 - abs(this->currentDistanceError()/this->lastDriveInputDistanceDelta);
+    return 1 - abs(this->distancePID.getError()/this->lastDriveInputDistanceDelta);
   }
 
   double moveProgress(){
@@ -265,7 +279,7 @@ public:
   }
 
   double currentDistanceError(){
-    return this->distancePID.getError();
+    return this->distancePID.getError()-this->lastAdditionalDelta;
   }
 
   double currentDistanceSteering(){

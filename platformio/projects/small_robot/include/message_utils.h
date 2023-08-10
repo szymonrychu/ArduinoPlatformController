@@ -116,24 +116,27 @@ private:
     }
 
     /*
-{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5}
-{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5}
-{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.4}
-{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.4}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "UUID":"xd"}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "UUID":"xd"}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.4, "UUID":"xd"}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.4, "UUID":"xd"}
 
-{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.6, "turn_x": 0.2, "turn_y": 0.2}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.6, "turn_x": 0.2, "turn_y": 0.2, "UUID":"xd"}
 
-{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": 0.4}
-{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": 0.4}
-{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": -0.4}
-{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": -0.4}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "UUID":"xd"}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "UUID":"xd"}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "UUID":"xd"}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "UUID":"xd"}
 
-{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "turn_y": 0.4}
-{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "turn_y": 0.4}
-{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "turn_y": 0.4}
-{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "turn_y": 0.4}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "turn_y": 0.4, "UUID":"xd"}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": 0.4, "turn_y": 0.4, "UUID":"xd"}
+{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "turn_y": 0.4, "UUID":"xd"}
+{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "turn_x": -0.4, "turn_y": 0.4, "UUID":"xd"}
     */
     OutputMessage parseTurnMove(JsonObject& obj){
+        String moveUUID = obj["UUID"];
+        if(moveUUID.length() < 1) return OutputMessage(OUTPUT_ERROR, "turn_move missing UUID");
+
         double turnCenterX = obj["turn_x"];
         double turnCenterY = obj["turn_y"];
 
@@ -141,20 +144,25 @@ private:
         double turnVelocity = obj["turn_velocity"];
 
         Move move = turn(turnAngle, turnVelocity, turnCenterX, turnCenterY);
+
+        move.moveUUID = moveUUID;
         
-        moveQueue->enqueue(filterAngles(move));
-        moveQueue->enqueue(filterDistanceVelocity(move));
+        moveQueue->enqueue(filterAngles(move, 0, 2));
+        moveQueue->enqueue(filterDistanceVelocity(move, 1, 2));
 
         return OutputMessage(OUTPUT_SUCCESS, "turn_move ok");
     }
 
     /*
-{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5}
-{"message_type":"forward", "move_distance":-0.25, "move_velocity": 0.5}
-{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "move_angle":0.7853}
-{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "move_angle":-0.7853}
+{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "UUID":"xd"}
+{"message_type":"forward", "move_distance":-0.25, "move_velocity": 0.5, "UUID":"xd"}
+{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "move_angle":0.7853, "UUID":"xd"}
+{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "move_angle":-0.7853, "UUID":"xd"}
     */
     OutputMessage parseForwardMove(JsonObject& obj){
+        String moveUUID = obj["UUID"];
+        if(moveUUID.length() < 1) return OutputMessage(OUTPUT_ERROR, "move_forward missing UUID");
+
         double moveDistance = obj["move_distance"];
         double moveVelocity = obj["move_velocity"];
         double moveAngle = obj["move_angle"];
@@ -176,14 +184,19 @@ private:
         move.motor4.distanceDelta = moveDistance;
         move.motor4.velocity = moveVelocity;
 
-        moveQueue->enqueue(zeroAngles(moveAngle));
+        move.moveUUID = moveUUID;
+
+        moveQueue->enqueue(zeroAngles(moveAngle, 0, 2));
+
+        move.movePart = 1;
+        move.maxMoveParts = 2;
         moveQueue->enqueue(move);
 
         return OutputMessage(OUTPUT_SUCCESS, "move_forward ok");
     }
 
     /*
-{"message_type":"sequentional_move","moves":[{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5},{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5}]}
+{"message_type":"sequentional_move","moves":[{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "UUID":"1"},{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "UUID":"2"}]}
     */
 
     OutputMessage parseSequentionalMove(JsonObject& obj){
@@ -263,7 +276,8 @@ private:
     Servo servoPan;
     Servo servoTilt;
     uint32_t loopCount = 0;
-    XYCoordinates currentPlatformCoordinates;
+    Move currentMove;
+    bool currentMoveDone_ = true;
 
 public:
     SensorHandler(ArduinoQueue<Move>* mQueue, Adafruit_BNO055* bno, Adafruit_GPS* gps,
@@ -298,8 +312,13 @@ public:
         servoTilt.attach(servoTiltPin);
     }
 
-    XYCoordinates getPlatformCoordinates(){
-        return currentPlatformCoordinates;
+    void updateCurrentMove(Move m){
+        this->currentMove = m;
+        this->currentMoveDone_ = false;
+    }
+
+    void currentMoveDone(){
+        currentMoveDone_ = true;
     }
 
     void printOutput(){
@@ -363,28 +382,17 @@ public:
                 gps["dec_longitude"] = gpsDecimalLongitude;
             }
 
-            double motor1Progress = motor1->moveProgress();
-            double motor2Progress = motor2->moveProgress();
-            double motor3Progress = motor3->moveProgress();
-            double motor4Progress = motor4->moveProgress();
-
-            doc["progress"] = (motor1Progress + motor2Progress + motor3Progress + motor4Progress)/4.0;
-
-            JsonObject motor1JSON = doc.createNestedObject("motor1");
-            motor1JSON["ready"] = motor1->ready();
-            motor1JSON["progress"] = motor1Progress;
-
-            JsonObject motor2JSON = doc.createNestedObject("motor2");
-            motor2JSON["ready"] = motor2->ready();
-            motor2JSON["progress"] = motor2Progress;
-
-            JsonObject motor3JSON = doc.createNestedObject("motor3");
-            motor3JSON["ready"] = motor3->ready();
-            motor3JSON["progress"] = motor3Progress;
-
-            JsonObject motor4JSON = doc.createNestedObject("motor4");
-            motor4JSON["ready"] = motor4->ready();
-            motor4JSON["progress"] = motor4Progress;
+            if(!currentMoveDone_){
+                JsonObject moveProgress = doc.createNestedObject("move_progress");
+                double motor1Progress = motor1->moveProgress();
+                double motor2Progress = motor2->moveProgress();
+                double motor3Progress = motor3->moveProgress();
+                double motor4Progress = motor4->moveProgress();
+                moveProgress["progress"] = (motor1Progress + motor2Progress + motor3Progress + motor4Progress)/4.0;
+                moveProgress["uuid"] = currentMove.moveUUID;
+                moveProgress["part"] = currentMove.movePart;
+                moveProgress["max_parts"] = currentMove.maxMoveParts;
+            }
 
 
 
