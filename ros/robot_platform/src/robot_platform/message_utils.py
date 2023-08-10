@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, validator, ValidationError, ConfigDict
 from typing import Optional, List
+from uuid import uuid4, UUID
 import json
 
 class Response(BaseModel):
@@ -29,16 +30,11 @@ class IMUStatus(BaseModel):
     gyroscope: GyroscopeStatus
     accelerometer: AccelerometerStatus
 
-class MotorStatus(BaseModel):
-    ready: bool
-    servo: float
-    distance: float
-    distance_error: float
-    distance_steering: float
-    velocity: float
-    velocity_error: float
-    velocity_steering: float
-    steering: float
+class MoveStatus(BaseModel):
+    progress: Optional[float] = 0
+    uuid: Optional[UUID] = None
+    part: Optional[int] = 0
+    max_parts: Optional[int] = 0
 
 class GPSStatus(BaseModel):
     fix_quality: int
@@ -58,10 +54,7 @@ class StatusResponse(Response):
     battery: BatteryStatus
     imu: IMUStatus
     gps: Optional[GPSStatus] = None
-    motor1: Optional[MotorStatus] = None
-    motor2: Optional[MotorStatus] = None
-    motor3: Optional[MotorStatus] = None
-    motor4: Optional[MotorStatus] = None
+    move_progress: Optional[MoveStatus] = None
 
     @validator('message_type')
     def type_is_success_or_error(cls, v):
@@ -86,18 +79,6 @@ class AckResponse(Response):
 class Request(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-class MotorRequest(BaseModel):
-    distance: float
-    velocity: float
-    angle: float
-
-class RawRequest(Request):
-    message_type: str = Field(default='raw_move')
-    motor1: Optional[MotorRequest]
-    motor2: Optional[MotorRequest]
-    motor3: Optional[MotorRequest]
-    motor4: Optional[MotorRequest]
-
 class ResetRequest(Request):
     message_type: str = Field(default='reset')
 
@@ -107,8 +88,8 @@ class ResetQueueRequest(Request):
 class StopRequest(Request):
     message_type: str = Field(default='stop')
 
-class MoveRequest(Request):
-    pass
+class MoveRequest(Request, MoveStatus):
+    uuid: UUID = Field(default_factory=uuid4)
 
 class TurnRequest(MoveRequest):
     message_type: str = Field(default='turn')
@@ -135,11 +116,11 @@ def parse_response(raw_input:str) -> Response:
         message_type = message_json["message_type"]
 
         if message_type == 'STATUS':
-            return StatusResponse.parse_obj(message_json)
+            return StatusResponse.model_validate_json(message_json)
         if message_type in ['ERROR', 'SUCCESS']:
-            return AckResponse.parse_obj(message_json)
+            return AckResponse.model_validate_json(message_json)
     except json.decoder.JSONDecodeError as _json_error:
         return None
     
 def encode_request(req:Request) -> str:
-    return req.json()
+    return req.model_dump_json()

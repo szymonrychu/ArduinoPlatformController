@@ -4,10 +4,16 @@ import rospy
 import signal
 
 from std_msgs.msg import String
+from geometry_msgs.msg import Pose
+from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
+
+from uuid import UUID
+from typing import Optional
 
 from .log_utils import env2log
 from .serial_utils import SerialWrapper
-from .message_utils import parse_response
+from .message_utils import parse_response, Response, MoveStatus, GPSStatus, BatteryStatus, IMUStatus, MoveRequest
+from .tf_helpers import difference_between_Poses
 
 class ROSNode():
 
@@ -48,30 +54,151 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
 
     def __init__(self):
         SerialROSNode.__init__(self)
+        self._current_pose = Pose()
+        self._currently_processed_move_uuid = None
+        self._move_registry = {}
+
         raw_input_topic = rospy.get_param('~raw_input_topic')
-        raw_output_topic = rospy.get_param('~raw_output_topic')
         rospy.Subscriber(raw_input_topic, String, self._write_raw_data)
+
+        goal_input_topic = rospy.get_param('~goal_move_input_topic')
+        rospy.Subscriber(goal_input_topic, Pose, self.__handle_goal_pose_input_data)
+
+        raw_output_topic = rospy.get_param('~raw_output_topic')
         self._raw_log_publisher = rospy.Publisher(raw_output_topic, String)
+
+        battery_state_output_topic = rospy.get_param('~battery_state_output_topic')
+        self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState)
+
+        gps_state_output_topic = rospy.get_param('~gps_state_output_topic')
+        self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix)
+
+        imu_state_output_topic = rospy.get_param('~imu_state_output_topic')
+        self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
 
     def _write_raw_data(self, ros_data):
         raw_string = ros_data.data
         self.write_data(raw_string)
 
-    def parse_serial(self, raw_data):
+    def request_move(self, m:MoveRequest):
+        self._move_registry[m.uuid] = m
+        self._write_raw_data(m.model_dump_json())
+
+    def __drop_move_from_registry_by_uuid(self, uuid:UUID):
+        try:
+            del self._move_registry[uuid]
+        except KeyError as _key_error:
+            rospy.logerr(f"Missing {self._currently_processed_move.uuid} move in requested moves!")
+
+    def __get_currently_processed_move(self) -> Optional[MoveRequest]:
+        if not self._currently_processed_move_uuid:
+            return None
+        return self._move_registry.get(self._currently_processed_move_uuid, None)
+
+    def handle_move_status(self, status:MoveStatus):
+        if not status:
+            if self._currently_processed_move_uuid:
+                self.__drop_move_from_registry_by_uuid(status.uuid)
+            self._currently_processed_move_uuid = None
+            return
+        
+        if self._currently_processed_move_uuid != status.uuid: # new move detected
+            self.__drop_move_from_registry_by_uuid(self._currently_processed_move_uuid)
+
+        self._currently_processed_move_uuid = status.uuid
+        
+        try:
+            self._move_registry[status.uuid].progress = status.progress
+            self._move_registry[status.uuid].part = status.part
+            self._move_registry[status.uuid].max_parts = status.max_parts
+        except KeyError as _key_error:
+            rospy.logerr(f"Missing {self._currently_processed_move.uuid} move in requested moves!")
+
+    def handle_gps_status(self, status:GPSStatus):
+        nav_sat_status = NavSatStatus()
+        nav_sat_fix = NavSatFix()
+        if status:
+            nav_sat_status.status = NavSatStatus.STATUS_FIX
+            nav_sat_status.service = NavSatStatus.SERVICE_GPS
+            nav_sat_fix.altitude = status.altitude
+            nav_sat_fix.latitude = status.dec_latitude
+            nav_sat_fix.longitude = status.dec_longitude
+            nav_sat_fix.position_covariance = NavSatFix.COVARIANCE_TYPE_UNKNOWN
+        else:
+            nav_sat_status.status = NavSatStatus.STATUS_NO_FIX
+        nav_sat_fix.status = nav_sat_status
+        self._gps_state_publisher.publish(nav_sat_fix)
+
+    def handle_battery_status(self, status:BatteryStatus):
+        battery = BatteryState()
+        battery.voltage = status.voltage
+        battery.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_DISCHARGING
+        battery.power_supply_health = BatteryState.POWER_SUPPLY_HEALTH_GOOD
+        battery.power_supply_technology = BatteryState.POWER_SUPPLY_TECHNOLOGY_LION
+        self._battery_state_publisher.publish(battery)
+
+    def handle_imu_status(self, status:IMUStatus):
+        imu = Imu()
+        imu.orientation.w = status.quaternion.w
+        imu.orientation.x = status.quaternion.x
+        imu.orientation.y = status.quaternion.y
+        imu.orientation.z = status.quaternion.z
+        # imu.orientation_covariance
+
+        imu.angular_velocity.x = status.gyroscope.x
+        imu.angular_velocity.y = status.gyroscope.y
+        imu.angular_velocity.z = status.gyroscope.z
+        # imu.angular_velocity_covariance
+
+        imu.linear_acceleration.x = status.accelerometer.x
+        imu.linear_acceleration.y = status.accelerometer.y
+        imu.linear_acceleration.z = status.accelerometer.z
+        # imu.linear_acceleration_covariance
+
+        self._imu_state_publisher.publish(imu)
+
+    def __handle_goal_pose_input_data(self, goal_pose:Pose):
+        pose_difference = difference_between_Poses(self._current_pose, goal_pose)
+
+    def handler_error_platform_output(self, response:Response):
+        rospy.logerr(response)
+    
+    def handler_success_platform_output(self, response:Response):
+        rospy.loginfo(response)
+    
+    def __handler_status_platform_output(self, response:Response):
+        rospy.logdebug(f'Raw platform output:\n{response.model_dump_json()}')
+
+        self.handle_battery_status(response.battery)
+        self.handle_imu_status(response.imu)
+
+        if response.move_progress:
+            self.handle_move_status(response.move_status)
+        else:
+            self.handle_move_status(None)
+        
+        if response.gps:
+            self.handle_gps_status(response.gps)
+        else:
+            self.handle_gps_status(None)
+
+    def parse_serial(self, raw_data:String):
         response = parse_response(raw_data)
         if not response:
             return
-        
-        if response.message_type == 'ERROR':
-            rospy.logerr(response)
-        elif response.message_type == 'SUCCESS':
-            rospy.loginfo(response)
-        else:
-            rospy.logdebug(response)
-        
+
         raw_string = String()
         raw_string.data = raw_data
         self._raw_log_publisher.publish(raw_string)
+        
+        if response.message_type == 'ERROR':
+            self.handler_error_platform_output(response)
+        elif response.message_type == 'SUCCESS':
+            self.handler_success_platform_output(response)
+        elif response.message_type == 'STATUS':
+            self.__handler_status_platform_output(response)
+        else:
+            rospy.logerr(f'Unknown message type "{response.message_type}"')
 
 
 def main():

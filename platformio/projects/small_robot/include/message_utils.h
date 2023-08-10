@@ -392,6 +392,7 @@ public:
                 moveProgress["uuid"] = currentMove.moveUUID;
                 moveProgress["part"] = currentMove.movePart;
                 moveProgress["max_parts"] = currentMove.maxMoveParts;
+                moveProgress["type"] = currentMove.maxMoveParts;
             }
 
 
