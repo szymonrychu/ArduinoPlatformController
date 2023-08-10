@@ -13,6 +13,7 @@
 
     <param name="raw_output_topic" value="/robot_platform/raw_serial_response" />
     <param name="battery_state_output_topic" value="/robot_platform/battery" />
+    <param name="gps_state_output_topic" value="/robot_platform/gps" />
     <param name="imu_state_output_topic" value="/robot_platform/imu" />
 
 
