@@ -116,9 +116,9 @@ def parse_response(raw_input:str) -> Response:
         message_type = message_json["message_type"]
 
         if message_type == 'STATUS':
-            return StatusResponse.model_validate_json(message_json)
+            return StatusResponse.model_validate(message_json)
         if message_type in ['ERROR', 'SUCCESS']:
-            return AckResponse.model_validate_json(message_json)
+            return AckResponse.model_validate(message_json)
     except json.decoder.JSONDecodeError as _json_error:
         return None
     
