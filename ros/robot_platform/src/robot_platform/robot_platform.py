@@ -4,6 +4,7 @@ import rospy
 import signal
 
 import numpy as np
+import tf2_ros
 
 from std_msgs.msg import String
 from geometry_msgs.msg import Pose
@@ -78,6 +79,8 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         imu_state_output_topic = rospy.get_param('~imu_state_output_topic')
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
 
+        self._tf_broadcaster = tf2_ros.TransformBroadcaster()
+
     def _write_raw_data(self, ros_data):
         raw_string = ros_data.data
         self.write_data(raw_string)
@@ -117,54 +120,14 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
             rospy.logerr(f"Missing {self._currently_processed_move.uuid} move in requested moves!")
 
     def handle_gps_status(self, status:GPSStatus):
-        nav_sat_status = NavSatStatus()
-        nav_sat_fix = NavSatFix()
-        if status:
-            nav_sat_status.status = NavSatStatus.STATUS_FIX
-            nav_sat_status.service = NavSatStatus.SERVICE_GPS
-            nav_sat_fix.altitude = status.altitude
-            nav_sat_fix.latitude = status.dec_latitude
-            nav_sat_fix.longitude = status.dec_longitude
-            nav_sat_fix.position_covariance = NavSatFix.COVARIANCE_TYPE_UNKNOWN
-        else:
-            nav_sat_status.status = NavSatStatus.STATUS_NO_FIX
-        nav_sat_fix.status = nav_sat_status
-        self._gps_state_publisher.publish(nav_sat_fix)
+        self._gps_state_publisher.publish(status.parse_ROS_GPS('/robot'))
 
     def handle_battery_status(self, status:BatteryStatus):
-        battery = BatteryState()
-        battery.voltage = status.voltage
-        battery.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_DISCHARGING
-        battery.power_supply_health = BatteryState.POWER_SUPPLY_HEALTH_GOOD
-        battery.power_supply_technology = BatteryState.POWER_SUPPLY_TECHNOLOGY_LION
-        self._battery_state_publisher.publish(battery)
+        self._battery_state_publisher.publish(status.parse_ROS_Battery('/robot'))
 
     def handle_imu_status(self, status:IMUStatus):
-        imu = Imu()
-        imu.orientation.w = status.quaternion.w
-        imu.orientation.x = status.quaternion.x
-        imu.orientation.y = status.quaternion.y
-        imu.orientation.z = status.quaternion.z
-        imu.orientation_covariance = (
-            0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01
-        )
-
-
-        imu.angular_velocity.x = status.gyroscope.x
-        imu.angular_velocity.y = status.gyroscope.y
-        imu.angular_velocity.z = status.gyroscope.z
-        imu.angular_velocity_covariance = (
-            0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01
-        )
-
-        imu.linear_acceleration.x = status.accelerometer.x
-        imu.linear_acceleration.y = status.accelerometer.y
-        imu.linear_acceleration.z = status.accelerometer.z
-        imu.linear_acceleration_covariance = (
-            0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01
-        )
-
-        self._imu_state_publisher.publish(imu)
+        self._imu_state_publisher.publish(status.parse_ROS_IMU('/robot'))
+        self._tf_broadcaster.sendTransform(status.parse_ROS_TF('/map', '/robot'))
 
     def __handle_goal_pose_input_data(self, goal_pose:Pose):
         pose_difference = difference_between_Poses(self._current_pose, goal_pose)
@@ -185,11 +148,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
             self.handle_move_status(response.move_status)
         else:
             self.handle_move_status(None)
-        
-        if response.gps:
-            self.handle_gps_status(response.gps)
-        else:
-            self.handle_gps_status(None)
+        self.handle_gps_status(response.gps)
 
     def parse_serial(self, raw_data:String):
         response = parse_response(raw_data)
