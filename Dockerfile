@@ -17,7 +17,8 @@ RUN set -xe;\
         ros-noetic-xacro \
         ros-noetic-camera-info-manager \
         ros-noetic-diagnostic-updater \
-        ros-noetic-hector-slam \
+        ros-noetic-hector-mapping \
+        ros-noetic-hector-geotiff \
         ;\
     rm -rf /var/lib/apt/lists/*;\
     useradd -m -s /bin/bash -G sudo,dialout ros;\
