@@ -145,18 +145,20 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         imu.orientation.x = status.quaternion.x
         imu.orientation.y = status.quaternion.y
         imu.orientation.z = status.quaternion.z
-        imu.orientation_covariance = np.cov([
+        orientation_covariance = np.cov([
             imu.orientation.w,
             imu.orientation.x,
             imu.orientation.y,
             imu.orientation.z
         ])
+        print(type(orientation_covariance))
+        print(orientation_covariance)
 
 
         imu.angular_velocity.x = status.gyroscope.x
         imu.angular_velocity.y = status.gyroscope.y
         imu.angular_velocity.z = status.gyroscope.z
-        imu.angular_velocity_covariance = np.cov([
+        angular_velocity_covariance = np.cov([
             imu.angular_velocity.x,
             imu.angular_velocity.y,
             imu.angular_velocity.z
@@ -165,7 +167,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         imu.linear_acceleration.x = status.accelerometer.x
         imu.linear_acceleration.y = status.accelerometer.y
         imu.linear_acceleration.z = status.accelerometer.z
-        imu.linear_acceleration_covariance = np.cov([
+        linear_acceleration_covariance = np.cov([
             imu.linear_acceleration.x,
             imu.linear_acceleration.y,
             imu.linear_acceleration.z
