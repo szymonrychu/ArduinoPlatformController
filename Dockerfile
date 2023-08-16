@@ -6,7 +6,7 @@ COPY ./ros_entrypoint.sh /ros_entrypoint.sh
 
 RUN set -xe;\
     apt-get update;\
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
         git \
         vim \
         curl \
