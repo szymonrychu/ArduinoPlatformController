@@ -5,9 +5,10 @@ import signal
 
 import numpy as np
 import tf2_ros
+import tf_conversions
 
 from std_msgs.msg import String
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose, TransformStamped
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 
 from uuid import UUID
@@ -17,6 +18,23 @@ from .log_utils import env2log
 from .serial_utils import SerialWrapper
 from .message_utils import parse_response, Response, MoveStatus, GPSStatus, BatteryStatus, IMUStatus, MoveRequest
 from .tf_helpers import difference_between_Poses
+
+def create_static_transform(root_frame_id, child_frame_id, X=0, Y=0, Z=0, Roll=0, Pitch=0, Yaw=0, timestamp:int=None):
+    t = TransformStamped()
+    t.header.stamp = timestamp or rospy.Time.now()
+    t.header.frame_id = root_frame_id
+    t.child_frame_id = child_frame_id
+    t.transform.translation.x = X
+    t.transform.translation.y = Y
+    t.transform.translation.z = Z
+    q = tf_conversions.transformations.quaternion_from_euler(
+        Roll, Pitch, Yaw
+    )
+    t.transform.rotation.x = q[0]
+    t.transform.rotation.y = q[1]
+    t.transform.rotation.z = q[2]
+    t.transform.rotation.w = q[3]
+    return t
 
 class ROSNode():
 
@@ -60,6 +78,9 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         self._current_pose = Pose()
         self._currently_processed_move_uuid = None
         self._move_registry = {}
+        self._map_frame_id = rospy.get_param('~map_frame_id')
+        self._robot_to_map_projection_frame_id = rospy.get_param('~robot_to_map_projection_frame_id')
+        self._robot_frame_id = rospy.get_param('~robot_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         rospy.Subscriber(raw_input_topic, String, self._write_raw_data)
@@ -120,14 +141,15 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
             rospy.logerr(f"Missing {self._currently_processed_move.uuid} move in requested moves!")
 
     def handle_gps_status(self, status:GPSStatus):
-        self._gps_state_publisher.publish(status.parse_ROS_GPS('/robot'))
+        self._gps_state_publisher.publish(status.parse_ROS_GPS(self._robot_frame_id))
 
     def handle_battery_status(self, status:BatteryStatus):
-        self._battery_state_publisher.publish(status.parse_ROS_Battery('/robot'))
+        self._battery_state_publisher.publish(status.parse_ROS_Battery(self._robot_frame_id))
 
     def handle_imu_status(self, status:IMUStatus):
-        self._imu_state_publisher.publish(status.parse_ROS_IMU('/robot'))
-        self._tf_broadcaster.sendTransform(status.parse_ROS_TF('/map', '/robot'))
+        self._imu_state_publisher.publish(status.parse_ROS_IMU(self._robot_frame_id))
+        self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id), Z=0.1)
+        self._tf_broadcaster.sendTransform(status.parse_ROS_TF(self._robot_to_map_projection_frame_id, self._robot_frame_id))
 
     def __handle_goal_pose_input_data(self, goal_pose:Pose):
         pose_difference = difference_between_Poses(self._current_pose, goal_pose)
