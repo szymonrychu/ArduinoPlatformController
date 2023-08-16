@@ -151,7 +151,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
             imu.orientation.y,
             imu.orientation.z
         ])
-        imu.orientation_covariancetuple(map(tuple, orientation_covariance))
+        imu.orientation_covariance = tuple(map(tuple, orientation_covariance))
 
 
         imu.angular_velocity.x = status.gyroscope.x
@@ -162,7 +162,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
             imu.angular_velocity.y,
             imu.angular_velocity.z
         ])
-        imu.angular_velocity_covariance(map(tuple, angular_velocity_covariance))
+        imu.angular_velocity_covariance = tuple(map(tuple, angular_velocity_covariance))
 
         imu.linear_acceleration.x = status.accelerometer.x
         imu.linear_acceleration.y = status.accelerometer.y
@@ -172,7 +172,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
             imu.linear_acceleration.y,
             imu.linear_acceleration.z
         ])
-        imu.linear_acceleration_covariance(map(tuple, linear_acceleration_covariance))
+        imu.linear_acceleration_covariance = tuple(map(tuple, linear_acceleration_covariance))
 
         self._imu_state_publisher.publish(imu)
 
