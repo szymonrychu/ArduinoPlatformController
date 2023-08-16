@@ -3,7 +3,11 @@
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
 
-
+  <arg name="map_frame" default="map" />
+  <arg name="base_frame" default="base_stabilized"/>
+  <arg name="odom_frame" default="base_frame"/>
+  
+  <arg name="scan_topic" default="scan"/>
 
   <node pkg="robot_platform" type="robot_platform" name="robot_platform" output="screen" respawn="true">
 
@@ -18,15 +22,15 @@
     <param name="gps_state_output_topic" type="string" value="/robot_platform/gps" />
     <param name="imu_state_output_topic" type="string" value="/robot_platform/imu" />
 
-    <param name="map_frame_id" type="string" value="/map" />
-    <param name="robot_to_map_projection_frame_id" type="string" value="/robot_platform/robot_center_to_map_projection" />
-    <param name="robot_frame_id" type="string" value="/robot_platform/robot_center" />
-    <param name="rplidar_frame_id" type="string" value="/robot_platform/rplidar_base" />
+    <param name="map_frame_id" type="string" value="$(arg map_frame)" />
+    <param name="robot_to_map_projection_frame_id" type="string" value="$(arg base_frame)" />
+    <param name="robot_frame_id" type="string" value="$(arg odom_frame)" />
+    <param name="rplidar_frame_id" type="string" value="$(arg scan_topic)" />
 
   </node>
   
   <include file="$(find rplidar_ros)/launch/rplidar.launch">
-    <arg name="frame_id" value="/robot_platform/rplidar_base" />
+    <arg name="frame_id" value="$(arg scan_topic)" />
   </include>
 
 </launch>
