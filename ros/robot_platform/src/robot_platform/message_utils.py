@@ -76,7 +76,7 @@ class IMUStatus(BaseModel):
     def parse_ROS_TF(self, child_frame_id:str, base_frame_id:str, translation:Vector3 = None, timestamp:int=None):
         imu = self.parse_ROS_IMU(base_frame_id, timestamp)
         t = TransformStamped()
-        t.header = imu.stamp
+        t.header = imu.header
         t.child_frame_id = child_frame_id
         if translation:
             t.transform.translation = translation
