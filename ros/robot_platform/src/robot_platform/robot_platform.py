@@ -151,8 +151,8 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
             imu.orientation.y,
             imu.orientation.z
         ])
-        print(type(orientation_covariance))
-        print(orientation_covariance)
+        rospy.loginfo(type(orientation_covariance))
+        rospy.loginfo(str(orientation_covariance))
 
 
         imu.angular_velocity.x = status.gyroscope.x
