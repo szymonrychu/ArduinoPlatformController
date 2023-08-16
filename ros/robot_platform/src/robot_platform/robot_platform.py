@@ -148,7 +148,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
 
     def handle_imu_status(self, status:IMUStatus):
         self._imu_state_publisher.publish(status.parse_ROS_IMU(self._robot_frame_id))
-        self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id), Z=0.1)
+        self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id, Z=0.1))
         self._tf_broadcaster.sendTransform(status.parse_ROS_TF(self._robot_to_map_projection_frame_id, self._robot_frame_id))
 
     def __handle_goal_pose_input_data(self, goal_pose:Pose):
