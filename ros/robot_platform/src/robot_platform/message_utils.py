@@ -77,7 +77,8 @@ class IMUStatus(BaseModel):
         imu = self.parse_ROS_IMU(base_frame_id, timestamp)
         t = TransformStamped()
         t.header = imu.header
-        t.child_frame_id = child_frame_id
+        t.header.frame_id = child_frame_id
+        t.child_frame_id = base_frame_id
         if translation:
             t.transform.translation = translation
         t.transform.rotation = imu.orientation
