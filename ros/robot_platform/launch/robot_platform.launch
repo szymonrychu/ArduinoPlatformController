@@ -19,11 +19,12 @@
     <param name="map_frame_id" value="/map" />
     <param name="robot_to_map_projection_frame_id" value="/robot_platform/robot_center_to_map_projection" />
     <param name="robot_frame_id" value="/robot_platform/robot_center" />
-
-    
-
-    
+    <param name="rplidar_frame_id" value="/robot_platform/rplidar_base" />
 
   </node>
+  
+  <include file="$(find rplidar_ros)/launch/rplidar.launch">
+    <param name="frame_id" value="/robot_platform/rplidar_base" />
+  </include>
 
 </launch>
