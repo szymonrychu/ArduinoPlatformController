@@ -275,7 +275,6 @@ private:
     Battery battery;
     Servo servoPan;
     Servo servoTilt;
-    uint32_t loopCount = 0;
     Move currentMove;
     bool currentMoveDone_ = true;
 
@@ -330,118 +329,115 @@ public:
         imu::Quaternion quat = bno->getQuat();
         int8_t temp = bno->getTemp();
 
-        loopCount = (loopCount + 1) % 100;
-        if(loopCount == 0 || !mReady){
-            StaticJsonDocument<1536> doc;
-            doc["micros"] = micros();
-            doc["message_type"] = "STATUS";
-            if(mReady){
-                doc["status"] = "ready";
-            }else{
-                doc["status"] = "busy";
-            }
-            doc["queue_l"] = moveQueue->item_count();
-            doc["int_temp"] = temp;
-            JsonObject battery = doc.createNestedObject("battery");
-            battery["voltage"] = this->battery.readVoltage();
-            JsonObject imu = doc.createNestedObject("imu");
-            JsonObject quaternion = imu.createNestedObject("quaternion");
-            quaternion["w"] = quat.w();
-            quaternion["x"] = quat.x();
-            quaternion["y"] = quat.y();
-            quaternion["z"] = quat.z();
-            JsonObject gyroscope = imu.createNestedObject("gyroscope");
-            gyroscope["x"] = angVelocityData.gyro.x;
-            gyroscope["y"] = angVelocityData.gyro.y;
-            gyroscope["z"] = angVelocityData.gyro.z;
-            JsonObject accelerometer = imu.createNestedObject("accelerometer");
-            accelerometer["x"] = angVelocityData.acceleration.x;
-            accelerometer["y"] = angVelocityData.acceleration.y;
-            accelerometer["z"] = angVelocityData.acceleration.z;
-
-            if(this->gps->fix){
-                JsonObject gps = doc.createNestedObject("gps");
-                gps["fix_quality"] = this->gps->fixquality;
-                gps["satellites"] = this->gps->satellites;
-                gps["speed"] = this->gps->speed;
-                gps["angle"] = this->gps->angle;
-                gps["altitude"] = this->gps->altitude;
-
-                float gpsDecimalLatitude = 0.0;
-                float gpsDecimalLongitude = 0.0;
-
-                int gps_DD_latitude = int(this->gps->latitude/100.0);
-                float gps_MMMM_latitude = this->gps->latitude - 100.0*gps_DD_latitude;
-                gpsDecimalLatitude = gps_DD_latitude + float(gps_MMMM_latitude)/60.0;
-
-                int gps_DDD_longitude = int(this->gps->longitude/100.0);
-                float gps_MMMM_longitude = this->gps->longitude - 100.0*gps_DDD_longitude;
-                gpsDecimalLongitude = gps_DDD_longitude + float(gps_MMMM_longitude)/60.0;
-
-                gps["dec_latitude"] = gpsDecimalLatitude;
-                gps["dec_longitude"] = gpsDecimalLongitude;
-            }
-
-            if(!currentMoveDone_){
-                JsonObject moveProgress = doc.createNestedObject("move_progress");
-                double motor1Progress = motor1->moveProgress();
-                double motor2Progress = motor2->moveProgress();
-                double motor3Progress = motor3->moveProgress();
-                double motor4Progress = motor4->moveProgress();
-                moveProgress["progress"] = (motor1Progress + motor2Progress + motor3Progress + motor4Progress)/4.0;
-                moveProgress["uuid"] = currentMove.moveUUID;
-                moveProgress["part"] = currentMove.movePart;
-                moveProgress["max_parts"] = currentMove.maxMoveParts;
-                moveProgress["type"] = currentMove.maxMoveParts;
-            }
-
-
-
-            // if(!mReady){
-            //     JsonObject motor1JSON = doc.createNestedObject("motor1");
-            //     motor1JSON["ready"] = motor1->ready();
-            //     motor1JSON["servo"] = motor1->readServo();
-            //     motor1JSON["distance"] = motor1->currentDistance();
-            //     motor1JSON["distance_error"] = motor1->currentDistanceError();
-            //     motor1JSON["distance_steering"] = motor1->currentDistanceSteering();
-            //     motor1JSON["velocity"] = motor1->currentVelocity();
-            //     motor1JSON["velocity_error"] = motor1->currentDistanceError();
-            //     motor1JSON["velocity_steering"] = motor1->currentVelocityError();
-            //     motor1JSON["steering"] = motor1->currentSteering();
-            //     JsonObject motor2JSON = doc.createNestedObject("motor2");
-            //     motor2JSON["ready"] = motor2->ready();
-            //     motor2JSON["servo"] = motor2->readServo();
-            //     motor2JSON["distance"] = motor2->currentDistance();
-            //     motor2JSON["distance_error"] = motor2->currentDistanceError();
-            //     motor2JSON["distance_steering"] = motor2->currentDistanceSteering();
-            //     motor2JSON["velocity"] = motor2->currentVelocity();
-            //     motor2JSON["velocity_error"] = motor2->currentDistanceError();
-            //     motor2JSON["velocity_steering"] = motor2->currentVelocityError();
-            //     motor2JSON["steering"] = motor2->currentSteering();
-            //     JsonObject motor3JSON = doc.createNestedObject("motor3");
-            //     motor3JSON["ready"] = motor3->ready();
-            //     motor3JSON["servo"] = motor3->readServo();
-            //     motor3JSON["distance"] = motor3->currentDistance();
-            //     motor3JSON["distance_error"] = motor3->currentDistanceError();
-            //     motor3JSON["distance_steering"] = motor3->currentDistanceSteering();
-            //     motor3JSON["velocity"] = motor3->currentVelocity();
-            //     motor3JSON["velocity_error"] = motor3->currentDistanceError();
-            //     motor3JSON["velocity_steering"] = motor3->currentVelocityError();
-            //     motor3JSON["steering"] = motor3->currentSteering();
-            //     JsonObject motor4JSON = doc.createNestedObject("motor4");
-            //     motor4JSON["ready"] = motor4->ready();
-            //     motor4JSON["servo"] = motor4->readServo();
-            //     motor4JSON["distance"] = motor4->currentDistance();
-            //     motor4JSON["distance_error"] = motor4->currentDistanceError();
-            //     motor4JSON["distance_steering"] = motor4->currentDistanceSteering();
-            //     motor4JSON["velocity"] = motor4->currentVelocity();
-            //     motor4JSON["velocity_error"] = motor4->currentDistanceError();
-            //     motor4JSON["velocity_steering"] = motor4->currentVelocityError();
-            //     motor4JSON["steering"] = motor4->currentSteering();
-            // }
-            serializeJson(doc, Serial);
-            Serial.println("");
+        StaticJsonDocument<1536> doc;
+        doc["micros"] = micros();
+        doc["message_type"] = "STATUS";
+        if(mReady){
+            doc["status"] = "ready";
+        }else{
+            doc["status"] = "busy";
         }
+        doc["queue_l"] = moveQueue->item_count();
+        doc["int_temp"] = temp;
+        JsonObject battery = doc.createNestedObject("battery");
+        battery["voltage"] = this->battery.readVoltage();
+        JsonObject imu = doc.createNestedObject("imu");
+        JsonObject quaternion = imu.createNestedObject("quaternion");
+        quaternion["w"] = quat.w();
+        quaternion["x"] = quat.x();
+        quaternion["y"] = quat.y();
+        quaternion["z"] = quat.z();
+        JsonObject gyroscope = imu.createNestedObject("gyroscope");
+        gyroscope["x"] = angVelocityData.gyro.x;
+        gyroscope["y"] = angVelocityData.gyro.y;
+        gyroscope["z"] = angVelocityData.gyro.z;
+        JsonObject accelerometer = imu.createNestedObject("accelerometer");
+        accelerometer["x"] = angVelocityData.acceleration.x;
+        accelerometer["y"] = angVelocityData.acceleration.y;
+        accelerometer["z"] = angVelocityData.acceleration.z;
+
+        if(this->gps->fix){
+            JsonObject gps = doc.createNestedObject("gps");
+            gps["fix_quality"] = this->gps->fixquality;
+            gps["satellites"] = this->gps->satellites;
+            gps["speed"] = this->gps->speed;
+            gps["angle"] = this->gps->angle;
+            gps["altitude"] = this->gps->altitude;
+
+            float gpsDecimalLatitude = 0.0;
+            float gpsDecimalLongitude = 0.0;
+
+            int gps_DD_latitude = int(this->gps->latitude/100.0);
+            float gps_MMMM_latitude = this->gps->latitude - 100.0*gps_DD_latitude;
+            gpsDecimalLatitude = gps_DD_latitude + float(gps_MMMM_latitude)/60.0;
+
+            int gps_DDD_longitude = int(this->gps->longitude/100.0);
+            float gps_MMMM_longitude = this->gps->longitude - 100.0*gps_DDD_longitude;
+            gpsDecimalLongitude = gps_DDD_longitude + float(gps_MMMM_longitude)/60.0;
+
+            gps["dec_latitude"] = gpsDecimalLatitude;
+            gps["dec_longitude"] = gpsDecimalLongitude;
+        }
+
+        if(!currentMoveDone_){
+            JsonObject moveProgress = doc.createNestedObject("move_progress");
+            double motor1Progress = motor1->moveProgress();
+            double motor2Progress = motor2->moveProgress();
+            double motor3Progress = motor3->moveProgress();
+            double motor4Progress = motor4->moveProgress();
+            moveProgress["progress"] = (motor1Progress + motor2Progress + motor3Progress + motor4Progress)/4.0;
+            moveProgress["uuid"] = currentMove.moveUUID;
+            moveProgress["part"] = currentMove.movePart;
+            moveProgress["max_parts"] = currentMove.maxMoveParts;
+            moveProgress["type"] = currentMove.maxMoveParts;
+        }
+
+
+
+        // if(!mReady){
+        //     JsonObject motor1JSON = doc.createNestedObject("motor1");
+        //     motor1JSON["ready"] = motor1->ready();
+        //     motor1JSON["servo"] = motor1->readServo();
+        //     motor1JSON["distance"] = motor1->currentDistance();
+        //     motor1JSON["distance_error"] = motor1->currentDistanceError();
+        //     motor1JSON["distance_steering"] = motor1->currentDistanceSteering();
+        //     motor1JSON["velocity"] = motor1->currentVelocity();
+        //     motor1JSON["velocity_error"] = motor1->currentDistanceError();
+        //     motor1JSON["velocity_steering"] = motor1->currentVelocityError();
+        //     motor1JSON["steering"] = motor1->currentSteering();
+        //     JsonObject motor2JSON = doc.createNestedObject("motor2");
+        //     motor2JSON["ready"] = motor2->ready();
+        //     motor2JSON["servo"] = motor2->readServo();
+        //     motor2JSON["distance"] = motor2->currentDistance();
+        //     motor2JSON["distance_error"] = motor2->currentDistanceError();
+        //     motor2JSON["distance_steering"] = motor2->currentDistanceSteering();
+        //     motor2JSON["velocity"] = motor2->currentVelocity();
+        //     motor2JSON["velocity_error"] = motor2->currentDistanceError();
+        //     motor2JSON["velocity_steering"] = motor2->currentVelocityError();
+        //     motor2JSON["steering"] = motor2->currentSteering();
+        //     JsonObject motor3JSON = doc.createNestedObject("motor3");
+        //     motor3JSON["ready"] = motor3->ready();
+        //     motor3JSON["servo"] = motor3->readServo();
+        //     motor3JSON["distance"] = motor3->currentDistance();
+        //     motor3JSON["distance_error"] = motor3->currentDistanceError();
+        //     motor3JSON["distance_steering"] = motor3->currentDistanceSteering();
+        //     motor3JSON["velocity"] = motor3->currentVelocity();
+        //     motor3JSON["velocity_error"] = motor3->currentDistanceError();
+        //     motor3JSON["velocity_steering"] = motor3->currentVelocityError();
+        //     motor3JSON["steering"] = motor3->currentSteering();
+        //     JsonObject motor4JSON = doc.createNestedObject("motor4");
+        //     motor4JSON["ready"] = motor4->ready();
+        //     motor4JSON["servo"] = motor4->readServo();
+        //     motor4JSON["distance"] = motor4->currentDistance();
+        //     motor4JSON["distance_error"] = motor4->currentDistanceError();
+        //     motor4JSON["distance_steering"] = motor4->currentDistanceSteering();
+        //     motor4JSON["velocity"] = motor4->currentVelocity();
+        //     motor4JSON["velocity_error"] = motor4->currentDistanceError();
+        //     motor4JSON["velocity_steering"] = motor4->currentVelocityError();
+        //     motor4JSON["steering"] = motor4->currentSteering();
+        // }
+        serializeJson(doc, Serial);
+        Serial.println("");
     }
 
 };
