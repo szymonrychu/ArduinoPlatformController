@@ -19,6 +19,7 @@ RUN set -xe;\
         ros-noetic-diagnostic-updater \
         ros-noetic-hector-localization \
         ros-noetic-hector-map-server \
+        hector_geotiff_launch \
         ;\
     rm -rf /var/lib/apt/lists/*;\
     useradd -m -s /bin/bash -G sudo,dialout ros;\
