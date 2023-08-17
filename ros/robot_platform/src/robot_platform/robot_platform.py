@@ -7,6 +7,8 @@ import numpy as np
 import tf2_ros
 import tf_conversions
 
+from math import pi as PI
+
 from std_msgs.msg import String
 from geometry_msgs.msg import Pose, TransformStamped
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
@@ -19,7 +21,7 @@ from .serial_utils import SerialWrapper
 from .message_utils import parse_response, Response, MoveStatus, GPSStatus, BatteryStatus, IMUStatus, MoveRequest
 from .tf_helpers import difference_between_Poses
 
-def create_static_transform(root_frame_id, child_frame_id, X=0, Y=0, Z=0, Roll=0, Pitch=0, Yaw=0, timestamp:int=None):
+def create_static_transform(root_frame_id:str, child_frame_id:str, X:float=0, Y:float=0, Z:float=0, Roll:float=0, Pitch:float=0, Yaw:float=0, timestamp:int=None) -> TransformStamped:
     t = TransformStamped()
     t.header.stamp = timestamp or rospy.Time.now()
     t.header.frame_id = root_frame_id
@@ -149,7 +151,8 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
 
     def handle_imu_status(self, status:IMUStatus):
         self._imu_state_publisher.publish(status.parse_ROS_IMU(self._robot_frame_id))
-        self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id, Z=0.1))
+        
+        self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id, Z=0.1, Yaw=PI/2))
         self._tf_broadcaster.sendTransform(status.parse_ROS_TF(self._robot_to_map_projection_frame_id, self._robot_frame_id))
         self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, self._rplidar_frame_id, Y=0.1, Z=0.1))
 
