@@ -154,7 +154,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         
         self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id, Z=0.1))
         self._tf_broadcaster.sendTransform(status.parse_ROS_TF(self._robot_to_map_projection_frame_id, self._robot_frame_id))
-        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, self._rplidar_frame_id, Y=0.1, Z=0.1))
+        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, self._rplidar_frame_id, X=0.1, Z=0.1))
 
     def __handle_goal_pose_input_data(self, goal_pose:Pose):
         pose_difference = difference_between_Poses(self._current_pose, goal_pose)
