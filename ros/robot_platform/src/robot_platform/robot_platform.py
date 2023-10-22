@@ -10,7 +10,7 @@ import tf_conversions
 from math import pi as PI
 
 from std_msgs.msg import String
-from geometry_msgs.msg import Pose, TransformStamped
+from geometry_msgs.msg import PoseStamped, Pose, TransformStamped
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 
 from uuid import UUID
@@ -89,7 +89,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         rospy.Subscriber(raw_input_topic, String, self._write_raw_data)
 
         goal_input_topic = rospy.get_param('~goal_move_input_topic')
-        rospy.Subscriber(goal_input_topic, Pose, self.__handle_goal_pose_input_data)
+        rospy.Subscriber(goal_input_topic, PoseStamped, self.__handle_goal_pose_input_data)
 
         raw_output_topic = rospy.get_param('~raw_output_topic')
         self._raw_log_publisher = rospy.Publisher(raw_output_topic, String)
@@ -156,8 +156,9 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         self._tf_broadcaster.sendTransform(status.parse_ROS_TF(self._robot_to_map_projection_frame_id, self._robot_frame_id))
         self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, self._rplidar_frame_id, X=0.1, Z=0.1))
 
-    def __handle_goal_pose_input_data(self, goal_pose:Pose):
-        pose_difference = difference_between_Poses(self._current_pose, goal_pose)
+    def __handle_goal_pose_input_data(self, goal_pose:PoseStamped):
+        pose_difference = difference_between_Poses(self._current_pose, goal_pose.pose)
+        rospy.loginfo(str(pose_difference))
 
     def handler_error_platform_output(self, response:Response):
         rospy.logerr(response)
