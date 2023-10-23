@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator, ValidationError, ConfigDict
+from pydantic import BaseModel, Field, validator, ValidationError, ConfigDict, ValidationError
 from typing import Optional, List
 from uuid import uuid4, UUID
 import json
@@ -193,6 +193,10 @@ def parse_response(raw_input:str) -> Response:
         if message_type in ['ERROR', 'SUCCESS']:
             return AckResponse.model_validate(message_json)
     except json.decoder.JSONDecodeError as _json_error:
+        rospy.logerr(f"Couldn't parse JSON: '{raw_input}'")
+        return None
+    except ValidationError as pydantic_error:
+        rospy.logerr(f"Couldn't parse Pydantic: '{raw_input}'")
         return None
     
 def encode_request(req:Request) -> str:

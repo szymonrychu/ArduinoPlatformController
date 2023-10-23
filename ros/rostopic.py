@@ -22,3 +22,18 @@ class FireForgetPublisher():
         rospy.spin()
 
 FireForgetPublisher(sys.argv[1], sys.argv[2]).start()
+
+'''
+~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
+   '{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "UUID":"a5ad3b48-71d1-11ee-b962-0242ac120002"}'
+~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
+   '{"message_type":"forward", "move_distance":-0.25, "move_velocity": 0.5, "UUID":"a5ad3b48-71d1-11ee-b962-0242ac120002"}'
+
+~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
+   '{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "UUID":"a5ad3b48-71d1-11ee-b962-0242ac120002"}'
+~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
+   '{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "UUID":"a5ad3b48-71d1-11ee-b962-0242ac120002"}'
+
+~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
+   '{"message_type":"sequentional_move","moves":[{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "UUID":"2669a2ee-71d2-11ee-b962-0242ac120002"},{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "UUID":"2a0d6d86-71d2-11ee-b962-0242ac120002"}]}'
+'''
