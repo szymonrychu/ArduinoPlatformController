@@ -195,7 +195,10 @@ def parse_response(raw_input:str) -> Response:
     except json.decoder.JSONDecodeError as _json_error:
         rospy.logerr(f"Couldn't parse JSON: '{raw_input}'")
         return None
-    except ValidationError as pydantic_error:
+    except ValidationError as _pydantic_error:
+        rospy.logerr(f"Couldn't parse Pydantic: '{raw_input}'")
+        return None
+    except AttributeError as _attribute_error:
         rospy.logerr(f"Couldn't parse Pydantic: '{raw_input}'")
         return None
     
