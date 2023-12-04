@@ -101,14 +101,14 @@ include_directories(
 )
 
 ## Declare a cpp executable
-add_executable(i2c_imu_node src/i2c_imu_node.cpp)
+add_executable(i2c_imu src/i2c_imu_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(i2c_imu_node i2c_imu_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(i2c_imu_node
+target_link_libraries(i2c_imu
   RTIMULib
   ${catkin_LIBRARIES}
 )
@@ -128,7 +128,7 @@ target_link_libraries(i2c_imu_node
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS i2c_imu_node
+install(TARGETS i2c_imu
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
