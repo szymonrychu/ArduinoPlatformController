@@ -33,7 +33,7 @@ RUN set -xe;\
     make install;\
     ldconfig;\
     rm -rf /home/ros/RTIMULib2;\
-    useradd -m -s /bin/bash -G sudo,dialout ros;\
+    useradd -m -s /bin/bash -G sudo,dialout,i2c ros;\
     echo 'ros ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ros;\
     mkdir -p /home/ros/catkin_ws/src;\
     mkdir -p /home/ros/arduino;\
