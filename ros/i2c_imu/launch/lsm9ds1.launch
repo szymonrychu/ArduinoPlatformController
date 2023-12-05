@@ -6,17 +6,9 @@
 	<node name="i2c_imu" pkg="i2c_imu" type="i2c_imu_node" ns="imu" output="screen">
 			<param name="imu_frame" value="imu_link" />
 			
-			<param name="i2c_bus" value="0" />
+			<param name="i2c_bus" value="1" />
 			
-			<!-- <param name="i2c_slave_address" value="1e" /> -->
-			<!--imu_type:
-				1 = Null: used when data is provided from a remote IMU
-				2 = InvenSense MPU-9150
-				3 = STM L3GD20H + LSM303D
-				4 = STM L3GD20 + LSM303DLHC
-				5 = STM LSM9DS0
-				6 = InvenSense MPU-9250
-			-->
+			<param name="i2c_slave_address" value="107" />
 			<param name="imu_type" value="6" />
 			
 			<!--fusion_type:
