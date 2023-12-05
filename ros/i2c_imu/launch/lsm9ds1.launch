@@ -8,7 +8,7 @@
 			
 			<param name="i2c_bus" value="0" />
 			
-			<param name="i2c_slave_address" value="104" />
+			<!-- <param name="i2c_slave_address" value="1e" /> -->
 			<!--imu_type:
 				1 = Null: used when data is provided from a remote IMU
 				2 = InvenSense MPU-9150
@@ -17,7 +17,7 @@
 				5 = STM LSM9DS0
 				6 = InvenSense MPU-9250
 			-->
-			<param name="imu_type" value="2" />
+			<param name="imu_type" value="6" />
 			
 			<!--fusion_type:
 				0 = RTFUSION_TYPE_NULL: just a dummy to keep things happy if not needed
