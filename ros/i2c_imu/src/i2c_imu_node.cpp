@@ -211,9 +211,10 @@ bool I2cImu::ImuSettings::loadSettings()
 	if(settings_nh_->getParam("i2c_bus", temp_int))
 		m_I2CBus = (unsigned char) temp_int;
 
-	if(settings_nh_->getParam("i2c_slave_address", temp_slave_address))
-		m_I2CSlaveAddress = (unsigned char) temp_slave_address;
+	// if(settings_nh_->getParam("i2c_slave_address", temp_slave_address))
+	// 	m_I2CSlaveAddress = (unsigned char) temp_slave_address;
 
+	m_I2CSlaveAddress = 107;
 		
 
 	settings_nh_->getParam("axis_rotation", m_axisRotation);
