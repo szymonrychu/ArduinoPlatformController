@@ -46,8 +46,7 @@ RUN git clone https://github.com/szymonrychu/RTIMULib2.git /home/ros/RTIMULib2;\
     cmake ..;\
     make -j4;\
     make install;\
-    ldconfig;\
-    rm -rf /home/ros/RTIMULib2
+    ldconfig
 
 RUN set -xe;\
     bash -c "\
