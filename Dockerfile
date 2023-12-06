@@ -37,11 +37,11 @@ RUN set -xe;\
         source /opt/ros/${ROS_DISTRO}/setup.bash;\
         rosdep update"
 
-COPY ./ros_libraries/ /home/ros/
+COPY ./ros_libraries/RTIMULib /home/ros/RTIMULib
 
-RUN cd /home/ros/ros_libraries/RTIMULib2;\
-    mkdir -p ./RTIMULib/build;\
-    cd ./RTIMULib/build;\
+RUN cd /home/ros/RTIMULib;\
+    mkdir -p build;\
+    cd build;\
     cmake ..;\
     make -j4;\
     make install;\
