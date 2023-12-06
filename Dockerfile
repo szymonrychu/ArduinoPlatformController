@@ -39,7 +39,7 @@ RUN set -xe;\
 
 COPY ./ros_libraries/ /home/ros/
 
-RUN cd /home/ros/RTIMULib2;\
+RUN cd /home/ros/ros_libraries/RTIMULib2;\
     mkdir -p ./RTIMULib/build;\
     cd ./RTIMULib/build;\
     cmake ..;\
