@@ -205,6 +205,7 @@ bool I2cImu::ImuSettings::loadSettings()
 	m_imuType = 6;
 	m_I2CSlaveAddress = 0x6b;
 
+
 	// m_magSlaveAddr = (unsigned char) (30);
 
 
