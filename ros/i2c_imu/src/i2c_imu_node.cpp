@@ -28,8 +28,7 @@
 #define G_2_MPSS 9.80665
 #define uT_2_T 1000000
 
-class I2cImu
-{
+class I2cImu{
 public:
 	I2cImu();
 
@@ -201,20 +200,13 @@ void I2cImu::update()
 bool I2cImu::ImuSettings::loadSettings()
 {
 	ROS_INFO("%s: reading IMU parameters from param server", __FUNCTION__);
-	int temp_int;
-	int temp_slave_address;
+
+	m_I2CBus = (unsigned char) 1;
+	m_imuType = 6;
+	m_I2CSlaveAddress = (unsigned char) 0x6b;
 
 	// General
-	settings_nh_->getParam("imu_type", m_imuType);
 	settings_nh_->getParam("fusion_type", m_fusionType);
-
-	if(settings_nh_->getParam("i2c_bus", temp_int))
-		m_I2CBus = (unsigned char) temp_int;
-
-	// if(settings_nh_->getParam("i2c_slave_address", temp_slave_address))
-	// 	m_I2CSlaveAddress = (unsigned char) temp_slave_address;
-
-	m_I2CSlaveAddress = (unsigned char) 0x6b;
 		
 
 	settings_nh_->getParam("axis_rotation", m_axisRotation);
@@ -222,63 +214,6 @@ bool I2cImu::ImuSettings::loadSettings()
 	//double declination_radians;
 	//settings_nh_->param("magnetic_declination", declination_radians, 0.0);
 	//m_compassAdjDeclination = angles::to_degrees(declination_radians);
-
-	//MPU9150
-	settings_nh_->getParam("mpu9150/gyro_accel_sample_rate", m_MPU9150GyroAccelSampleRate);
-	settings_nh_->getParam("mpu9150/compass_sample_rate", m_MPU9150CompassSampleRate);
-	settings_nh_->getParam("mpu9150/accel_full_scale_range", m_MPU9150AccelFsr);
-	settings_nh_->getParam("mpu9150/gyro_accel_low_pass_filter", m_MPU9150GyroAccelLpf);
-	settings_nh_->getParam("mpu9150/gyro_full_scale_range", m_MPU9150GyroFsr);
-
-	//MPU9250
-	settings_nh_->getParam("mpu9250/gyro_accel_sample_rate", m_MPU9250GyroAccelSampleRate);
-	settings_nh_->getParam("mpu9250/compass_sample_rate", m_MPU9250CompassSampleRate);
-	settings_nh_->getParam("mpu9250/accel_full_scale_range", m_MPU9250AccelFsr);
-	settings_nh_->getParam("mpu9250/accel_low_pass_filter", m_MPU9250AccelLpf);
-	settings_nh_->getParam("mpu9250/gyro_full_scale_range", m_MPU9250GyroFsr);
-	settings_nh_->getParam("mpu9250/gyro_low_pass_filter", m_MPU9250GyroLpf);
-
-	//GD20HM303D
-	settings_nh_->getParam("GD20HM303D/gyro_sample_rate", m_GD20HM303DGyroSampleRate);
-	settings_nh_->getParam("GD20HM303D/accel_sample_rate", m_GD20HM303DAccelSampleRate);
-	settings_nh_->getParam("GD20HM303D/compass_sample_rate", m_GD20HM303DCompassSampleRate);
-	settings_nh_->getParam("GD20HM303D/accel_full_scale_range", m_GD20HM303DAccelFsr);
-	settings_nh_->getParam("GD20HM303D/gyro_full_scale_range", m_GD20HM303DGyroFsr);
-	settings_nh_->getParam("GD20HM303D/compass_full_scale_range", m_GD20HM303DCompassFsr);
-	settings_nh_->getParam("GD20HM303D/accel_low_pass_filter", m_GD20HM303DAccelLpf);
-	settings_nh_->getParam("GD20HM303D/gyro_high_pass_filter", m_GD20HM303DGyroHpf);
-	settings_nh_->getParam("GD20HM303D/gyro_bandwidth", m_GD20HM303DGyroBW);
-
-	//GD20M303DLHC
-	settings_nh_->getParam("GD20M303DLHC/gyro_sample_rate",m_GD20M303DLHCGyroSampleRate);
-	settings_nh_->getParam("GD20M303DLHC/accel_sample_rate",m_GD20M303DLHCAccelSampleRate);
-	settings_nh_->getParam("GD20M303DLHC/compass_sample_rate",m_GD20M303DLHCCompassSampleRate);
-	settings_nh_->getParam("GD20M303DLHC/accel_full_scale_range",m_GD20M303DLHCAccelFsr);
-	settings_nh_->getParam("GD20M303DLHC/gyro_full_scale_range",m_GD20M303DLHCGyroFsr);
-	settings_nh_->getParam("GD20M303DLHC/compass_full_scale_range",m_GD20M303DLHCCompassFsr);
-	settings_nh_->getParam("GD20M303DLHC/gyro_high_pass_filter",m_GD20M303DLHCGyroHpf);
-	settings_nh_->getParam("GD20M303DLHC/gyro_bandwidth",m_GD20M303DLHCGyroBW);
-
-	//GD20HM303DLHC
-	settings_nh_->getParam("GD20HM303DLHC/gyro_sample_rate", m_GD20HM303DLHCGyroSampleRate);
-	settings_nh_->getParam("GD20HM303DLHC/accel_sample_rate",m_GD20HM303DLHCAccelSampleRate);
-	settings_nh_->getParam("GD20HM303DLHC/compass_sample_rate",m_GD20HM303DLHCCompassSampleRate);
-	settings_nh_->getParam("GD20HM303DLHC/accel_full_scale_range",m_GD20HM303DLHCAccelFsr);
-	settings_nh_->getParam("GD20HM303DLHC/gyro_full_scale_range",m_GD20HM303DLHCGyroFsr);
-	settings_nh_->getParam("GD20HM303DLHC/compass_full_scale_range",m_GD20HM303DLHCCompassFsr);
-	settings_nh_->getParam("GD20HM303DLHC/gyro_high_pass_filter",m_GD20HM303DLHCGyroHpf);
-	settings_nh_->getParam("GD20HM303DLHC/gyro_bandwidth",m_GD20HM303DLHCGyroBW);
-
-	//LSM9DS0
-	settings_nh_->getParam("LSM9DS0/gyro_sample_rate",m_LSM9DS0GyroSampleRate);
-	settings_nh_->getParam("LSM9DS0/accel_sample_rate",m_LSM9DS0AccelSampleRate);
-	settings_nh_->getParam("LSM9DS0/compass_sample_rate",m_LSM9DS0CompassSampleRate);
-	settings_nh_->getParam("LSM9DS0/accel_full_scale_range",m_LSM9DS0AccelFsr);
-	settings_nh_->getParam("LSM9DS0/gyro_full_scale_range",m_LSM9DS0GyroFsr);
-	settings_nh_->getParam("LSM9DS0/compass_full_scale_range",m_LSM9DS0CompassFsr);
-	settings_nh_->getParam("LSM9DS0/accel_low_pass_filter",m_LSM9DS0AccelLpf);
-	settings_nh_->getParam("LSM9DS0/gyro_high_pass_filter",m_LSM9DS0GyroHpf);
-	settings_nh_->getParam("LSM9DS0/gyro_bandwidth",m_LSM9DS0GyroBW);
 
 	//LSM9DS1
 	settings_nh_->getParam("LSM9DS1/gyro_sample_rate",m_LSM9DS1GyroSampleRate);
