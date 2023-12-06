@@ -30,13 +30,6 @@ RUN set -xe;\
     mkdir -p /home/ros/arduino;\
     chown -R ros /opt/ros /home/ros
 
-USER ros
-
-RUN set -xe;\
-    bash -c "\
-        source /opt/ros/${ROS_DISTRO}/setup.bash;\
-        rosdep update"
-
 COPY ./ros_libraries/RTIMULib /home/ros/RTIMULib
 
 RUN cd /home/ros/RTIMULib;\
@@ -46,6 +39,13 @@ RUN cd /home/ros/RTIMULib;\
     make -j4;\
     make install;\
     ldconfig
+
+USER ros
+
+RUN set -xe;\
+    bash -c "\
+        source /opt/ros/${ROS_DISTRO}/setup.bash;\
+        rosdep update"
 
 COPY ./ros/ /home/ros/catkin_ws/src/
 
