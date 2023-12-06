@@ -24,7 +24,7 @@ RUN set -xe;\
         vim \
         ;\
     rm -rf /var/lib/apt/lists/*;\
-    git clone https://github.com/HongshiTan/RTIMULib2 /home/ros/RTIMULib2;\
+    git clone https://github.com/szymonrychu/RTIMULib2.git /home/ros/RTIMULib2;\
     cd /home/ros/RTIMULib2;\
     mkdir -p ./RTIMULib/build;\
     cd ./RTIMULib/build;\
