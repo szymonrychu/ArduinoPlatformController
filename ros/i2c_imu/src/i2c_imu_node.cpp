@@ -22,8 +22,8 @@
 #include <sensor_msgs/MagneticField.h>
 #include <angles/angles.h>
 
-#include "RTIMULib.h"
-#include "RTIMUSettings.h"
+#include "RTIMULib/RTIMULib.h"
+#include "RTIMULib/RTIMUSettings.h"
 
 #define G_2_MPSS 9.80665
 #define uT_2_T 1000000

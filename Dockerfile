@@ -37,16 +37,17 @@ RUN set -xe;\
         source /opt/ros/${ROS_DISTRO}/setup.bash;\
         rosdep update"
 
-COPY ./ros/ /home/ros/catkin_ws/src/
+COPY ./ros_libraries/ /home/ros/
 
-RUN git clone https://github.com/szymonrychu/RTIMULib2.git /home/ros/RTIMULib2;\
-    cd /home/ros/RTIMULib2;\
+RUN cd /home/ros/RTIMULib2;\
     mkdir -p ./RTIMULib/build;\
     cd ./RTIMULib/build;\
     cmake ..;\
     make -j4;\
     make install;\
     ldconfig
+
+COPY ./ros/ /home/ros/catkin_ws/src/
 
 RUN set -xe;\
     bash -c "\
