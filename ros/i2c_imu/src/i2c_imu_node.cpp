@@ -203,7 +203,9 @@ bool I2cImu::ImuSettings::loadSettings()
 
 	m_I2CBus = (unsigned char) 1;
 	m_imuType = 6;
-	m_I2CSlaveAddress = (unsigned char) 107-9;
+	m_accelGyroSlaveAddr = (unsigned char) 107;
+	m_magSlaveAddr = (unsigned char) 30;
+
 
 	// General
 	settings_nh_->getParam("fusion_type", m_fusionType);
