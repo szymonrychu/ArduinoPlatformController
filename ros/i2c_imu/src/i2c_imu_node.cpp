@@ -209,7 +209,6 @@ bool I2cImu::ImuSettings::loadSettings()
 
 	// General
 	settings_nh_->getParam("fusion_type", m_fusionType);
-		
 
 	settings_nh_->getParam("axis_rotation", m_axisRotation);
 	
