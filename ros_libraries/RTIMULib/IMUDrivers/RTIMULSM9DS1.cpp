@@ -55,27 +55,28 @@ bool RTIMULSM9DS1::IMUInit()
 
     //  configure IMU
 
-    m_accelGyroSlaveAddr = m_settings->m_I2CSlaveAddress;
+    m_accelGyroSlaveAddr = LSM9DS1_ADDRESS1;
 
     // work outmag address
 
-    if (m_settings->HALRead(LSM9DS1_MAG_ADDRESS0, LSM9DS1_MAG_WHO_AM_I, 1, &result, "")) {
-        if (result == LSM9DS1_MAG_ID) {
-            m_magSlaveAddr = LSM9DS1_MAG_ADDRESS0;
-        }
-    } else if (m_settings->HALRead(LSM9DS1_MAG_ADDRESS1, LSM9DS1_MAG_WHO_AM_I, 1, &result, "")) {
-        if (result == LSM9DS1_MAG_ID) {
-            m_magSlaveAddr = LSM9DS1_MAG_ADDRESS1;
-        }
-    } else if (m_settings->HALRead(LSM9DS1_MAG_ADDRESS2, LSM9DS1_MAG_WHO_AM_I, 1, &result, "")) {
-        if (result == LSM9DS1_MAG_ID) {
-            m_magSlaveAddr = LSM9DS1_MAG_ADDRESS2;
-        }
-    } else if (m_settings->HALRead(LSM9DS1_MAG_ADDRESS3, LSM9DS1_MAG_WHO_AM_I, 1, &result, "")) {
-        if (result == LSM9DS1_MAG_ID) {
-            m_magSlaveAddr = LSM9DS1_MAG_ADDRESS3;
-        }
-    }
+    // if (m_settings->HALRead(LSM9DS1_MAG_ADDRESS0, LSM9DS1_MAG_WHO_AM_I, 1, &result, "")) {
+    //     if (result == LSM9DS1_MAG_ID) {
+    //         m_magSlaveAddr = LSM9DS1_MAG_ADDRESS0;
+    //     }
+    // } else if (m_settings->HALRead(LSM9DS1_MAG_ADDRESS1, LSM9DS1_MAG_WHO_AM_I, 1, &result, "")) {
+    //     if (result == LSM9DS1_MAG_ID) {
+    //         m_magSlaveAddr = LSM9DS1_MAG_ADDRESS1;
+    //     }
+    // } else if (m_settings->HALRead(LSM9DS1_MAG_ADDRESS2, LSM9DS1_MAG_WHO_AM_I, 1, &result, "")) {
+    //     if (result == LSM9DS1_MAG_ID) {
+    //         m_magSlaveAddr = LSM9DS1_MAG_ADDRESS2;
+    //     }
+    // } else if (m_settings->HALRead(LSM9DS1_MAG_ADDRESS3, LSM9DS1_MAG_WHO_AM_I, 1, &result, "")) {
+    //     if (result == LSM9DS1_MAG_ID) {
+    //         m_magSlaveAddr = LSM9DS1_MAG_ADDRESS3;
+    //     }
+    // }
+    m_magSlaveAddr = LSM9DS1_MAG_ADDRESS2;
 
     setCalibrationData();
 
