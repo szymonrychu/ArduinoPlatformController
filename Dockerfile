@@ -24,15 +24,6 @@ RUN set -xe;\
         vim \
         ;\
     rm -rf /var/lib/apt/lists/*;\
-    git clone https://github.com/szymonrychu/RTIMULib2.git /home/ros/RTIMULib2;\
-    cd /home/ros/RTIMULib2;\
-    mkdir -p ./RTIMULib/build;\
-    cd ./RTIMULib/build;\
-    cmake ..;\
-    make -j4;\
-    make install;\
-    ldconfig;\
-    rm -rf /home/ros/RTIMULib2;\
     useradd -m -s /bin/bash -G sudo,dialout ros;\
     echo 'ros ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ros;\
     mkdir -p /home/ros/catkin_ws/src;\
@@ -41,13 +32,22 @@ RUN set -xe;\
 
 USER ros
 
-
 RUN set -xe;\
     bash -c "\
         source /opt/ros/${ROS_DISTRO}/setup.bash;\
         rosdep update"
 
 COPY ./ros/ /home/ros/catkin_ws/src/
+
+RUN git clone https://github.com/szymonrychu/RTIMULib2.git /home/ros/RTIMULib2;\
+    cd /home/ros/RTIMULib2;\
+    mkdir -p ./RTIMULib/build;\
+    cd ./RTIMULib/build;\
+    cmake ..;\
+    make -j4;\
+    make install;\
+    ldconfig;\
+    rm -rf /home/ros/RTIMULib2
 
 RUN set -xe;\
     bash -c "\
