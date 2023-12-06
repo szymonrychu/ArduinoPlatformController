@@ -41,6 +41,7 @@ RUN set -xe;\
 
 USER ros
 
+
 RUN set -xe;\
     bash -c "\
         source /opt/ros/${ROS_DISTRO}/setup.bash;\
