@@ -202,8 +202,9 @@ bool I2cImu::ImuSettings::loadSettings()
 	ROS_INFO("%s: reading IMU parameters from param server", __FUNCTION__);
 
 	m_I2CBus = (unsigned char) 1;
-	m_imuType = 0;
-	// m_I2CSlaveAddress = (unsigned char)(0x6b);
+	m_imuType = ;
+	m_I2CSlaveAddress = (char)(0x6b);
+
 	// m_magSlaveAddr = (unsigned char) (30);
 
 
