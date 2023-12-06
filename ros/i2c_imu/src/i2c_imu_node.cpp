@@ -208,7 +208,6 @@ bool I2cImu::ImuSettings::loadSettings()
 
 	// m_magSlaveAddr = (unsigned char) (30);
 
-
 	// General
 	settings_nh_->getParam("fusion_type", m_fusionType);
 		
