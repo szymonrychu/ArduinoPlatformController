@@ -19,7 +19,7 @@ docker build \
 docker run \
   --rm \
   --privileged \
-  --add-host overlord:192.168.1.48 \
+  --add-host mobile-overlord:192.168.1.49 \
   --network host \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
