@@ -2,7 +2,7 @@
 
 mkdir -p "${HOME}/config"
 
-docker run --rm --name code-server -p 8080:8080 \
+docker run --rm -p 8080:8080 \
   -v "$HOME/.local:/home/coder/.local" \
   -v "$HOME/.config:/home/coder/.config" \
   -v "$HOME/.ssh:/home/coder/.ssh" \
