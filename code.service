@@ -5,7 +5,7 @@ Requires=network.target
 
 [Service]
 User=szymonri
-ExecStart=SCRIPT_FULL_PATH/build_and_run.sh
+ExecStart=SCRIPT_FULL_PATH/code.sh
 
 [Install]
 WantedBy=multi-user.target
