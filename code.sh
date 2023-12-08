@@ -9,7 +9,7 @@ docker run --rm -p 8080:8080 \
   -v "$HOME/.gitconfig:/home/coder/.gitconfig" \
   -v "$HOME/.bash_history:/home/coder/.bash_history" \
   -v "$HOME/ArduinoPlatformController:/home/coder/ArduinoPlatformController" \
+  --network host \
   -u "$(id -u):$(id -g)" \
-  --add-host robot:192.168.1.48 \
   -e "DOCKER_USER=$USER" \
   codercom/code-server:latest
