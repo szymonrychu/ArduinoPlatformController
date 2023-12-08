@@ -3,13 +3,15 @@
 mkdir -p "${HOME}/config"
 
 docker run --rm -p 8080:8080 \
+  --privileged \
   -v "$HOME/.local:/home/coder/.local" \
   -v "$HOME/.config:/home/coder/.config" \
   -v "$HOME/.ssh:/home/coder/.ssh" \
-  -v "$HOME/.git/coder/.git" \
-  -v "/opt/ros/noetic" \
-  -v "/:/root" \
+  -v "$HOME/.gitconfig:/home/coder/.gitconfig" \
+  -v "$HOME/.bash_history:/home/coder/.bash_history" \
+  -v "/opt/ros/noetic:/opt/ros/noetic" \
   -v "$HOME/ArduinoPlatformController:/home/coder/ArduinoPlatformController" \
   -u "$(id -u):$(id -g)" \
+  --add-host robot:192.168.1.48 \
   -e "DOCKER_USER=$USER" \
   codercom/code-server:latest
