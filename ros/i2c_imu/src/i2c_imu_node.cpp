@@ -202,8 +202,8 @@ bool I2cImu::ImuSettings::loadSettings()
 	ROS_INFO("%s: reading IMU parameters from param server", __FUNCTION__);
 
 	m_I2CBus = (unsigned char) 1;
-	m_imuType = 6;
-	m_I2CSlaveAddress = 0x6b;
+	m_imuType = 7;
+	m_I2CSlaveAddress = 0x68;
 
 	// m_magSlaveAddr = (unsigned char) (30);
 
@@ -216,16 +216,12 @@ bool I2cImu::ImuSettings::loadSettings()
 	//settings_nh_->param("magnetic_declination", declination_radians, 0.0);
 	//m_compassAdjDeclination = angles::to_degrees(declination_radians);
 
-	//LSM9DS1
-	settings_nh_->getParam("LSM9DS1/gyro_sample_rate",m_LSM9DS1GyroSampleRate);
-	settings_nh_->getParam("LSM9DS1/accel_sample_rate",m_LSM9DS1AccelSampleRate);
-	settings_nh_->getParam("LSM9DS1/compass_sample_rate",m_LSM9DS1CompassSampleRate);
-	settings_nh_->getParam("LSM9DS1/accel_full_scale_range",m_LSM9DS1AccelFsr);
-	settings_nh_->getParam("LSM9DS1/gyro_full_scale_range",m_LSM9DS1GyroFsr);
-	settings_nh_->getParam("LSM9DS1/compass_full_scale_range",m_LSM9DS1CompassFsr);
-	settings_nh_->getParam("LSM9DS1/accel_low_pass_filter",m_LSM9DS1AccelLpf);
-	settings_nh_->getParam("LSM9DS1/gyro_high_pass_filter",m_LSM9DS1GyroHpf);
-	settings_nh_->getParam("LSM9DS1/gyro_bandwidth",m_LSM9DS1GyroBW);
+	settings_nh_->getParam("mpu9250/gyro_accel_sample_rate", m_MPU9250GyroAccelSampleRate);
+	settings_nh_->getParam("mpu9250/compass_sample_rate", m_MPU9250CompassSampleRate);
+	settings_nh_->getParam("mpu9250/accel_full_scale_range", m_MPU9250AccelFsr);
+	settings_nh_->getParam("mpu9250/accel_low_pass_filter", m_MPU9250AccelLpf);
+	settings_nh_->getParam("mpu9250/gyro_full_scale_range", m_MPU9250GyroFsr);
+	settings_nh_->getParam("mpu9250/gyro_low_pass_filter", m_MPU9250GyroLpf);
 
 	std::vector<double> compass_max, compass_min;
 	if (settings_nh_->getParam("calib/compass_min", compass_min)

@@ -2,17 +2,16 @@ imu_frame: imu_link
 fusion_type: 2
 
 LSM9DS1:
-  #Sample Rates
   compass_sample_rate: 25
   gyro_accel_sample_rate: 50
   
   #Accel
   accel_low_pass_filter: 4
-  accel_full_scale_range: 0
+  accel_full_scale_range: 16
   
   #Gyro
   gyro_low_pass_filter: 3
-  gyro_full_scale_range: 0
+  gyro_full_scale_range: 16
 
 #Calibration
 calib:
