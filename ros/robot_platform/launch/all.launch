@@ -7,6 +7,9 @@
   <include file="$(find freenect_launch)/launch/examples/freenect-registered-xyzrgb.launch">
   </include>
 
+  <include file="$(find i2c_imu)/launch/i2c_imu.launch">
+  </include>
+
   <include file="$(find robot_platform)/launch/rplidar_hector.launch">
   </include>
 

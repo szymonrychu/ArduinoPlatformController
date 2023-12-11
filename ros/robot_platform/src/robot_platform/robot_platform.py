@@ -85,6 +85,10 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         self._robot_frame_id = rospy.get_param('~robot_frame_id')
         self._rplidar_frame_id = rospy.get_param('~rplidar_frame_id')
 
+        self._use_external_imu = rospy.get_param('~use_external_imu')
+        if self._use_external_imu:
+            self._external_imu_topic = rospy.get_param('~external_imu_topic')
+
         raw_input_topic = rospy.get_param('~raw_input_topic')
         rospy.Subscriber(raw_input_topic, String, self._write_raw_data)
 
@@ -102,6 +106,9 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
 
         imu_state_output_topic = rospy.get_param('~imu_state_output_topic')
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
+        
+        if self._use_external_imu:
+            rospy.Subscriber(self._external_imu_topic, Imu, self.handle_external_imu_data)
 
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
 
@@ -150,10 +157,24 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         self._battery_state_publisher.publish(status.parse_ROS_Battery(self._robot_frame_id))
 
     def handle_imu_status(self, status:IMUStatus):
-        self._imu_state_publisher.publish(status.parse_ROS_IMU(self._robot_frame_id))
-        
+        if not self._use_external_imu:
+            self._imu_state_publisher.publish(status.parse_ROS_IMU(self._robot_frame_id))
+            
+            self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id, Z=0.1))
+            
+            self._tf_broadcaster.sendTransform(status.parse_ROS_TF(self._robot_to_map_projection_frame_id, self._robot_frame_id))
+            self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, self._rplidar_frame_id, X=0.1, Z=0.1))
+
+    def handle_external_imu_data(self, data:Imu):        
         self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id, Z=0.1))
-        self._tf_broadcaster.sendTransform(status.parse_ROS_TF(self._robot_to_map_projection_frame_id, self._robot_frame_id))
+
+        t = TransformStamped()
+        t.header = data.header
+        t.header.frame_id = self._robot_to_map_projection_frame_id
+        t.child_frame_id = self._robot_frame_id
+        t.transform.rotation = imu.orientation
+        self._tf_broadcaster.sendTransform(t)
+        
         self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, self._rplidar_frame_id, X=0.1, Z=0.1))
 
     def __handle_goal_pose_input_data(self, goal_pose:PoseStamped):

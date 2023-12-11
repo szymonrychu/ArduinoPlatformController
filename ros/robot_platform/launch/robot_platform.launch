@@ -16,6 +16,12 @@
   <arg name="scan_subscriber_queue_size" default="5"/>
   <param name="/use_sim_time" value="false"/>
 
+  <include file="$(find freenect_launch)/launch/examples/freenect-registered-xyzrgb.launch">
+  </include>
+
+  <include file="$(find i2c_imu)/launch/i2c_imu.launch">
+  </include>
+
   <node pkg="robot_platform" type="robot_platform" name="robot_platform" output="screen" respawn="true">
 
     <param name="serial_dev" type="string" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_13671670-if00" />
@@ -23,7 +29,10 @@
 
     <param name="raw_input_topic" type="string" value="/robot_platform/raw_serial_request" />
     <param name="goal_move_input_topic" type="string" value="/move_base_simple/goal" />
-
+  
+    <param name="use_external_imu" type="bool" value="true" />
+    <param name="external_imu_topic" type="string" value="/i2c_imu" />
+    
     <param name="raw_output_topic" type="string" value="/robot_platform/raw_serial_response" />
     <param name="battery_state_output_topic" type="string" value="/robot_platform/battery" />
     <param name="gps_state_output_topic" type="string" value="/robot_platform/gps" />
