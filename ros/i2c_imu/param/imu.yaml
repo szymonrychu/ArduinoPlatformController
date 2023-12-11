@@ -1,7 +1,7 @@
 imu_frame: imu_link
 imu_topic: /i2c_imu
 
-fusion_type: 2
+fusion_type: 1
 
 mpu9250:
   compass_sample_rate: 25

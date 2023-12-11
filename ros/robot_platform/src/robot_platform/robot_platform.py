@@ -172,7 +172,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         t.header = data.header
         t.header.frame_id = self._robot_to_map_projection_frame_id
         t.child_frame_id = self._robot_frame_id
-        t.transform.rotation = imu.orientation
+        t.transform.rotation = data.orientation
         self._tf_broadcaster.sendTransform(t)
         
         self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, self._rplidar_frame_id, X=0.1, Z=0.1))

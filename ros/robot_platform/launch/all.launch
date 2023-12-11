@@ -19,7 +19,7 @@
   <include file="$(find freenect_launch)/launch/examples/freenect-registered-xyzrgb.launch">
   </include>
 
-  <include file="$(find robot_platform)/launch/robot_platform_with_imu.launch">
+  <include file="$(find robot_platform)/launch/robot_platform.launch">
     <arg name="map_frame" value="$(arg map_frame)" />
     <arg name="base_frame" value="$(arg base_frame)" />
     <arg name="odom_frame" value="$(arg odom_frame)" />

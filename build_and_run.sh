@@ -7,11 +7,6 @@ cd "${GIT_REPO_ROOT}"
 readonly GIT_REPO_SHORT_SHA="$(git rev-parse HEAD)"
 readonly GIT_CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
-git fetch origin
-git reset "origin/${GIT_CURRENT_BRANCH}"
-
-git reset --hard
-git clean -xfd
 
 docker build \
   --tag "ros:${GIT_REPO_SHORT_SHA}" .
@@ -26,6 +21,6 @@ docker run \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
   -v /tmp/ros:/home/ros/.ros \
-  "ros:${GIT_REPO_SHORT_SHA}" roslaunch robot_platform robot_platform.launch
+  "ros:${GIT_REPO_SHORT_SHA}" roslaunch robot_platform all.launch
 
 
