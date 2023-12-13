@@ -20,6 +20,7 @@ from .log_utils import env2log
 from .serial_utils import SerialWrapper
 from .message_utils import parse_response, Response, MoveStatus, GPSStatus, BatteryStatus, IMUStatus, MoveRequest
 from .tf_helpers import difference_between_Poses
+from .move_registry import MoveRegistry
 
 def create_static_transform(root_frame_id:str, child_frame_id:str, X:float=0, Y:float=0, Z:float=0, Roll:float=0, Pitch:float=0, Yaw:float=0, timestamp:int=None) -> TransformStamped:
     t = TransformStamped()
@@ -77,9 +78,9 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
 
     def __init__(self):
         SerialROSNode.__init__(self)
+        self._move_registry = MoveRegistry()
         self._current_pose = Pose()
         self._currently_processed_move_uuid = None
-        self._move_registry = {}
         self._map_frame_id = rospy.get_param('~map_frame_id')
         self._robot_to_map_projection_frame_id = rospy.get_param('~robot_to_map_projection_frame_id')
         self._robot_frame_id = rospy.get_param('~robot_frame_id')
@@ -116,39 +117,8 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         raw_string = ros_data.data
         self.write_data(raw_string)
 
-    def request_move(self, m:MoveRequest):
-        self._move_registry[m.uuid] = m
-        self._write_raw_data(m.model_dump_json())
-
-    def __drop_move_from_registry_by_uuid(self, uuid:UUID):
-        try:
-            del self._move_registry[uuid]
-        except KeyError as _key_error:
-            rospy.logerr(f"Missing {self._currently_processed_move.uuid} move in requested moves!")
-
-    def __get_currently_processed_move(self) -> Optional[MoveRequest]:
-        if not self._currently_processed_move_uuid:
-            return None
-        return self._move_registry.get(self._currently_processed_move_uuid, None)
-
     def handle_move_status(self, status:MoveStatus):
-        if not status:
-            if self._currently_processed_move_uuid:
-                self.__drop_move_from_registry_by_uuid(status.uuid)
-            self._currently_processed_move_uuid = None
-            return
-        
-        if self._currently_processed_move_uuid != status.uuid: # new move detected
-            self.__drop_move_from_registry_by_uuid(self._currently_processed_move_uuid)
-
-        self._currently_processed_move_uuid = status.uuid
-        
-        try:
-            self._move_registry[status.uuid].progress = status.progress
-            self._move_registry[status.uuid].part = status.part
-            self._move_registry[status.uuid].max_parts = status.max_parts
-        except KeyError as _key_error:
-            rospy.logerr(f"Missing {self._currently_processed_move.uuid} move in requested moves!")
+        self._move_registry.handle_moves_update(status)
 
     def handle_gps_status(self, status:GPSStatus):
         self._gps_state_publisher.publish(status.parse_ROS_GPS(self._robot_frame_id))
