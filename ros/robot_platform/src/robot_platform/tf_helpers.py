@@ -39,8 +39,8 @@ def difference_between_Poses(p1:Pose, p2:Pose):
 
     relative_p = p2_mat - p1_mat
 
-    result.position.x = relative_p[0]
-    result.position.y = relative_p[1]
-    result.position.z = relative_p[2]
+    result.position.x = relative_p[0][0]
+    result.position.y = relative_p[1][0]
+    result.position.z = relative_p[2][0]
 
     return result
