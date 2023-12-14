@@ -7,6 +7,9 @@ cd "${GIT_REPO_ROOT}"
 readonly GIT_REPO_SHORT_SHA="$(git rev-parse HEAD)"
 readonly GIT_CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
+rm -rf /tmp/ros
+mkdir -p /tmp/ros
+chown -r 1000:1000 /tmp/ros
 
 docker build \
   --tag "ros:${GIT_REPO_SHORT_SHA}" .
