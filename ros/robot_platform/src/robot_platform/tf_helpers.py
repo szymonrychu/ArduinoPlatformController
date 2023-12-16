@@ -1,5 +1,5 @@
 from typing import Tuple
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose, Quaternion
 import tf_conversions
 import numpy as np
 
@@ -7,6 +7,10 @@ def get_RPY_from_Pose(p:Pose) -> Tuple[float, float, float]:
     return tf_conversions.transformations.euler_from_quaternion(
         p.orientation.w, p.orientation.x, p.orientation.y, p.orientation.z
     )
+
+def get_pose_from_RPY(roll:float, pitch:float, yaw:float) -> Quaternion:
+    q = tf_conversions.transformations.quaternion_from_euler(roll, pitch, yaw)
+    return Quaternion(*q)
 
 def difference_between_Poses(p1:Pose, p2:Pose):
     result = Pose()

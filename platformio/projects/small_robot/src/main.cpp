@@ -6,47 +6,115 @@
 #include <utility/imumaths.h>
 #include <Adafruit_GPS.h>
 #include <LED.h>
-#include <ServoWheel.h>
+#include <VelocityController.h>
 #include <JSONCommand.h>
 #include <ArduinoQueue.h>
+#include <Battery.h>
 
 #include "config.h"
-#include "message_utils.h"
-#include "move_utils.h"
+
+enum OutputMessageType {
+    OUTPUT_UNDEFINED,
+    OUTPUT_SUCCESS,
+    OUTPUT_ERROR
+};
+class OutputMessage{
+private:
+  OutputMessageType type;
+  char* message;
+public:
+  OutputMessage(OutputMessageType type, char* message){
+    this->type = type;
+    this->message = message;
+  }
+
+  void printJson(){
+    StaticJsonDocument<128> out;
+    out["micros"] = micros();
+    switch(this->type){
+    case OUTPUT_SUCCESS:
+        out["message_type"] = "SUCCESS";
+        break;
+    case OUTPUT_ERROR:
+        out["message_type"] = "ERROR";
+        break;
+    default:
+        out["message_type"] = "UNDEFINED";
+        break;
+    }
+    
+    out["message"] = this->message;
+    serializeJson(out, Serial);
+    Serial.println("");
+  }
+
+  bool isSuccess(){
+    return this->type == OUTPUT_SUCCESS;
+  }
+};
 
 
 #define QUEUE_SIZE_ITEMS 10
  
 #define BNO055_SAMPLERATE_DELAY_MS (10)
+
 #define MEM_LEN 256
 char buffer[MEM_LEN];
 long loopCounter = 0;
 double batteryVoltage = 0;
 
-ArduinoQueue<Move> moveQueue(QUEUE_SIZE_ITEMS);
-
-ServoWheel motor1(1, M1_ENCA, M1_ENCB, M1_HA, M1_HB, M1_SERV);
-ServoWheel motor2(2, M2_ENCA, M2_ENCB, M2_HA, M2_HB, M2_SERV);
-ServoWheel motor3(3, M3_ENCA, M3_ENCB, M3_HA, M3_HB, M3_SERV);
-ServoWheel motor4(4, M4_ENCA, M4_ENCB, M4_HA, M4_HB, M4_SERV);
+VelocityController motor1(1, M1_ENCA, M1_ENCB, M1_HA, M1_HB, M1_SERV);
+VelocityController motor2(2, M2_ENCA, M2_ENCB, M2_HA, M2_HB, M2_SERV);
+VelocityController motor3(3, M3_ENCA, M3_ENCB, M3_HA, M3_HB, M3_SERV);
+VelocityController motor4(4, M4_ENCA, M4_ENCB, M4_HA, M4_HB, M4_SERV);
 
 Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x28);
 #define GPSSerial Serial4
-Adafruit_GPS GPS(&GPSSerial);
+Adafruit_GPS gps(&GPSSerial);
 
-Servo servoPan;
-Servo servoTilt;
+ServoController servoPan(SERV_PAN);
+ServoController servoTilt(SERV_TILT);
+
 Led redLed = Led(USER_LED_1);
 Led greenLed = Led(USER_LED_2, true);
 
-MessageParser messageParser(&moveQueue, &motor1, &motor2, &motor3, &motor4);
-SensorHandler sensorHandler(&moveQueue, &bno, &GPS, &motor1, &motor2, &motor3, &motor4);
+Battery battery;
 
 void commandHandler(char* input);
 JSONCommand command = JSONCommand("\n", commandHandler);
 
 void commandHandler(char* input){
-  messageParser.parse(input).printJson();
+  DynamicJsonDocument doc(512);
+  deserializeJson(doc, input);
+  JsonObject obj = doc.as<JsonObject>();
+
+  if(!obj["motor1"].isNull()){
+    if(!obj["motor1"]["velocity"].isNull()) motor1.drive(obj["motor1"]["velocity"]);
+    if(!obj["motor1"]["angle"].isNull()) motor1.writeServo(obj["motor1"]["angle"]);
+  }
+
+  if(!obj["motor2"].isNull()){
+    if(!obj["motor2"]["velocity"].isNull()) motor2.drive(obj["motor2"]["velocity"]);
+    if(!obj["motor2"]["angle"].isNull()) motor2.writeServo(obj["motor2"]["angle"]);
+  }
+
+  if(!obj["motor3"].isNull()){
+    if(!obj["motor3"]["velocity"].isNull()) motor3.drive(obj["motor3"]["velocity"]);
+    if(!obj["motor3"]["angle"].isNull()) motor3.writeServo(obj["motor3"]["angle"]);
+  }
+
+  if(!obj["motor4"].isNull()){
+    if(!obj["motor4"]["velocity"].isNull()) motor4.drive(obj["motor4"]["velocity"]);
+    if(!obj["motor4"]["angle"].isNull()) motor4.writeServo(obj["motor4"]["angle"]);
+  }
+
+  if(!obj["pan"].isNull()){
+    if(!obj["pan"]["angle"].isNull()) servoPan.writeServo(obj["pan"]["angle"]);
+  }
+
+  if(!obj["tilt"].isNull()){
+    if(!obj["tilt"]["angle"].isNull()) servoTilt.writeServo(obj["tilt"]["angle"]);
+  }
 }
 
 void serialEvent() {
@@ -65,51 +133,114 @@ void setup(void){
   motor2.setup();
   motor3.setup();
   motor4.setup();
+  servoPan.setup();
+  servoTilt.setup();
 
-  sensorHandler.setup(BATT_MEAS_AIN, SERV_PAN, SERV_TILT);
+  gps.begin(9600);
+  gps.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  gps.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+
+  while(!bno.begin()) {
+    OutputMessage(OUTPUT_ERROR, "BNO055 init error").printJson();
+    delay(1000);
+  }
+  bno.setExtCrystalUse(true);
+  Wire.setClock(400000); // 400KHz
+
+  battery.setup(BATT_MEAS_AIN);
 
   pinMode(USER_BUTTON_1, INPUT);
   pinMode(USER_BUTTON_2, INPUT);
 }
 
 void serialEvent4() {
-  GPS.read();
-  if (GPS.newNMEAreceived()) GPS.parse(GPS.lastNMEA());
+  gps.read();
+  if (gps.newNMEAreceived()) gps.parse(gps.lastNMEA());
 }
 
 void loop(void){
   command.parse();
-
-  if(sensorHandler.motorsReady()){
-      if(!moveQueue.isEmpty()){
-          Move m = moveQueue.dequeue();
-          sensorHandler.updateCurrentMove(m);
-
-          motor1.drive(m.motor1);
-          motor2.drive(m.motor2);
-          motor3.drive(m.motor3);
-          motor4.drive(m.motor4);
-      }else{
-          sensorHandler.currentMoveDone();
-          if(!motor1.isFresh()){
-              motor1.resetDistanceVelocity();
-          }
-          if(!motor2.isFresh()){
-              motor2.resetDistanceVelocity();
-          }
-          if(!motor3.isFresh()){
-              motor3.resetDistanceVelocity();
-          }
-          if(!motor4.isFresh()){
-              motor4.resetDistanceVelocity();
-          }
-      }
-  }
-  sensorHandler.printOutput();
-
   motor1.loop();
   motor2.loop();
   motor3.loop();
   motor4.loop();
+  servoPan.loop();
+  servoTilt.loop();
+
+
+  sensors_event_t angVelocityData , accData;
+  bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
+  bno.getEvent(&accData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+  imu::Quaternion quat = bno.getQuat();
+  int8_t temp = bno.getTemp();
+
+
+  StaticJsonDocument<1024> doc;
+  doc["micros"] = micros();
+  doc["int_temp"] = temp;
+
+  JsonObject batt = doc.createNestedObject("battery");
+  batt["voltage"] = battery.readVoltage();
+
+  JsonObject imu = doc.createNestedObject("imu");
+  JsonObject quaternion = imu.createNestedObject("quaternion");
+  quaternion["w"] = quat.w();
+  quaternion["x"] = quat.x();
+  quaternion["y"] = quat.y();
+  quaternion["z"] = quat.z();
+  JsonObject gyroscope = imu.createNestedObject("gyroscope");
+  gyroscope["x"] = angVelocityData.gyro.x;
+  gyroscope["y"] = angVelocityData.gyro.y;
+  gyroscope["z"] = angVelocityData.gyro.z;
+  JsonObject accelerometer = imu.createNestedObject("accelerometer");
+  accelerometer["x"] = angVelocityData.acceleration.x;
+  accelerometer["y"] = angVelocityData.acceleration.y;
+  accelerometer["z"] = angVelocityData.acceleration.z;
+
+  if(gps.fix){
+      JsonObject gps_ = doc.createNestedObject("gps");
+      gps_["fix_quality"] = gps.fixquality;
+      gps_["satellites"] = gps.satellites;
+      gps_["speed"] = gps.speed;
+      gps_["angle"] = gps.angle;
+      gps_["altitude"] = gps.altitude;
+
+      float gpsDecimalLatitude = 0.0;
+      float gpsDecimalLongitude = 0.0;
+
+      int gps_DD_latitude = int(gps.latitude/100.0);
+      float gps_MMMM_latitude = gps.latitude - 100.0*gps_DD_latitude;
+      gpsDecimalLatitude = gps_DD_latitude + float(gps_MMMM_latitude)/60.0;
+
+      int gps_DDD_longitude = int(gps.longitude/100.0);
+      float gps_MMMM_longitude = gps.longitude - 100.0*gps_DDD_longitude;
+      gpsDecimalLongitude = gps_DDD_longitude + float(gps_MMMM_longitude)/60.0;
+
+      gps_["dec_latitude"] = gpsDecimalLatitude;
+      gps_["dec_longitude"] = gpsDecimalLongitude;
+  }
+
+  JsonObject m1 = doc.createNestedObject("motor1");
+  m1["velocity"] = motor1.currentVelocity();
+  m1["angle"] = motor1.readServo();
+
+  JsonObject m2 = doc.createNestedObject("motor2");
+  m2["velocity"] = motor2.currentVelocity();
+  m2["angle"] = motor2.readServo();
+
+  JsonObject m3 = doc.createNestedObject("motor3");
+  m3["velocity"] = motor3.currentVelocity();
+  m3["angle"] = motor3.readServo();
+
+  JsonObject m4 = doc.createNestedObject("motor4");
+  m4["velocity"] = motor4.currentVelocity();
+  m4["angle"] = motor4.readServo();
+
+  JsonObject pan = doc.createNestedObject("pan");
+  pan["angle"] = servoPan.readServo();
+
+  JsonObject tilt = doc.createNestedObject("tilt");
+  tilt["angle"] = servoTilt.readServo();
+
   delay(BNO055_SAMPLERATE_DELAY_MS);
 }

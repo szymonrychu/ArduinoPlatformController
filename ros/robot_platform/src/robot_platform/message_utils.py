@@ -4,9 +4,11 @@ from uuid import uuid4, UUID
 import json
 import rospy
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
-from geometry_msgs.msg import TransformStamped, Vector3
+from geometry_msgs.msg import TransformStamped, Vector3, PoseStamped
 
-class Response(BaseModel):
+from .tf_helpers import get_pose_from_RPY
+
+class Message(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
 class BatteryStatus(BaseModel):
@@ -84,12 +86,21 @@ class IMUStatus(BaseModel):
         t.transform.rotation = imu.orientation
         return t
 
+class ServoStatus(BaseModel):
+    angle: Optional[float] = None
+    
+    def parse_ROS_TF(self, child_frame_id:str, base_frame_id:str, translation:Vector3 = None, timestamp:int=None):
+        t = TransformStamped()
+        t.header.stamp = timestamp or rospy.Time.now()
+        t.header.frame_id = child_frame_id
+        t.child_frame_id = base_frame_id
+        if translation:
+            t.transform.translation = translation
+        t.transform.rotation = get_pose_from_RPY(0, 0, self.angle)
+        return t
 
-class MoveStatus(BaseModel):
-    progress: Optional[float] = 0
-    uuid: Optional[UUID] = None
-    part: Optional[int] = 0
-    max_parts: Optional[int] = 0
+class MotorStatus(ServoStatus):
+    velocity: Optional[float] = None
 
 class GPSStatus(BaseModel):
     fix_quality: Optional[int] = -1
@@ -118,80 +129,33 @@ class GPSStatus(BaseModel):
         return nav_sat_fix
 
 
-class StatusResponse(Response):
+class StatusResponse(Message):
     micros: int
-    message_type: str
-    status: str
-    queue_l: int
     int_temp: int
     battery: BatteryStatus
     imu: IMUStatus
-    gps: Optional[GPSStatus] = GPSStatus()
-    move_progress: Optional[MoveStatus] = None
-
-    @validator('message_type')
-    def type_is_success_or_error(cls, v):
-        if v != 'STATUS':
-            raise ValidationError('Message type not eq STATUS')
-        return v
-
-class AckResponse(Response):
-    micros: int
-    message_type: str
-    message: str
-
-    @validator('message_type')
-    def type_is_success_or_error(cls, v):
-        if v not in ['ERROR', 'SUCCESS']:
-            raise ValidationError('Message type not in [ERROR, SUCCCESS]')
-        return v
+    gps: Optional[GPSStatus] = None
+    motor1: MotorStatus
+    motor2: MotorStatus
+    motor3: MotorStatus
+    motor4: MotorStatus
+    pan: ServoStatus
+    tilt: ServoStatus
 
 
+class Request(Message):
+    motor1: Optional[MotorStatus] = MotorStatus()
+    motor2: Optional[MotorStatus] = MotorStatus()
+    motor3: Optional[MotorStatus] = MotorStatus()
+    motor4: Optional[MotorStatus] = MotorStatus()
+    pan: Optional[ServoStatus] = ServoStatus()
+    tilt: Optional[ServoStatus] = ServoStatus()
 
 
-class Request(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-class ResetRequest(Request):
-    message_type: str = Field(default='reset')
-
-class ResetQueueRequest(Request):
-    message_type: str = Field(default='reset_queue')
-
-class StopRequest(Request):
-    message_type: str = Field(default='stop')
-
-class MoveRequest(Request, MoveStatus):
-    uuid: UUID = Field(default_factory=uuid4)
-
-class TurnRequest(MoveRequest):
-    message_type: str = Field(default='turn')
-    turn_angle: float
-    turn_velocity: float
-    turn_x: float = Field(default=0)
-    turn_y: float = Field(default=0)
-
-class ForwardRequest(MoveRequest):
-    message_type: str = Field(default='forward')
-    move_distance: float
-    move_velocity: float
-    move_angle: float = Field(default=0)
-
-class SequentionalMove(Request):
-    message_type: str = Field(default='sequentional_move')
-    moves: List[MoveRequest]
-
-
-
-def parse_response(raw_input:str) -> Response:
+def parse_response(raw_input:str) -> StatusResponse:
     try:
         message_json = json.loads(raw_input)
-        message_type = message_json["message_type"]
-
-        if message_type == 'STATUS':
-            return StatusResponse.model_validate(message_json)
-        if message_type in ['ERROR', 'SUCCESS']:
-            return AckResponse.model_validate(message_json)
+        return StatusResponse.model_validate(message_json)
     except json.decoder.JSONDecodeError as _json_error:
         rospy.logerr(f"Couldn't parse JSON: '{raw_input}'")
         return None

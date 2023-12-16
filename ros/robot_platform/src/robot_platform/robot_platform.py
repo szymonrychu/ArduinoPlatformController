@@ -18,9 +18,9 @@ from typing import Optional
 
 from .log_utils import env2log
 from .serial_utils import SerialWrapper
-from .message_utils import parse_response, Response, MoveStatus, GPSStatus, BatteryStatus, IMUStatus, MoveRequest
+from .message_utils import parse_response, GPSStatus, StatusResponse, BatteryStatus, IMUStatus, MotorStatus, ServoStatus
 from .tf_helpers import difference_between_Poses
-from .move_registry import MoveRegistry
+from .odom_handler import OdomHanlder
 
 def create_static_transform(root_frame_id:str, child_frame_id:str, X:float=0, Y:float=0, Z:float=0, Roll:float=0, Pitch:float=0, Yaw:float=0, timestamp:int=None) -> TransformStamped:
     t = TransformStamped()
@@ -78,8 +78,8 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
 
     def __init__(self):
         SerialROSNode.__init__(self)
-        self._move_registry = MoveRegistry()
         self._current_pose = Pose()
+        self._odom_handler = OdomHanlder()
         self._currently_processed_move_uuid = None
         self._map_frame_id = rospy.get_param('~map_frame_id')
         self._robot_to_map_projection_frame_id = rospy.get_param('~robot_to_map_projection_frame_id')
@@ -107,6 +107,9 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
 
         imu_state_output_topic = rospy.get_param('~imu_state_output_topic')
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
+
+        odom_state_output_topic = rospy.get_param('~odom_state_output_topic')
+        self._odom_state_publisher = rospy.Publisher(odom_state_output_topic, PoseStamped)
         
         if self._use_external_imu:
             rospy.Subscriber(self._external_imu_topic, Imu, self.handle_external_imu_data)
@@ -114,11 +117,38 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
 
     def _write_raw_data(self, ros_data):
+        '''
+        {"motor1":{"angle":0.78539},"motor2":{"angle":0.78539},"motor3":{"angle":0.78539},"motor4":{"angle":0.78539}}
+        {"motor1":{"angle":1.04719},"motor2":{"angle":1.04719},"motor3":{"angle":1.04719},"motor4":{"angle":1.04719}}
+        {"motor1":{"velocity":0},"motor2":{"velocity":0},"motor3":{"velocity":0},"motor4":{"velocity":0}}
+        '''
         raw_string = ros_data.data
         self.write_data(raw_string)
 
-    def handle_move_status(self, status:MoveStatus):
-        self._move_registry.handle_moves_update(status)
+    def handle_motors_servos_status(self, motor1:MotorStatus, motor2:MotorStatus, motor3:MotorStatus, motor4:MotorStatus, pan:ServoStatus, tilt:ServoStatus):
+
+        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'motor1_base', X=-0.2, Y=0.2))
+        self._tf_broadcaster.sendTransform(motor1.parse_ROS_TF('motor1_base', 'motor1'))
+        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'motor2_base', X=0.2, Y=0.2))
+        self._tf_broadcaster.sendTransform(motor2.parse_ROS_TF('motor2_base', 'motor2'))
+        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'motor3_base', X=-0.2, Y=-0.2))
+        self._tf_broadcaster.sendTransform(motor3.parse_ROS_TF('motor3_base', 'motor3'))
+        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'motor4_base', X=-0.2, Y=-0.2))
+        self._tf_broadcaster.sendTransform(motor4.parse_ROS_TF('motor4_base', 'motor4'))
+
+        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'pan_base', Z=0.1))
+        self._tf_broadcaster.sendTransform(pan.parse_ROS_TF('pan_base', 'pan'))
+        self._tf_broadcaster.sendTransform(tilt.parse_ROS_TF('pan', 'tilt'))
+
+        self._odom_handler.handle_motor_updates(motor1, motor2, motor3, motor4)
+
+        ps = PoseStamped()
+        ps.header.stamp = rospy.Time.now()
+        ps.header.frame_id = self._robot_frame_id
+        ps.pose = self._odom_handler.getPlatformPose()
+
+        self._odom_state_publisher.publish(ps)
+
 
     def handle_gps_status(self, status:GPSStatus):
         self._gps_state_publisher.publish(status.parse_ROS_GPS(self._robot_frame_id))
@@ -151,24 +181,6 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         pose_difference = difference_between_Poses(self._current_pose, goal_pose.pose)
         rospy.loginfo(str(pose_difference))
 
-    def handler_error_platform_output(self, response:Response):
-        rospy.logerr(response)
-    
-    def handler_success_platform_output(self, response:Response):
-        rospy.loginfo(response)
-    
-    def __handler_status_platform_output(self, response:Response):
-        rospy.logdebug(f'Raw platform output:\n{response.model_dump_json()}')
-
-        self.handle_battery_status(response.battery)
-        self.handle_imu_status(response.imu)
-
-        if response.move_progress:
-            self.handle_move_status(response.move_status)
-        else:
-            self.handle_move_status(None)
-        self.handle_gps_status(response.gps)
-
     def parse_serial(self, raw_data:String):
         response = parse_response(raw_data)
         if not response:
@@ -177,15 +189,13 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         raw_string = String()
         raw_string.data = raw_data
         self._raw_log_publisher.publish(raw_string)
-        
-        if response.message_type == 'ERROR':
-            self.handler_error_platform_output(response)
-        elif response.message_type == 'SUCCESS':
-            self.handler_success_platform_output(response)
-        elif response.message_type == 'STATUS':
-            self.__handler_status_platform_output(response)
-        else:
-            rospy.logerr(f'Unknown message type "{response.message_type}"')
+
+        rospy.logdebug(f'Raw platform output:\n{response.model_dump_json()}')
+        self.handle_battery_status(response.battery)
+        self.handle_imu_status(response.imu)
+        self.handle_motors_servos_status(response.motor1, response.motor2, response.motor3, response.motor4, response.pan, response.tilt)
+        if response.gps:
+            self.handle_gps_status(response.gps)
 
 
 def main():
