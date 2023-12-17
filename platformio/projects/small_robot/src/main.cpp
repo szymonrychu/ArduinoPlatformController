@@ -174,73 +174,77 @@ void loop(void){
   imu::Quaternion quat = bno.getQuat();
   int8_t temp = bno.getTemp();
 
+  loopCounter = (loopCounter+1)%10;
+  if(loopCounter == 0){
+    StaticJsonDocument<1024> doc;
+    doc["micros"] = micros();
+    doc["int_temp"] = temp;
 
-  StaticJsonDocument<1024> doc;
-  doc["micros"] = micros();
-  doc["int_temp"] = temp;
+    JsonObject batt = doc.createNestedObject("battery");
+    batt["voltage"] = battery.readVoltage();
 
-  JsonObject batt = doc.createNestedObject("battery");
-  batt["voltage"] = battery.readVoltage();
+    JsonObject imu = doc.createNestedObject("imu");
+    JsonObject quaternion = imu.createNestedObject("quaternion");
+    quaternion["w"] = quat.w();
+    quaternion["x"] = quat.x();
+    quaternion["y"] = quat.y();
+    quaternion["z"] = quat.z();
+    JsonObject gyroscope = imu.createNestedObject("gyroscope");
+    gyroscope["x"] = angVelocityData.gyro.x;
+    gyroscope["y"] = angVelocityData.gyro.y;
+    gyroscope["z"] = angVelocityData.gyro.z;
+    JsonObject accelerometer = imu.createNestedObject("accelerometer");
+    accelerometer["x"] = angVelocityData.acceleration.x;
+    accelerometer["y"] = angVelocityData.acceleration.y;
+    accelerometer["z"] = angVelocityData.acceleration.z;
 
-  JsonObject imu = doc.createNestedObject("imu");
-  JsonObject quaternion = imu.createNestedObject("quaternion");
-  quaternion["w"] = quat.w();
-  quaternion["x"] = quat.x();
-  quaternion["y"] = quat.y();
-  quaternion["z"] = quat.z();
-  JsonObject gyroscope = imu.createNestedObject("gyroscope");
-  gyroscope["x"] = angVelocityData.gyro.x;
-  gyroscope["y"] = angVelocityData.gyro.y;
-  gyroscope["z"] = angVelocityData.gyro.z;
-  JsonObject accelerometer = imu.createNestedObject("accelerometer");
-  accelerometer["x"] = angVelocityData.acceleration.x;
-  accelerometer["y"] = angVelocityData.acceleration.y;
-  accelerometer["z"] = angVelocityData.acceleration.z;
+    if(gps.fix){
+        JsonObject gps_ = doc.createNestedObject("gps");
+        gps_["fix_quality"] = gps.fixquality;
+        gps_["satellites"] = gps.satellites;
+        gps_["speed"] = gps.speed;
+        gps_["angle"] = gps.angle;
+        gps_["altitude"] = gps.altitude;
 
-  if(gps.fix){
-      JsonObject gps_ = doc.createNestedObject("gps");
-      gps_["fix_quality"] = gps.fixquality;
-      gps_["satellites"] = gps.satellites;
-      gps_["speed"] = gps.speed;
-      gps_["angle"] = gps.angle;
-      gps_["altitude"] = gps.altitude;
+        float gpsDecimalLatitude = 0.0;
+        float gpsDecimalLongitude = 0.0;
 
-      float gpsDecimalLatitude = 0.0;
-      float gpsDecimalLongitude = 0.0;
+        int gps_DD_latitude = int(gps.latitude/100.0);
+        float gps_MMMM_latitude = gps.latitude - 100.0*gps_DD_latitude;
+        gpsDecimalLatitude = gps_DD_latitude + float(gps_MMMM_latitude)/60.0;
 
-      int gps_DD_latitude = int(gps.latitude/100.0);
-      float gps_MMMM_latitude = gps.latitude - 100.0*gps_DD_latitude;
-      gpsDecimalLatitude = gps_DD_latitude + float(gps_MMMM_latitude)/60.0;
+        int gps_DDD_longitude = int(gps.longitude/100.0);
+        float gps_MMMM_longitude = gps.longitude - 100.0*gps_DDD_longitude;
+        gpsDecimalLongitude = gps_DDD_longitude + float(gps_MMMM_longitude)/60.0;
 
-      int gps_DDD_longitude = int(gps.longitude/100.0);
-      float gps_MMMM_longitude = gps.longitude - 100.0*gps_DDD_longitude;
-      gpsDecimalLongitude = gps_DDD_longitude + float(gps_MMMM_longitude)/60.0;
+        gps_["dec_latitude"] = gpsDecimalLatitude;
+        gps_["dec_longitude"] = gpsDecimalLongitude;
+    }
 
-      gps_["dec_latitude"] = gpsDecimalLatitude;
-      gps_["dec_longitude"] = gpsDecimalLongitude;
+    JsonObject m1 = doc.createNestedObject("motor1");
+    m1["velocity"] = motor1.currentVelocity();
+    m1["angle"] = motor1.readServo();
+
+    JsonObject m2 = doc.createNestedObject("motor2");
+    m2["velocity"] = motor2.currentVelocity();
+    m2["angle"] = motor2.readServo();
+
+    JsonObject m3 = doc.createNestedObject("motor3");
+    m3["velocity"] = motor3.currentVelocity();
+    m3["angle"] = motor3.readServo();
+
+    JsonObject m4 = doc.createNestedObject("motor4");
+    m4["velocity"] = motor4.currentVelocity();
+    m4["angle"] = motor4.readServo();
+
+    JsonObject pan = doc.createNestedObject("pan");
+    pan["angle"] = servoPan.readServo();
+
+    JsonObject tilt = doc.createNestedObject("tilt");
+    tilt["angle"] = servoTilt.readServo();
+
+    serializeJson(doc, Serial);
+    Serial.println("");
   }
-
-  JsonObject m1 = doc.createNestedObject("motor1");
-  m1["velocity"] = motor1.currentVelocity();
-  m1["angle"] = motor1.readServo();
-
-  JsonObject m2 = doc.createNestedObject("motor2");
-  m2["velocity"] = motor2.currentVelocity();
-  m2["angle"] = motor2.readServo();
-
-  JsonObject m3 = doc.createNestedObject("motor3");
-  m3["velocity"] = motor3.currentVelocity();
-  m3["angle"] = motor3.readServo();
-
-  JsonObject m4 = doc.createNestedObject("motor4");
-  m4["velocity"] = motor4.currentVelocity();
-  m4["angle"] = motor4.readServo();
-
-  JsonObject pan = doc.createNestedObject("pan");
-  pan["angle"] = servoPan.readServo();
-
-  JsonObject tilt = doc.createNestedObject("tilt");
-  tilt["angle"] = servoTilt.readServo();
-
   delay(BNO055_SAMPLERATE_DELAY_MS);
 }

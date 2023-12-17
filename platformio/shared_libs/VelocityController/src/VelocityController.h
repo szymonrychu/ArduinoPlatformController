@@ -14,7 +14,7 @@
 #endif
 
 #ifndef SERVO_FULL_ROTATION_UPDATE_SPEED
-#define SERVO_FULL_ROTATION_UPDATE_SPEED 1.2
+#define SERVO_FULL_ROTATION_UPDATE_SPEED 2.0
 #endif
 
 #define SERVO_STARTING_OFFSET PI/2
@@ -47,8 +47,10 @@ public:
 
   void loop(){
     this->ramp.update();
-    this->servoValueRadians = this->ramp.getValue();
-    this->servo.writeMicroseconds(1000.0 + 1000.0*(servoValueRadians/PI));
+    this->servoValueRadians = this->ramp.getValue()*PI;
+    if(this->servoValueRadians > PI/2) this->servoValueRadians = PI/2;
+    if(this->servoValueRadians < -PI/2) this->servoValueRadians = -PI/2;
+    this->servo.writeMicroseconds(1500.0 + 2000.0*(servoValueRadians/PI));
   }
 
   bool servoReady(){
@@ -56,12 +58,15 @@ public:
   }
 
   bool writeServo(double angle, double timeS=0){
-    if(timeS == 0) timeS = SERVO_FULL_ROTATION_UPDATE_SPEED;
-    if(angle < -PI/2 || angle > PI/2 || timeS < SERVO_FULL_ROTATION_UPDATE_SPEED){
+    double angleDelta = abs(angle - this->servoValueRadians);
+    if(angleDelta < 0.0001) angleDelta = 0.0001; 
+    double minTimeS = SERVO_FULL_ROTATION_UPDATE_SPEED*(angleDelta/PI);
+    if(timeS == 0) timeS = minTimeS;
+    if(angle < -PI/2 || angle > PI/2 || timeS < minTimeS){
       return false;
     }
     unsigned long timeMs = (unsigned long)(timeS * 1000.0);
-    this->ramp.go(angle, timeMs, LINEAR);
+    this->ramp.go(angle/PI, timeMs, LINEAR);
     return true;
   }
 
@@ -105,11 +110,11 @@ public:
     this->servo = ServoController(servoPin);
   }
 
-  void setup(double dP=15.0, double dI=0, double dD=0.8, double vP=3.0, double vI=0.2, double vD=0.01){
+  void setup(double P=2.0, double I=0.0, double D=0.0){
     this->encoder.setInitConfig();
     this->encoder.init();
     this->hbridge.setup();
-    this->velocityPID = PID(vP, vI, vD, -1.0, 1.0);
+    this->velocityPID = PID(P, I, D);
     this->lastComputeTimeMicros = micros();
     this->servo.setup();
   }
