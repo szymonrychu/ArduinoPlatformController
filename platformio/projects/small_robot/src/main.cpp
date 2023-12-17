@@ -83,38 +83,52 @@ Battery battery;
 void commandHandler(char* input);
 JSONCommand command = JSONCommand("\n", commandHandler);
 
+uint64_t lastCommandTimestampMicros = 0;
+uint64_t moveTimeout = 0;
+
 void commandHandler(char* input){
   DynamicJsonDocument doc(512);
   deserializeJson(doc, input);
   JsonObject obj = doc.as<JsonObject>();
 
+  double moveDuration = 0;
+  lastCommandTimestampMicros = micros();
+
+  if(!obj["move_duration"].isNull()){
+    moveDuration = obj["move_duration"];
+    moveTimeout = (uint64_t)(1000000.0 * moveDuration) + lastCommandTimestampMicros;
+  } else {
+    moveTimeout = 0;
+  }
+
   if(!obj["motor1"].isNull()){
     if(!obj["motor1"]["velocity"].isNull()) motor1.drive(obj["motor1"]["velocity"]);
-    if(!obj["motor1"]["angle"].isNull()) motor1.writeServo(obj["motor1"]["angle"]);
+    if(!obj["motor1"]["angle"].isNull()) motor1.writeServo(obj["motor1"]["angle"], moveDuration);
   }
 
   if(!obj["motor2"].isNull()){
     if(!obj["motor2"]["velocity"].isNull()) motor2.drive(obj["motor2"]["velocity"]);
-    if(!obj["motor2"]["angle"].isNull()) motor2.writeServo(obj["motor2"]["angle"]);
+    if(!obj["motor2"]["angle"].isNull()) motor2.writeServo(obj["motor2"]["angle"], moveDuration);
   }
 
   if(!obj["motor3"].isNull()){
     if(!obj["motor3"]["velocity"].isNull()) motor3.drive(obj["motor3"]["velocity"]);
-    if(!obj["motor3"]["angle"].isNull()) motor3.writeServo(obj["motor3"]["angle"]);
+    if(!obj["motor3"]["angle"].isNull()) motor3.writeServo(obj["motor3"]["angle"], moveDuration);
   }
 
   if(!obj["motor4"].isNull()){
     if(!obj["motor4"]["velocity"].isNull()) motor4.drive(obj["motor4"]["velocity"]);
-    if(!obj["motor4"]["angle"].isNull()) motor4.writeServo(obj["motor4"]["angle"]);
+    if(!obj["motor4"]["angle"].isNull()) motor4.writeServo(obj["motor4"]["angle"], moveDuration);
   }
 
   if(!obj["pan"].isNull()){
-    if(!obj["pan"]["angle"].isNull()) servoPan.writeServo(obj["pan"]["angle"]);
+    if(!obj["pan"]["angle"].isNull()) servoPan.writeServo(obj["pan"]["angle"], moveDuration);
   }
 
   if(!obj["tilt"].isNull()){
-    if(!obj["tilt"]["angle"].isNull()) servoTilt.writeServo(obj["tilt"]["angle"]);
+    if(!obj["tilt"]["angle"].isNull()) servoTilt.writeServo(obj["tilt"]["angle"], moveDuration);
   }
+
 }
 
 void serialEvent() {
@@ -160,12 +174,23 @@ void serialEvent4() {
 
 void loop(void){
   command.parse();
-  motor1.loop();
-  motor2.loop();
-  motor3.loop();
-  motor4.loop();
-  servoPan.loop();
-  servoTilt.loop();
+
+  uint64_t currentTimeMicros = micros();
+
+  if(moveTimeout > 0 && moveTimeout < currentTimeMicros) {
+    motor1.stop();
+    motor2.stop();
+    motor3.stop();
+    motor4.stop();
+  }
+
+  motor1.loop(currentTimeMicros);
+  motor2.loop(currentTimeMicros);
+  motor3.loop(currentTimeMicros);
+  motor4.loop(currentTimeMicros);
+
+  servoPan.loop(currentTimeMicros);
+  servoTilt.loop(currentTimeMicros);
 
 
   sensors_event_t angVelocityData , accData;
@@ -177,8 +202,13 @@ void loop(void){
   loopCounter = (loopCounter+1)%10;
   if(loopCounter == 0){
     StaticJsonDocument<1024> doc;
-    doc["micros"] = micros();
+    doc["micros"] = currentTimeMicros;
     doc["int_temp"] = temp;
+    if(moveTimeout > 0){
+      doc["move_duration"] = ((double)(moveTimeout - currentTimeMicros))/1000000.0;
+    } else {
+      doc["move_duration"] = 0.0;
+    }
 
     JsonObject batt = doc.createNestedObject("battery");
     batt["voltage"] = battery.readVoltage();

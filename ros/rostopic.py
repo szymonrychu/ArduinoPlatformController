@@ -24,16 +24,25 @@ class FireForgetPublisher():
 FireForgetPublisher(sys.argv[1], sys.argv[2]).start()
 
 '''
+90
 ~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
-   '{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "UUID":"a5ad3b48-71d1-11ee-b962-0242ac120002"}'
+   '{"move_duration":3,"motor1":{"angle":1.5707},"motor2":{"angle":1.5707},"motor3":{"angle":1.5707},"motor4":{"angle":1.5707}}'
+-90
 ~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
-   '{"message_type":"forward", "move_distance":-0.25, "move_velocity": 0.5, "UUID":"a5ad3b48-71d1-11ee-b962-0242ac120002"}'
+   '{"move_duration":3,"motor1":{"angle":-1.5707},"motor2":{"angle":-1.5707},"motor3":{"angle":-1.5707},"motor4":{"angle":-1.5707}}'
+0
+~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
+   '{"move_duration":3,"motor1":{"angle":0},"motor2":{"angle":0},"motor3":{"angle":0},"motor4":{"angle":0}'
 
+motors stop
 ~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
-   '{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "UUID":"a5ad3b48-71d1-11ee-b962-0242ac120002"}'
-~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
-   '{"message_type":"turn", "turn_angle":-0.7853, "turn_velocity": 0.5, "UUID":"a5ad3b48-71d1-11ee-b962-0242ac120002"}'
+   '{"motor1":{"velocity":0},"motor2":{"velocity":0},"motor3":{"velocity":0},"motor4":{"velocity":0}}'
 
+0.2 forward for 2s
 ~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
-   '{"message_type":"sequentional_move","moves":[{"message_type":"reset_queue"},{"message_type":"turn", "turn_angle":0.7853, "turn_velocity": 0.5, "UUID":"a5ad3b48-71d1-11ee-b962-0242ac120002"},{"message_type":"forward", "move_distance":0.25, "move_velocity": 0.5, "UUID":"2a0d6d86-71d2-11ee-b962-0242ac120002"}]}'
+   '{"move_duration":2,"motor1":{"velocity":0.2},"motor2":{"velocity":0.2},"motor3":{"velocity":0.2},"motor4":{"velocity":0.2}}'
+
+0.2 backward for 2s
+~/catkin_ws/src/ArduinoPlatformController/ros/rostopic.py /robot_platform/raw_serial_request \
+   '{"move_duration":2,"motor1":{"velocity":-0.2},"motor2":{"velocity":-0.2},"motor3":{"velocity":-0.2},"motor4":{"velocity":-0.2}}'
 '''

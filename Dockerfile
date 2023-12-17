@@ -31,16 +31,6 @@ RUN set -xe;\
     mkdir -p /home/ros/arduino;\
     chown -R ros /opt/ros /home/ros
 
-COPY ./ros_libraries/RTIMULib /home/ros/RTIMULib
-
-RUN cd /home/ros/RTIMULib;\
-    mkdir -p build;\
-    cd build;\
-    cmake ..;\
-    make -j4;\
-    make install;\
-    ldconfig
-
 USER ros
 
 RUN set -xe;\
@@ -57,14 +47,6 @@ RUN set -xe;\
         sudo chown -R ros .;\
         find ./src/ -maxdepth 2 -name requirements.txt -exec pip3 install -r {} \; ;\
         catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/${ROS_DISTRO} install"
-
-# RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt-get install -y nodejs;\
-#     cd /home/ros/build/catkin_ws;\
-#     git clone https://github.com/yxzhan/rvizweb.git src/rvizweb -b 0.1.0;\
-#     rosdep install --from-paths src --ignore-src -r -y;\
-#     bash -c "\
-#         source /opt/ros/${ROS_DISTRO}/setup.bash;\
-#         catkin_make install"
 
 ENTRYPOINT [ "/ros_entrypoint.sh" ]
 

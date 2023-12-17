@@ -45,7 +45,7 @@ public:
     this->servo.attach(this->servoPin);
   }
 
-  void loop(){
+  void loop(uint64_t currentTimeMicros=0){
     this->ramp.update();
     this->servoValueRadians = this->ramp.getValue()*PI;
     if(this->servoValueRadians > PI/2) this->servoValueRadians = PI/2;
@@ -72,6 +72,10 @@ public:
 
   int readServo(){
     return this->servoValueRadians;
+  }
+
+  void stop(){
+    this->ramp.go(ramp.getValue());
   }
 };
 
@@ -110,7 +114,7 @@ public:
     this->servo = ServoController(servoPin);
   }
 
-  void setup(double P=2.0, double I=0.0, double D=0.0){
+  void setup(double P=7.5, double I=0.0, double D=0.5){
     this->encoder.setInitConfig();
     this->encoder.init();
     this->hbridge.setup();
@@ -120,10 +124,10 @@ public:
   }
 
   void loop(uint64_t currentTimeMicros=0){
+    this->servo.loop(currentTimeMicros);
     if(currentTimeMicros==0){
       currentTimeMicros = micros();
     }
-    this->servo.loop();
 
     this->distance = computeDistance();
     double timeDeltaSeconds =((double)currentTimeMicros - (double)this->lastComputeTimeMicros)/1000000.0;
@@ -147,6 +151,7 @@ public:
 
   void stop(){
     this->velocityTarget = 0;
+    this->servo.stop();
   }
 
   bool isStopped(){

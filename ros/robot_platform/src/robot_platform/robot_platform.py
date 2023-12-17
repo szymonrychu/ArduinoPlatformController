@@ -1,43 +1,25 @@
 #!/usr/bin/env python3
 
-import rospy
 import signal
-
 import numpy as np
-import tf2_ros
+
+import rospy
 import tf_conversions
+import tf2_ros
 
 from math import pi as PI
+from typing import Optional
+from uuid import UUID
 
 from std_msgs.msg import String
-from geometry_msgs.msg import PoseStamped, Pose, TransformStamped
+from geometry_msgs.msg import PoseStamped, Pose, TransformStamped, Point
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 
-from uuid import UUID
-from typing import Optional
-
 from .log_utils import env2log
-from .serial_utils import SerialWrapper
 from .message_utils import parse_response, GPSStatus, StatusResponse, BatteryStatus, IMUStatus, MotorStatus, ServoStatus
-from .tf_helpers import difference_between_Poses
-from .odom_handler import OdomHanlder
-
-def create_static_transform(root_frame_id:str, child_frame_id:str, X:float=0, Y:float=0, Z:float=0, Roll:float=0, Pitch:float=0, Yaw:float=0, timestamp:int=None) -> TransformStamped:
-    t = TransformStamped()
-    t.header.stamp = timestamp or rospy.Time.now()
-    t.header.frame_id = root_frame_id
-    t.child_frame_id = child_frame_id
-    t.transform.translation.x = X
-    t.transform.translation.y = Y
-    t.transform.translation.z = Z
-    q = tf_conversions.transformations.quaternion_from_euler(
-        Roll, Pitch, Yaw
-    )
-    t.transform.rotation.x = q[0]
-    t.transform.rotation.y = q[1]
-    t.transform.rotation.z = q[2]
-    t.transform.rotation.w = q[3]
-    return t
+from .odom_handler import OdomHandler
+from .serial_utils import SerialWrapper
+from .tf_helpers import *
 
 class ROSNode():
 
@@ -79,109 +61,35 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
     def __init__(self):
         SerialROSNode.__init__(self)
         self._current_pose = Pose()
-        self._odom_handler = OdomHanlder()
+        self._odom_handler = OdomHandler()
         self._currently_processed_move_uuid = None
-        self._map_frame_id = rospy.get_param('~map_frame_id')
-        self._robot_to_map_projection_frame_id = rospy.get_param('~robot_to_map_projection_frame_id')
-        self._robot_frame_id = rospy.get_param('~robot_frame_id')
-        self._rplidar_frame_id = rospy.get_param('~rplidar_frame_id')
 
-        self._use_external_imu = rospy.get_param('~use_external_imu')
-        if self._use_external_imu:
-            self._external_imu_topic = rospy.get_param('~external_imu_topic')
+        self._map_frame_id = rospy.get_param('~map_frame_id')
+        self._base_link_id = rospy.get_param('~base_link_frame_id')
+        self._base_link_stabilised_id = rospy.get_param('~base_link_stabilised_frame_id')
+        self._scan_link_id = rospy.get_param('~scan_link_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         rospy.Subscriber(raw_input_topic, String, self._write_raw_data)
-
-        goal_input_topic = rospy.get_param('~goal_move_input_topic')
-        rospy.Subscriber(goal_input_topic, PoseStamped, self.__handle_goal_pose_input_data)
-
         raw_output_topic = rospy.get_param('~raw_output_topic')
         self._raw_log_publisher = rospy.Publisher(raw_output_topic, String)
 
+        goal_input_topic = rospy.get_param('~goal_move_input_topic')
+        rospy.Subscriber(goal_input_topic, PoseStamped, self.handle_goal_pose_input_data)
+
         battery_state_output_topic = rospy.get_param('~battery_state_output_topic')
         self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState)
-
         gps_state_output_topic = rospy.get_param('~gps_state_output_topic')
         self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix)
-
         imu_state_output_topic = rospy.get_param('~imu_state_output_topic')
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
-
         odom_state_output_topic = rospy.get_param('~odom_state_output_topic')
         self._odom_state_publisher = rospy.Publisher(odom_state_output_topic, PoseStamped)
-        
-        if self._use_external_imu:
-            rospy.Subscriber(self._external_imu_topic, Imu, self.handle_external_imu_data)
-
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
 
-    def _write_raw_data(self, ros_data):
-        '''
-        {"motor1":{"angle":0.78539},"motor2":{"angle":0.78539},"motor3":{"angle":0.78539},"motor4":{"angle":0.78539}}
-        {"motor1":{"angle":1.04719},"motor2":{"angle":1.04719},"motor3":{"angle":1.04719},"motor4":{"angle":1.04719}}
-        {"motor1":{"velocity":0},"motor2":{"velocity":0},"motor3":{"velocity":0},"motor4":{"velocity":0}}
-        '''
-        raw_string = ros_data.data
-        self.write_data(raw_string)
-
-    def handle_motors_servos_status(self, motor1:MotorStatus, motor2:MotorStatus, motor3:MotorStatus, motor4:MotorStatus, pan:ServoStatus, tilt:ServoStatus):
-
-        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'motor1_base', X=-0.2, Y=0.2))
-        self._tf_broadcaster.sendTransform(motor1.parse_ROS_TF('motor1_base', 'motor1'))
-        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'motor2_base', X=0.2, Y=0.2))
-        self._tf_broadcaster.sendTransform(motor2.parse_ROS_TF('motor2_base', 'motor2'))
-        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'motor3_base', X=-0.2, Y=-0.2))
-        self._tf_broadcaster.sendTransform(motor3.parse_ROS_TF('motor3_base', 'motor3'))
-        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'motor4_base', X=-0.2, Y=-0.2))
-        self._tf_broadcaster.sendTransform(motor4.parse_ROS_TF('motor4_base', 'motor4'))
-
-        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, 'pan_base', Z=0.1))
-        self._tf_broadcaster.sendTransform(pan.parse_ROS_TF('pan_base', 'pan'))
-        self._tf_broadcaster.sendTransform(tilt.parse_ROS_TF('pan', 'tilt'))
-
-        self._odom_handler.handle_motor_updates(motor1, motor2, motor3, motor4)
-
-        ps = PoseStamped()
-        ps.header.stamp = rospy.Time.now()
-        ps.header.frame_id = self._robot_frame_id
-        ps.pose = self._odom_handler.getPlatformPose()
-
-        self._odom_state_publisher.publish(ps)
-
-
-    def handle_gps_status(self, status:GPSStatus):
-        self._gps_state_publisher.publish(status.parse_ROS_GPS(self._robot_frame_id))
-
-    def handle_battery_status(self, status:BatteryStatus):
-        self._battery_state_publisher.publish(status.parse_ROS_Battery(self._robot_frame_id))
-
-    def handle_imu_status(self, status:IMUStatus):
-        if not self._use_external_imu:
-            self._imu_state_publisher.publish(status.parse_ROS_IMU(self._robot_frame_id))
-            
-            self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id, Z=0.1))
-            
-            self._tf_broadcaster.sendTransform(status.parse_ROS_TF(self._robot_to_map_projection_frame_id, self._robot_frame_id))
-            self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, self._rplidar_frame_id, X=0.1, Z=0.1, Yaw=PI))
-
-    def handle_external_imu_data(self, data:Imu):        
-        self._tf_broadcaster.sendTransform(create_static_transform(self._map_frame_id, self._robot_to_map_projection_frame_id, Z=0.1))
-
-        t = TransformStamped()
-        t.header = data.header
-        t.header.frame_id = self._robot_to_map_projection_frame_id
-        t.child_frame_id = self._robot_frame_id
-        t.transform.rotation = data.orientation
-        self._tf_broadcaster.sendTransform(t)
-        
-        self._tf_broadcaster.sendTransform(create_static_transform(self._robot_frame_id, self._rplidar_frame_id, X=0.1, Z=0.1))
-
-    def __handle_goal_pose_input_data(self, goal_pose:PoseStamped):
-        pose_difference = difference_between_Poses(self._current_pose, goal_pose.pose)
-        rospy.loginfo(str(pose_difference))
-
     def parse_serial(self, raw_data:String):
+        rospy_time_now = rospy.Time.now()
+
         response = parse_response(raw_data)
         if not response:
             return
@@ -191,12 +99,41 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         self._raw_log_publisher.publish(raw_string)
 
         rospy.logdebug(f'Raw platform output:\n{response.model_dump_json()}')
-        self.handle_battery_status(response.battery)
-        self.handle_imu_status(response.imu)
-        self.handle_motors_servos_status(response.motor1, response.motor2, response.motor3, response.motor4, response.pan, response.tilt)
+        self._battery_state_publisher.publish(response.battery.parse_ROS_Battery(self._base_link_id, rospy_time_now))
+        self._imu_state_publisher.publish(response.imu.parse_ROS_IMU(self._base_link_id, rospy_time_now))
         if response.gps:
-            self.handle_gps_status(response.gps)
+            self._gps_state_publisher.publish(response.gps.parse_ROS_GPS(self._base_link_id, rospy_time_now))
 
+        # self._tf_broadcaster.sendTransform(create_static_transform(self._base_link_id, 'motor1_base', X=-0.2, Y=0.2))
+        # self._tf_broadcaster.sendTransform(response.motor1.parse_ROS_TF('motor1_base', 'motor1'))
+        # self._tf_broadcaster.sendTransform(create_static_transform(self._base_link_id, 'motor2_base', X=0.2, Y=0.2))
+        # self._tf_broadcaster.sendTransform(response.motor2.parse_ROS_TF('motor2_base', 'motor2'))
+        # self._tf_broadcaster.sendTransform(create_static_transform(self._base_link_id, 'motor3_base', X=-0.2, Y=-0.2))
+        # self._tf_broadcaster.sendTransform(response.motor3.parse_ROS_TF('motor3_base', 'motor3'))
+        # self._tf_broadcaster.sendTransform(create_static_transform(self._base_link_id, 'motor4_base', X=-0.2, Y=-0.2))
+        # self._tf_broadcaster.sendTransform(response.motor4.parse_ROS_TF('motor4_base', 'motor4'))
+
+        # self._tf_broadcaster.sendTransform(create_static_transform(self._base_link_id, 'pan_base', Z=0.1))
+        # self._tf_broadcaster.sendTransform(response.pan.parse_ROS_TF('pan_base', 'pan'))
+        # self._tf_broadcaster.sendTransform(response.tilt.parse_ROS_TF('pan', 'tilt'))
+
+        pose = self._odom_handler.handle_motor_updates(response)
+        p = Point()
+        p.z = 0.1
+
+        self._odom_state_publisher.publish(pose_to_pose_stamped(pose, self._base_link_id, p, rospy_time_now))
+        transform = pose_to_transform_stamped(pose, self._map_frame_id, self._base_link_id, p, rospy_time_now)
+        transform_stabilised = pose_to_transform_stabilised_stamped(pose, self._map_frame_id, self._base_link_stabilised_id, p, rospy_time_now)
+
+        self._tf_broadcaster.sendTransform(transform)
+        self._tf_broadcaster.sendTransform(transform_stabilised)
+        self._tf_broadcaster.sendTransform(create_static_transform(self._base_link_id, self._scan_link_id, X=0.1, Yaw=PI, timestamp=rospy_time_now))
+
+    def _write_raw_data(self, ros_data):
+        self.write_data(ros_data.data)
+
+    def handle_goal_pose_input_data(self, goal_pose:PoseStamped):
+        self.write_data(self._odom_handler.request_move(goal_pose))
 
 def main():
     platform = RobotPlatformRawSerialROSNode()

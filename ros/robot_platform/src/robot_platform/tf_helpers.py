@@ -1,16 +1,68 @@
 from typing import Tuple
-from geometry_msgs.msg import Pose, Quaternion
+from geometry_msgs.msg import Pose, PoseStamped, Quaternion, TransformStamped, Point
 import tf_conversions
 import numpy as np
+import rospy
 
-def get_RPY_from_Pose(p:Pose) -> Tuple[float, float, float]:
+def add_points(p1:Point, p2:Point=None) -> Point:
+    if not p2:
+        return p1
+    p = Point()
+    p.x = p1.x + p2.x
+    p.y = p1.y + p2.y
+    p.z = p1.z + p2.z
+    return p
+    
+
+def create_static_transform(root_frame_id:str, child_frame_id:str, X:float=0, Y:float=0, Z:float=0, Roll:float=0, Pitch:float=0, Yaw:float=0, timestamp:rospy.Time=None) -> TransformStamped:
+    t = TransformStamped()
+    t.header.stamp = timestamp or rospy.Time.now()
+    t.header.frame_id = root_frame_id
+    t.child_frame_id = child_frame_id
+    t.transform.translation.x = X
+    t.transform.translation.y = Y
+    t.transform.translation.z = Z
+    t.transform.rotation = get_quaterion_from_rpy(Roll, Pitch, Yaw)
+    return t
+
+def get_rpy_from_quaternion(q:Quaternion) -> Tuple[float, float, float]:
     return tf_conversions.transformations.euler_from_quaternion(
-        p.orientation.w, p.orientation.x, p.orientation.y, p.orientation.z
+        [q.w, q.x, q.y, q.z]
     )
 
-def get_pose_from_RPY(roll:float, pitch:float, yaw:float) -> Quaternion:
+def get_quaterion_from_rpy(roll:float, pitch:float, yaw:float) -> Quaternion:
     q = tf_conversions.transformations.quaternion_from_euler(roll, pitch, yaw)
     return Quaternion(*q)
+
+def stabilise_quaternion(q:Quaternion) -> Quaternion:
+    roll, pitch, yaw = get_rpy_from_quaternion(q)
+    return get_quaterion_from_rpy(0, 0, yaw)
+
+def pose_to_transform_stamped(pose:Pose, frame_id:str, child_frame_id:str, translation:Point=None, timestamp:rospy.Time=None) -> TransformStamped:
+    t = TransformStamped()
+    t.header.frame_id = frame_id
+    t.header.stamp = timestamp or rospy.Time.now()
+    t.child_frame_id = child_frame_id
+    t.transform.translation = add_points(pose.position, translation)
+    t.transform.rotation = pose.orientation
+    return t
+
+def pose_to_transform_stabilised_stamped(pose:Pose, frame_id:str, child_frame_id:str, translation:Point=None, timestamp:rospy.Time=None) -> TransformStamped:
+    t = TransformStamped()
+    t.header.frame_id = frame_id
+    t.header.stamp = timestamp or rospy.Time.now()
+    t.child_frame_id = child_frame_id
+    t.transform.translation = add_points(pose.position, translation)
+    t.transform.rotation = stabilise_quaternion(pose.orientation)
+    return t
+
+def pose_to_pose_stamped(pose:Pose, frame_id:str, translation:Point=None, timestamp:rospy.Time=None) -> PoseStamped:
+    ps = PoseStamped()
+    ps.header.frame_id = frame_id
+    ps.header.stamp = timestamp or rospy.Time.now()
+    ps.pose.position = add_points(pose.position, translation)
+    ps.pose.orientation = pose.orientation
+    return ps
 
 def difference_between_Poses(p1:Pose, p2:Pose):
     result = Pose()
