@@ -25,11 +25,14 @@
     <param name="raw_output_topic" type="string" value="/robot_platform/raw_serial_response" />
 
     <param name="goal_move_input_topic" type="string" value="/move_base_simple/goal" />
+    <param name="turning_center_output_topic" type="string" value="/robot_platform/turning_point" />
     
     <param name="battery_state_output_topic" type="string" value="$(arg battery_state_output_topic)" />
     <param name="gps_state_output_topic" type="string" value="$(arg gps_state_output_topic)" />
     <param name="imu_state_output_topic" type="string" value="$(arg imu_state_output_topic)" />
     <param name="odom_state_output_topic" type="string" value="$(arg odom_state_output_topic)" />
+
+
 
     <param name="map_frame_id" type="string" value="$(arg map_frame_id)" />
     <param name="base_link_frame_id" type="string" value="$(arg base_link_frame_id)" />

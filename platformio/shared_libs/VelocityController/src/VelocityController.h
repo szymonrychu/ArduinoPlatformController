@@ -17,7 +17,20 @@
 #define SERVO_FULL_ROTATION_UPDATE_SPEED 2.0
 #endif
 
+#ifndef VELOCITY_CONTROLLER_P
+#define VELOCITY_CONTROLLER_P 1.0
+#endif
+
+#ifndef VELOCITY_CONTROLLER_I
+#define VELOCITY_CONTROLLER_I 0.1
+#endif
+
+#ifndef VELOCITY_CONTROLLER_D
+#define VELOCITY_CONTROLLER_D 0.01
+#endif
+
 #define SERVO_STARTING_OFFSET PI/2
+#define PID_MAX_INTEGRAL 1.0f
 
 #include <Arduino.h>
 #include <Servo.h>
@@ -48,9 +61,11 @@ public:
   void loop(uint64_t currentTimeMicros=0){
     this->ramp.update();
     this->servoValueRadians = this->ramp.getValue()*PI;
+
     if(this->servoValueRadians > PI/2) this->servoValueRadians = PI/2;
     if(this->servoValueRadians < -PI/2) this->servoValueRadians = -PI/2;
-    this->servo.writeMicroseconds(1500.0 + 2000.0*(servoValueRadians/PI));
+    
+    this->servo.writeMicroseconds(1500.0 + 2000.0*(this->servoValueRadians/PI));
   }
 
   bool servoReady(){
@@ -70,7 +85,7 @@ public:
     return true;
   }
 
-  int readServo(){
+  double readServo(){
     return this->servoValueRadians;
   }
 
@@ -114,7 +129,7 @@ public:
     this->servo = ServoController(servoPin);
   }
 
-  void setup(double P=7.5, double I=0.0, double D=0.5){
+  void setup(double P=VELOCITY_CONTROLLER_P, double I=VELOCITY_CONTROLLER_I, double D=VELOCITY_CONTROLLER_D){
     this->encoder.setInitConfig();
     this->encoder.init();
     this->hbridge.setup();
@@ -186,7 +201,7 @@ public:
     this->servo.writeServo(angle, timeS);
   }
 
-  int readServo(){
+  double readServo(){
     return this->servo.readServo();
   }
 

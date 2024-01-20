@@ -101,6 +101,7 @@ class ServoStatus(BaseModel):
 
 class MotorStatus(ServoStatus):
     velocity: Optional[float] = None
+    distance: Optional[float] = None
 
 class GPSStatus(BaseModel):
     fix_quality: Optional[int] = -1

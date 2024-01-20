@@ -182,6 +182,10 @@ void loop(void){
     motor2.stop();
     motor3.stop();
     motor4.stop();
+    motor1.resetDistanceVelocity();
+    motor2.resetDistanceVelocity();
+    motor3.resetDistanceVelocity();
+    motor4.resetDistanceVelocity();
   }
 
   motor1.loop(currentTimeMicros);
@@ -253,18 +257,22 @@ void loop(void){
 
     JsonObject m1 = doc.createNestedObject("motor1");
     m1["velocity"] = motor1.currentVelocity();
+    m1["distance"] = motor1.currentDistance();
     m1["angle"] = motor1.readServo();
 
     JsonObject m2 = doc.createNestedObject("motor2");
     m2["velocity"] = motor2.currentVelocity();
+    m2["distance"] = motor2.currentDistance();
     m2["angle"] = motor2.readServo();
 
     JsonObject m3 = doc.createNestedObject("motor3");
     m3["velocity"] = motor3.currentVelocity();
+    m3["distance"] = motor3.currentDistance();
     m3["angle"] = motor3.readServo();
 
     JsonObject m4 = doc.createNestedObject("motor4");
     m4["velocity"] = motor4.currentVelocity();
+    m4["distance"] = motor4.currentDistance();
     m4["angle"] = motor4.readServo();
 
     JsonObject pan = doc.createNestedObject("pan");

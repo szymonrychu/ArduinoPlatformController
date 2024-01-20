@@ -12,7 +12,7 @@ from typing import Optional
 from uuid import UUID
 
 from std_msgs.msg import String
-from geometry_msgs.msg import PoseStamped, Pose, TransformStamped, Point
+from geometry_msgs.msg import PoseStamped, Pose, TransformStamped, Point, PointStamped
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 
 from .log_utils import env2log
@@ -61,7 +61,6 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
     def __init__(self):
         SerialROSNode.__init__(self)
         self._current_pose = Pose()
-        self._odom_handler = OdomHandler()
         self._currently_processed_move_uuid = None
 
         self._map_frame_id = rospy.get_param('~map_frame_id')
@@ -75,7 +74,9 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         self._raw_log_publisher = rospy.Publisher(raw_output_topic, String)
 
         goal_input_topic = rospy.get_param('~goal_move_input_topic')
+        turning_center_output_topic = rospy.get_param('~turning_center_output_topic')
         rospy.Subscriber(goal_input_topic, PoseStamped, self.handle_goal_pose_input_data)
+        self._turning_center_publisher = rospy.Publisher(turning_center_output_topic, PointStamped)
 
         battery_state_output_topic = rospy.get_param('~battery_state_output_topic')
         self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState)
@@ -86,6 +87,8 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         odom_state_output_topic = rospy.get_param('~odom_state_output_topic')
         self._odom_state_publisher = rospy.Publisher(odom_state_output_topic, PoseStamped)
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
+
+        self._odom_handler = OdomHandler(self._turning_center_publisher)
 
     def parse_serial(self, raw_data:String):
         rospy_time_now = rospy.Time.now()
