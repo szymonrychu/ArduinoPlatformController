@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import signal
+import time
+import math
 import numpy as np
 
 import rospy
@@ -61,7 +63,8 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
     def __init__(self):
         SerialROSNode.__init__(self)
         self._current_pose = Pose()
-        self._currently_processed_move_uuid = None
+        self._current_move_duration = 0
+        self._message_counter = 0
 
         self._map_frame_id = rospy.get_param('~map_frame_id')
         self._base_link_id = rospy.get_param('~base_link_frame_id')
@@ -73,10 +76,11 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         raw_output_topic = rospy.get_param('~raw_output_topic')
         self._raw_log_publisher = rospy.Publisher(raw_output_topic, String)
 
-        goal_input_topic = rospy.get_param('~goal_move_input_topic')
         turning_center_output_topic = rospy.get_param('~turning_center_output_topic')
-        rospy.Subscriber(goal_input_topic, PoseStamped, self.handle_goal_pose_input_data)
         self._turning_center_publisher = rospy.Publisher(turning_center_output_topic, PointStamped)
+
+        goal_input_topic = rospy.get_param('~goal_move_input_topic')
+        rospy.Subscriber(goal_input_topic, PoseStamped, self.handle_goal_pose_input_data)
 
         battery_state_output_topic = rospy.get_param('~battery_state_output_topic')
         self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState)
@@ -89,6 +93,7 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         self._tf_broadcaster = tf2_ros.TransformBroadcaster()
 
         self._odom_handler = OdomHandler(self._turning_center_publisher)
+        self.write_data('{"move_duration":1,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}')
 
     def parse_serial(self, raw_data:String):
         rospy_time_now = rospy.Time.now()
@@ -96,6 +101,8 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         response = parse_response(raw_data)
         if not response:
             return
+        self._current_move_duration = response.move_duration
+
 
         raw_string = String()
         raw_string.data = raw_data
@@ -132,11 +139,37 @@ class RobotPlatformRawSerialROSNode(SerialROSNode):
         self._tf_broadcaster.sendTransform(transform_stabilised)
         self._tf_broadcaster.sendTransform(create_static_transform(self._base_link_id, self._scan_link_id, X=0.1, Yaw=PI, timestamp=rospy_time_now))
 
+        if self._message_counter == 0:
+            rospy.loginfo(f"Battery level: {response.battery.voltage}V")
+        self._message_counter = (self._message_counter + 1) % 100
+
     def _write_raw_data(self, ros_data):
         self.write_data(ros_data.data)
 
     def handle_goal_pose_input_data(self, goal_pose:PoseStamped):
-        self.write_data(self._odom_handler.request_move(goal_pose))
+        pose_delta = substract_points(goal_pose.pose.position, self._current_pose.position)
+
+        roll, pitch, yaw = get_rpy_from_quaternion(goal_pose.pose.orientation)
+
+        turn_angle = math.atan2(pose_delta.y, pose_delta.x)
+        if abs(turn_angle) > 0.001:
+            for move in self._odom_handler.turn_around_XY(turn_angle):
+                raw_move = move.model_dump_json(exclude_none=True)
+                rospy.loginfo(raw_move)
+                self.write_data(raw_move)
+                time.sleep(move.move_duration)
+        else:
+            rospy.loginfo(f"Ommiting turn in move request- reason: abs(turn_angle) = {turn_angle} <= 0.001")
+        
+        move_distance = math.sqrt(pose_delta.x*pose_delta.x + pose_delta.y*pose_delta.y)
+        if abs(move_distance) > 0.01:
+            for move in self._odom_handler.move_forward(move_distance):
+                raw_move = move.model_dump_json(exclude_none=True)
+                rospy.loginfo(raw_move)
+                self.write_data(raw_move)
+                time.sleep(move.move_duration)
+        else:
+            rospy.loginfo(f"Ommiting move_forward in move request- reason: abs(move_distance) = {move_distance} <= 0.001")
 
 def main():
     platform = RobotPlatformRawSerialROSNode()

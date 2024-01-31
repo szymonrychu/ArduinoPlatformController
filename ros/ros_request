@@ -1,0 +1,8 @@
+#!/bin/bash
+source /opt/ros/noetic/setup.bash 
+set -euo nounset
+
+readonly CURRENT_PWD="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+readonly REQUEST_TYPE="${1:-}"
+
+eval "${CURRENT_PWD}/${REQUEST_TYPE}_ros_request.py ${@:2}"

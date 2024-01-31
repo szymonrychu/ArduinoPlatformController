@@ -154,6 +154,9 @@ class Request(Message):
     tilt: Optional[ServoStatus] = ServoStatus()
     move_duration: Optional[float] = 0.0
 
+    def to_json(self):
+        raw_data = self.model_dump(mode='json')
+
 
 def parse_response(raw_input:str) -> StatusResponse:
     try:

@@ -12,6 +12,15 @@ def add_points(p1:Point, p2:Point=None) -> Point:
     p.y = p1.y + p2.y
     p.z = p1.z + p2.z
     return p
+
+def substract_points(p1:Point, p2:Point=None) -> Point:
+    if not p2:
+        return p1
+    p = Point()
+    p.x = p1.x - p2.x
+    p.y = p1.y - p2.y
+    p.z = p1.z - p2.z
+    return p
     
 
 def create_static_transform(root_frame_id:str, child_frame_id:str, X:float=0, Y:float=0, Z:float=0, Roll:float=0, Pitch:float=0, Yaw:float=0, timestamp:rospy.Time=None) -> TransformStamped:
