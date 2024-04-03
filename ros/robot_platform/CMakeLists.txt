@@ -3,18 +3,32 @@ project(robot_platform)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
+  std_msgs
   sensor_msgs
+  geometry_msgs
+  message_generation
 )
 
 catkin_python_setup()
 
+add_message_files(
+  FILES
+  MotorRequest.msg
+  WheelRequest.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS rospy sensor_msgs
+  CATKIN_DEPENDS rospy std_msgs sensor_msgs geometry_msgs message_runtime message_generation
 )
 
 catkin_install_python(
-  PROGRAMS nodes/robot_platform
+  PROGRAMS nodes/robot_platform nodes/wheel_controller
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -1,0 +1,4 @@
+float32 distance
+bool distance_provided
+float32 angle
+bool angle_provided
