@@ -26,6 +26,6 @@ docker run \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
   -v /tmp/ros:/home/ros/.ros \
-  "ros:${GIT_REPO_SHORT_SHA}" roslaunch robot_platform all.launch
+  "ros:${GIT_REPO_SHORT_SHA}" roslaunch wheel_controller wheel_controller.launch
 
 
