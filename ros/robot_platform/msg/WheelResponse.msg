@@ -1,6 +1,6 @@
-MotorUpdate motor1
-MotorUpdate motor2
-MotorUpdate motor3
-MotorUpdate motor4
+MotorResponse motor1
+MotorResponse motor2
+MotorResponse motor3
+MotorResponse motor4
 
 std_msgs/Header header

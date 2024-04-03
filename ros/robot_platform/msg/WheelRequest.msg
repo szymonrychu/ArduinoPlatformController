@@ -1,6 +1,6 @@
-MotorUpdate motor1
-MotorUpdate motor2
-MotorUpdate motor3
-MotorUpdate motor4
+MotorRequest motor1
+MotorRequest motor2
+MotorRequest motor3
+MotorRequest motor4
 
 float32 duration
