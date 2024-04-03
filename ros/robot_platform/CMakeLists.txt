@@ -15,6 +15,8 @@ add_message_files(
   FILES
   MotorRequest.msg
   WheelRequest.msg
+  MotorResponse.msg
+  WheelResponse.msg
 )
 
 generate_messages(
