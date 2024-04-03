@@ -102,6 +102,7 @@ private:
   ServoController servo;
 
   double distance = 0;
+  double previousDistance = 0;
   double lastDistance = 0;
   double velocity = 0;
   double velocityTarget = 0;
@@ -175,6 +176,13 @@ public:
 
   double currentDistance(){
     return this->distance;
+  }
+
+  double currentDistanceDelta(){
+    double currentDistance = this->currentDistance();
+    double currentDistanceDelta = currentDistance - this->previousDistance;
+    this->previousDistance = currentDistance;
+    return currentDistanceDelta;
   }
 
   double currentVelocity(){
