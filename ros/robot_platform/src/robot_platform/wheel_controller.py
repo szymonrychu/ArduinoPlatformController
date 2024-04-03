@@ -65,6 +65,7 @@ class WheelController(SerialROSNode):
     def __init__(self):
         SerialROSNode.__init__(self)
         self._message_counter = 0
+        self._header_frame_id = rospy.get_param('~header_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         raw_output_topic = rospy.get_param('~raw_output_topic')
@@ -123,10 +124,10 @@ class WheelController(SerialROSNode):
         raw_string.data = raw_data
         self._raw_log_publisher.publish(raw_string)
 
-        self._battery_state_publisher.publish(response.battery.parse_ROS_Battery(self._base_link_id, rospy_time_now))
-        self._imu_state_publisher.publish(response.imu.parse_ROS_IMU(self._base_link_id, rospy_time_now))
+        self._battery_state_publisher.publish(response.battery.parse_ROS_Battery(self._header_frame_id, rospy_time_now))
+        self._imu_state_publisher.publish(response.imu.parse_ROS_IMU(self._header_frame_id, rospy_time_now))
         if response.gps:
-            self._gps_state_publisher.publish(response.gps.parse_ROS_GPS(self._base_link_id, rospy_time_now))
+            self._gps_state_publisher.publish(response.gps.parse_ROS_GPS(self._header_frame_id, rospy_time_now))
 
         if self._message_counter == 0:
             rospy.loginfo(f"Battery level: {response.battery.voltage}V")

@@ -14,10 +14,10 @@ class Message(BaseModel):
 class BatteryStatus(BaseModel):
     voltage: float
 
-    def parse_ROS_Battery(self, base_frame_id:str, timestamp:rospy.Time=None):
+    def parse_ROS_Battery(self, header_frame_id:str, timestamp:rospy.Time=None):
         battery = BatteryState()
         battery.header.stamp = timestamp or rospy.Time.now()
-        battery.header.frame_id = base_frame_id
+        battery.header.frame_id = header_frame_id
 
         battery.voltage = self.voltage
         battery.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_DISCHARGING
@@ -46,10 +46,10 @@ class IMUStatus(BaseModel):
     gyroscope: GyroscopeStatus
     accelerometer: AccelerometerStatus
 
-    def parse_ROS_IMU(self, base_frame_id:str, timestamp:rospy.Time=None):
+    def parse_ROS_IMU(self, header_frame_id:str, timestamp:rospy.Time=None):
         imu = Imu()
         imu.header.stamp = timestamp or rospy.Time.now()
-        imu.header.frame_id = base_frame_id
+        imu.header.frame_id = header_frame_id
 
         imu.orientation.w = self.quaternion.w
         imu.orientation.x = self.quaternion.x
@@ -112,11 +112,11 @@ class GPSStatus(BaseModel):
     dec_latitude: Optional[float] = -1
     dec_longitude: Optional[float] = -1
 
-    def parse_ROS_GPS(self, base_frame_id:str, timestamp:rospy.Time=None):
+    def parse_ROS_GPS(self, header_frame_id:str, timestamp:rospy.Time=None):
         nav_sat_status = NavSatStatus()
         nav_sat_fix = NavSatFix()
         nav_sat_fix.header.stamp = timestamp or rospy.Time.now()
-        nav_sat_fix.header.frame_id = base_frame_id
+        nav_sat_fix.header.frame_id = header_frame_id
         if self.satellites > 0:
             nav_sat_status.status = NavSatStatus.STATUS_FIX
             nav_sat_status.service = NavSatStatus.SERVICE_GPS
