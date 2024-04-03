@@ -161,7 +161,7 @@ class WheelController(SerialROSNode):
             rospy.loginfo(f"Ommiting move_forward in move request- reason: abs(move_distance) = {move_distance} <= 0.001")
 
 def main():
-    platform = RobotPlatformRawSerialROSNode()
+    platform = WheelController()
     signal.signal(signal.SIGINT, platform.stop)
     signal.signal(signal.SIGTERM, platform.stop)
     platform.start()
