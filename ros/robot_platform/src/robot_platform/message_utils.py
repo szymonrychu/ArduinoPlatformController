@@ -5,6 +5,7 @@ import json
 import rospy
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import TransformStamped, Vector3, PoseStamped
+from robot_platform.msg import WheelResponse
 
 from .tf_helpers import get_quaterion_from_rpy
 
@@ -14,7 +15,7 @@ class Message(BaseModel):
 class BatteryStatus(BaseModel):
     voltage: float
 
-    def parse_ROS_Battery(self, header_frame_id:str, timestamp:rospy.Time=None):
+    def parse_ROS_Battery(self, header_frame_id:str, timestamp:rospy.Time=None) -> BatteryState:
         battery = BatteryState()
         battery.header.stamp = timestamp or rospy.Time.now()
         battery.header.frame_id = header_frame_id
@@ -46,7 +47,7 @@ class IMUStatus(BaseModel):
     gyroscope: GyroscopeStatus
     accelerometer: AccelerometerStatus
 
-    def parse_ROS_IMU(self, header_frame_id:str, timestamp:rospy.Time=None):
+    def parse_ROS_IMU(self, header_frame_id:str, timestamp:rospy.Time=None) -> Imu:
         imu = Imu()
         imu.header.stamp = timestamp or rospy.Time.now()
         imu.header.frame_id = header_frame_id
@@ -75,7 +76,7 @@ class IMUStatus(BaseModel):
         )
         return imu
     
-    def parse_ROS_TF(self, child_frame_id:str, base_frame_id:str, translation:Vector3 = None, timestamp:rospy.Time=None):
+    def parse_ROS_TF(self, child_frame_id:str, base_frame_id:str, translation:Vector3 = None, timestamp:rospy.Time=None) -> TransformStamped:
         imu = self.parse_ROS_IMU(base_frame_id, timestamp)
         t = TransformStamped()
         t.header = imu.header
@@ -89,7 +90,7 @@ class IMUStatus(BaseModel):
 class ServoStatus(BaseModel):
     angle: Optional[float] = None
     
-    def parse_ROS_TF(self, child_frame_id:str, base_frame_id:str, translation:Vector3 = None, timestamp:rospy.Time=None):
+    def parse_ROS_TF(self, child_frame_id:str, base_frame_id:str, translation:Vector3 = None, timestamp:rospy.Time=None) -> TransformStamped:
         t = TransformStamped()
         t.header.stamp = timestamp or rospy.Time.now()
         t.header.frame_id = child_frame_id
@@ -112,7 +113,7 @@ class GPSStatus(BaseModel):
     dec_latitude: Optional[float] = -1
     dec_longitude: Optional[float] = -1
 
-    def parse_ROS_GPS(self, header_frame_id:str, timestamp:rospy.Time=None):
+    def parse_ROS_GPS(self, header_frame_id:str, timestamp:rospy.Time=None) -> NavSatFix:
         nav_sat_status = NavSatStatus()
         nav_sat_fix = NavSatFix()
         nav_sat_fix.header.stamp = timestamp or rospy.Time.now()
@@ -144,6 +145,20 @@ class StatusResponse(Message):
     pan: ServoStatus
     tilt: ServoStatus
 
+    def parse_ROS_Motors(self, header_frame_id:str, timestamp:rospy.Time=None) -> WheelResponse:
+        wheel_response = WheelResponse()
+        wheel_response.header.stamp = timestamp or rospy.Time.now()
+        wheel_response.header.frame_id = header_frame_id
+
+        wheel_response.motor1.distance = self.motor1.distance
+        wheel_response.motor1.angle = self.motor1.angle
+        wheel_response.motor2.distance = self.motor2.distance
+        wheel_response.motor2.angle = self.motor2.angle
+        wheel_response.motor3.distance = self.motor3.distance
+        wheel_response.motor3.angle = self.motor3.angle
+        wheel_response.motor4.distance = self.motor4.distance
+        wheel_response.motor4.angle = self.motor4.angle
+        return wheel_response
 
 class Request(Message):
     motor1: Optional[MotorStatus] = MotorStatus()

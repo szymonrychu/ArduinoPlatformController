@@ -3,4 +3,4 @@ MotorUpdate motor2
 MotorUpdate motor3
 MotorUpdate motor4
 
-float32 duration
+std_msgs/Header header

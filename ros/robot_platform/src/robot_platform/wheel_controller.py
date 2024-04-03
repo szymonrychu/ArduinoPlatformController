@@ -14,7 +14,7 @@ from math import pi as PI
 from typing import Optional
 from uuid import UUID
 
-from robot_platform.msg import WheelRequest
+from robot_platform.msg import WheelResponse, WheelRequest
 from std_msgs.msg import String, Duration
 from geometry_msgs.msg import Point, PoseStamped, Pose, TransformStamped, Point, PointStamped
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
@@ -73,11 +73,13 @@ class WheelController(SerialROSNode):
         self._raw_log_publisher = rospy.Publisher(raw_output_topic, String)
 
         wheel_positions_input_topic = rospy.get_param('~wheel_positions_input_topic')
+        wheel_positions_output_topic = rospy.get_param('~wheel_positions_output_topic')
         battery_state_output_topic = rospy.get_param('~battery_state_output_topic')
         gps_state_output_topic = rospy.get_param('~gps_state_output_topic')
         imu_state_output_topic = rospy.get_param('~imu_state_output_topic')
 
         rospy.Subscriber(wheel_positions_input_topic, WheelRequest, self._write_raw_data)
+        self._wheel_output_publisher = rospy.Publisher(wheel_positions_output_topic, WheelResponse)
         self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState)
         self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix)
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
@@ -123,6 +125,8 @@ class WheelController(SerialROSNode):
         raw_string = String()
         raw_string.data = raw_data
         self._raw_log_publisher.publish(raw_string)
+
+        self._wheel_output_publisher.publish(response.parse_ROS_Motors(self._header_frame_id, rospy_time_now))
 
         self._battery_state_publisher.publish(response.battery.parse_ROS_Battery(self._header_frame_id, rospy_time_now))
         self._imu_state_publisher.publish(response.imu.parse_ROS_IMU(self._header_frame_id, rospy_time_now))
