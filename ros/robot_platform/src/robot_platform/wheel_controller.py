@@ -86,9 +86,9 @@ class WheelController(SerialROSNode):
     def _handle_raw_wheel_inputs(self, raw_data:WheelRequest):
         raw_request = {
             'move_duration': raw_data.duration,
-            'motor1': {}
-            'motor2': {}
-            'motor3': {}
+            'motor1': {},
+            'motor2': {},
+            'motor3': {},
             'motor4': {}
         }
 
