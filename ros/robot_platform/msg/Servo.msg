@@ -1,0 +1,2 @@
+float32 angle
+bool angle_provided

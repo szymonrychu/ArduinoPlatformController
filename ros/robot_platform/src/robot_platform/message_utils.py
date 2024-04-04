@@ -5,7 +5,7 @@ import json
 import rospy
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import TransformStamped, Vector3, PoseStamped
-from robot_platform.msg import WheelResponse
+from robot_platform.msg import PlatformStatus
 
 from .tf_helpers import get_quaterion_from_rpy
 
@@ -145,20 +145,29 @@ class StatusResponse(Message):
     pan: ServoStatus
     tilt: ServoStatus
 
-    def parse_ROS_Motors(self, header_frame_id:str, timestamp:rospy.Time=None) -> WheelResponse:
-        wheel_response = WheelResponse()
-        wheel_response.header.stamp = timestamp or rospy.Time.now()
-        wheel_response.header.frame_id = header_frame_id
+    def parse_ROS(self, header_frame_id:str, timestamp:rospy.Time=None) -> PlatformStatus:
+        platform_status = PlatformStatus()
+        platform_status.header.stamp = timestamp or rospy.Time.now()
+        platform_status.header.frame_id = header_frame_id
 
-        wheel_response.motor1.distance = self.motor1.distance
-        wheel_response.motor1.angle = self.motor1.angle
-        wheel_response.motor2.distance = self.motor2.distance
-        wheel_response.motor2.angle = self.motor2.angle
-        wheel_response.motor3.distance = self.motor3.distance
-        wheel_response.motor3.angle = self.motor3.angle
-        wheel_response.motor4.distance = self.motor4.distance
-        wheel_response.motor4.angle = self.motor4.angle
-        return wheel_response
+        platform_status.motor1.distance = self.motor1.distance
+        platform_status.motor1.velocity = self.motor1.velocity
+        platform_status.motor1.servo.angle = self.motor1.angle
+        platform_status.motor2.distance = self.motor2.distance
+        platform_status.motor2.velocity = self.motor2.velocity
+        platform_status.motor2.servo.angle = self.motor2.angle
+        platform_status.motor3.distance = self.motor3.distance
+        platform_status.motor3.velocity = self.motor3.velocity
+        platform_status.motor3.servo.angle = self.motor3.angle
+        platform_status.motor4.distance = self.motor4.distance
+        platform_status.motor4.velocity = self.motor4.velocity
+        platform_status.motor4.servo.angle = self.motor4.angle
+        platform_status.pan.angle = self.pan.angle
+        platform_status.tilt.angle = self.tilt.angle
+        platform_status.imu = self.imu.parse_ROS_IMU(header, timestamp)
+        platform_status.gps = self.gps.parse_ROS_GPS(header, timestamp)
+        platform_status.battery = self.battery.parse_ROS_Battery(header, timestamp)
+        return platform_status
 
 class Request(Message):
     motor1: Optional[MotorStatus] = MotorStatus()

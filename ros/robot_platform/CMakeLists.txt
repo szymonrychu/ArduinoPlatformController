@@ -13,15 +13,16 @@ catkin_python_setup()
 
 add_message_files(
   FILES
-  MotorRequest.msg
-  WheelRequest.msg
-  MotorResponse.msg
-  WheelResponse.msg
+  Motor.msg
+  MoveRequest.msg
+  PlatformStatus.msg
+  Servo.msg
 )
 
 generate_messages(
   DEPENDENCIES
   std_msgs
+  sensor_msgs
 )
 
 catkin_package(
@@ -30,7 +31,7 @@ catkin_package(
 )
 
 catkin_install_python(
-  PROGRAMS nodes/robot_platform nodes/wheel_controller
+  PROGRAMS nodes/odometry_handler nodes/wheel_controller
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
