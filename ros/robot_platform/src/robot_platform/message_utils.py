@@ -164,9 +164,9 @@ class StatusResponse(Message):
         platform_status.motor4.servo.angle = self.motor4.angle
         platform_status.pan.angle = self.pan.angle
         platform_status.tilt.angle = self.tilt.angle
-        platform_status.imu = self.imu.parse_ROS_IMU(header, timestamp)
-        platform_status.gps = self.gps.parse_ROS_GPS(header, timestamp)
-        platform_status.battery = self.battery.parse_ROS_Battery(header, timestamp)
+        platform_status.imu = self.imu.parse_ROS_IMU(header_frame_id, timestamp)
+        platform_status.gps = self.gps.parse_ROS_GPS(header_frame_id, timestamp)
+        platform_status.battery = self.battery.parse_ROS_Battery(header_frame_id, timestamp)
         return platform_status
 
 class Request(Message):
