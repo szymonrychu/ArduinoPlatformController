@@ -26,7 +26,7 @@
     <param name="gps_state_output_topic" type="string" value="$(arg gps_state_output_topic)" />
     <param name="imu_state_output_topic" type="string" value="$(arg imu_state_output_topic)" />
     <param name="wheel_positions_input_topic" type="string" value="$(arg wheel_positions_input_topic)" />
-    <param name="platform_status_output_topic" type="string" value="$(arg ~platform_status_output_topic)" />
+    <param name="platform_status_output_topic" type="string" value="$(arg platform_status_output_topic)" />
     ~
   </node>
 
