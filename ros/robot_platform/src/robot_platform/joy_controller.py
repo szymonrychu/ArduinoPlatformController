@@ -71,7 +71,7 @@ class JoyPlatformController(ROSNode):
     def _send_request(self, event=None):
         velocity = 0.0
         if abs(self._last_joy.axes[1]) > 0.01:
-            velocity = PlatformStatics.MOVE_VELOCITY * self._last_joy.axes[1]
+            velocity = 10*PlatformStatics.MOVE_VELOCITY * self._last_joy.axes[1]
         
         # turn_radius = self._last_joy.axes[0]
         # if turn_radius > 0.01:
