@@ -190,18 +190,22 @@ class Request(Message):
     def from_MoveRequest(m:MoveRequest):
         r = Request()
         r.motor1.distance = m.motor1.distance
+        r.motor1.velocity = m.motor1.velocity
         if m.motor1.servo.angle_provided:
             r.motor1.angle = m.motor1.servo.angle
             
         r.motor2.distance = m.motor2.distance
+        r.motor2.velocity = m.motor2.velocity
         if m.motor2.servo.angle_provided:
             r.motor2.angle = m.motor2.servo.angle
 
         r.motor3.distance = m.motor3.distance
+        r.motor3.velocity = m.motor3.velocity
         if m.motor3.servo.angle_provided:
             r.motor3.angle = m.motor3.servo.angle
 
         r.motor4.distance = m.motor4.distance
+        r.motor4.velocity = m.motor4.velocity
         if m.motor4.servo.angle_provided:
             r.motor4.angle = m.motor4.servo.angle
         
@@ -209,7 +213,9 @@ class Request(Message):
             r.pan.angle = m.pan.angle
         if m.tilt.angle_provided:
             r.tilt.angle = m.tilt.angle
+        r.move_duration = m.duration
         return r
+    
 
 
 
@@ -226,6 +232,3 @@ def parse_response(raw_input:str) -> StatusResponse:
     except AttributeError as _attribute_error:
         rospy.logerr(f"Couldn't parse Pydantic: '{raw_input}'")
         return None
-    
-def encode_request(req:Request) -> str:
-    return req.model_dump_json()
