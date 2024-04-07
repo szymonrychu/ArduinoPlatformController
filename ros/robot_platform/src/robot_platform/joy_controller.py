@@ -60,7 +60,7 @@ class JoyPlatformController(ROSNode):
         self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
 
-        rospy.Timer(rospy.Duration(1.0/1.0), self._send_request)
+        rospy.Timer(rospy.Duration(1.0), self._send_request)
 
     def _handle_joystick_updates(self, data:Joy):
         self._last_joy = data
@@ -69,32 +69,41 @@ class JoyPlatformController(ROSNode):
         self._last_platform_status = status
 
     def _send_request(self, event=None):
-        # rel_velocity = self._last_joy.axes[1]
-        rel_velocity = 0.7
-        
-        # turn_radius = self._last_joy.axes[0]
-        # if turn_radius > 0.01:
-        #     turn_radius = 1 - turn_radius
-        # elif turn_radius < -0.01:
-        #     turn_radius = -1 + turn_radius
-        turn_radius = 0.2
+        if self._last_joy.axes:
+            rel_velocity = -0.9 * self._last_joy.axes[1]
+            if rel_velocity < 0:
+                rel_velocity = max(rel_velocity, -0.9)
+            elif rel_velocity > 0:
+                rel_velocity = min(rel_velocity, 0.9)
+            # rel_velocity = 0.3
+            
+            turn_radius = -1.1 * self._last_joy.axes[0]
+            if turn_radius < 0:
+                turn_radius = max(turn_radius, -0.99)
+            elif turn_radius > 0:
+                turn_radius = min(turn_radius, 0.99)
+            if turn_radius > 0.01:
+                turn_radius = 1 - turn_radius
+            elif turn_radius < -0.01:
+                turn_radius = -1 - turn_radius
+            # turn_radius = -0.2
 
 
-        velocity = 0.0
-        if abs(rel_velocity) > 0.01:
-            velocity = PlatformStatics.MOVE_VELOCITY * rel_velocity
-        
-        turning_point = None
-        if abs(turn_radius) > 0.0001:
-            turning_point = Point()
-            turning_point.x = turn_radius
-        
-            rospy.loginfo(f"Requested move with turning point [{turning_point.x},{turning_point.y}] and velocity {velocity}")
-        else:
-            rospy.loginfo(f"Requested move with velocity {velocity}")
+            velocity = 0.0
+            if abs(rel_velocity) > 0.01:
+                velocity = -PlatformStatics.MOVE_VELOCITY * rel_velocity
+            
+            turning_point = None
+            if abs(turn_radius) > 0.0001:
+                turning_point = Point()
+                turning_point.x = turn_radius
+            
+                rospy.loginfo(f"Requested move with turning point [{turning_point.x},{turning_point.y}] and velocity {velocity}")
+            else:
+                rospy.loginfo(f"Requested move with velocity {velocity}")
 
-        r = compute_next_request(velocity, 1.0, self._last_platform_status, turning_point)
-        self._move_request_publisher.publish(r)
+            r = compute_next_request(velocity, 1.0, self._last_platform_status, turning_point)
+            self._move_request_publisher.publish(r)
 
 
 

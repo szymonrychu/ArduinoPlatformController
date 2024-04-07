@@ -101,25 +101,58 @@ void commandHandler(char* input){
     moveTimeout = 0;
   }
 
+  bool emptyRequest = true;
+
   if(!obj["motor1"].isNull()){
-    if(!obj["motor1"]["velocity"].isNull()) motor1.drive(obj["motor1"]["velocity"]);
-    if(!obj["motor1"]["angle"].isNull()) motor1.writeServo(obj["motor1"]["angle"], moveDuration);
+    if(!obj["motor1"]["velocity"].isNull()){
+      motor1.drive(obj["motor1"]["velocity"]);
+      emptyRequest = false;
+    }
+    if(!obj["motor1"]["angle"].isNull()){
+      motor1.writeServo(obj["motor1"]["angle"], moveDuration);
+      emptyRequest = false;
+    }
   }
 
   if(!obj["motor2"].isNull()){
-    if(!obj["motor2"]["velocity"].isNull()) motor2.drive(obj["motor2"]["velocity"]);
-    if(!obj["motor2"]["angle"].isNull()) motor2.writeServo(obj["motor2"]["angle"], moveDuration);
+    if(!obj["motor2"]["velocity"].isNull()){
+      motor2.drive(obj["motor2"]["velocity"]);
+      emptyRequest = false;
+    }
+    if(!obj["motor2"]["angle"].isNull()){
+      motor2.writeServo(obj["motor2"]["angle"], moveDuration);
+      emptyRequest = false;
+    }
   }
 
   if(!obj["motor3"].isNull()){
-    if(!obj["motor3"]["velocity"].isNull()) motor3.drive(obj["motor3"]["velocity"]);
-    if(!obj["motor3"]["angle"].isNull()) motor3.writeServo(obj["motor3"]["angle"], moveDuration);
+    if(!obj["motor3"]["velocity"].isNull()){
+      motor3.drive(obj["motor3"]["velocity"]);
+      emptyRequest = false;
+    }
+    if(!obj["motor3"]["angle"].isNull()){
+      motor3.writeServo(obj["motor3"]["angle"], moveDuration);
+      emptyRequest = false;
+    }
   }
 
   if(!obj["motor4"].isNull()){
-    if(!obj["motor4"]["velocity"].isNull()) motor4.drive(obj["motor4"]["velocity"]);
-    if(!obj["motor4"]["angle"].isNull()) motor4.writeServo(obj["motor4"]["angle"], moveDuration);
+    if(!obj["motor4"]["velocity"].isNull()){
+      motor4.drive(obj["motor4"]["velocity"]);
+      emptyRequest = false;
+    }
+    if(!obj["motor4"]["angle"].isNull()){
+      motor4.writeServo(obj["motor4"]["angle"], moveDuration);
+      emptyRequest = false;
+    }
   }
+  if(emptyRequest){
+    motor1.resetDistanceVelocity();
+    motor2.resetDistanceVelocity();
+    motor3.resetDistanceVelocity();
+    motor4.resetDistanceVelocity();
+  }
+  
 
   if(!obj["pan"].isNull()){
     if(!obj["pan"]["angle"].isNull()) servoPan.writeServo(obj["pan"]["angle"], moveDuration);
