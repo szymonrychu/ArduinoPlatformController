@@ -39,10 +39,15 @@ if __name__ == '__main__':
 
 '''
 source /opt/ros/noetic/setup.bash 
-~/catkin_ws/src/string_ros_request.py -d '{"move_duration":2,"motor1":{"angle":-0.0},"motor2":{"angle":-0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}'
+./ros/string_ros_request.py -d '{"move_duration":2,"motor1":{"angle":-0.0},"motor2":{"angle":-0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}'
 
 
-~/catkin_ws/src/string_ros_request.py -d '{"move_duration":2,"motor1":{"angle":-0.7853},"motor2":{"angle":-0.7853},"motor3":{"angle":0.7853},"motor4":{"angle":0.7853}}'
+./ros/string_ros_request.py -d '{"move_duration":2,"motor1":{"angle":-0.7853},"motor2":{"angle":-0.7853},"motor3":{"angle":0.7853},"motor4":{"angle":0.7853}}'
+
+./ros/string_ros_request.py -d '{"move_duration":2,"motor1":{"angle":-0.7853}}'
+./ros/string_ros_request.py -d '{"move_duration":2,"motor2":{"angle":-0.7853}}'
+./ros/string_ros_request.py -d '{"move_duration":2,"motor3":{"angle":-0.7853}}'
+./ros/string_ros_request.py -d '{"move_duration":2,"motor4":{"angle":-0.7853}}'
 
 
 ~/catkin_ws/src/string_ros_request.py -d '{"motor1":{"angle":2.187251793041891},"motor2":{"angle":0.9543408605479022},"motor3":{"angle":-0.9543408605479022},"motor4":{"angle":-2.18725179304189},"move_duration":1.5000919909545711}'

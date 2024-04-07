@@ -18,26 +18,26 @@ class PlatformStatics:
 
     # LEFT BACK
     M1_IN_PLACE_TURN = -1.0
-    M1_ANGLE_COEFFICIENT = -1.0
+    M1_ANGLE_COEFFICIENT = 1.0
     M1_X = -(ROBOT_WIDTH/2) 
-    M1_Y = (ROBOT_LENGTH/2)
+    M1_Y = -(ROBOT_LENGTH/2)
 
     # RIGHT BACK
     M2_IN_PLACE_TURN = -1.0
-    M2_ANGLE_COEFFICIENT = -1.0
-    M2_X = -(ROBOT_WIDTH/2) 
+    M2_ANGLE_COEFFICIENT = 1.0
+    M2_X = (ROBOT_WIDTH/2) 
     M2_Y = -(ROBOT_LENGTH/2)
 
     # RIGHT FRONT
     M3_IN_PLACE_TURN = -1.0
     M3_ANGLE_COEFFICIENT = 1.0
     M3_X = (ROBOT_WIDTH/2) 
-    M3_Y = -(ROBOT_LENGTH/2)
+    M3_Y = (ROBOT_LENGTH/2)
 
     # LEFT FRONT
     M4_IN_PLACE_TURN = -1.0
     M4_ANGLE_COEFFICIENT = 1.0
-    M4_X = (ROBOT_WIDTH/2) 
+    M4_X = -(ROBOT_WIDTH/2) 
     M4_Y = (ROBOT_LENGTH/2)
 
     ROBOT_MOTORS_DIMENSIONS = [
@@ -48,7 +48,7 @@ class PlatformStatics:
     ]
 
 
-    TURN_VELOCITY = 0.78535 # 45degrees in 1s
+    TURN_VELOCITY = 0.78535 / 3.0# 45degrees in 1s /
     MOVE_VELOCITY = 0.3
     MIN_ANGLE_DIFF = 0.001
     REQUEST_DURATION_COEFFICIENT = 1.01 # how much additional time to count into a move, so we get overlapped requests
@@ -73,10 +73,10 @@ def _print_radians_in_degrees(angle_rad_list:List[float], round_:int = 4):
 
 def compute_relative_turning_point(m1_angle, m2_angle, m3_angle, m4_angle) -> Optional[Point]:
     motor_servo_angles = [
-        PlatformStatics.M1_ANGLE_COEFFICIENT * m1_angle,
-        PlatformStatics.M2_ANGLE_COEFFICIENT * m2_angle,
-        PlatformStatics.M3_ANGLE_COEFFICIENT * m3_angle,
-        PlatformStatics.M4_ANGLE_COEFFICIENT * m4_angle,
+        m1_angle,
+        m2_angle,
+        m3_angle,
+        m4_angle,
     ]
 
     partial_turning_points = []
@@ -94,16 +94,16 @@ def compute_relative_turning_point(m1_angle, m2_angle, m3_angle, m4_angle) -> Op
             p = Point()
             p.y = ( YA * math.tan(math.pi/2 - yaw_A) + YB * math.tan(math.pi/2 - yaw_B) + XB - XA ) / (math.tan(math.pi/2 - yaw_A) - math.tan(math.pi/2 - yaw_B))
             p.x = XA - (YA - p.y) * math.tan(math.pi/2 - yaw_A)
-            rospy.loginfo(f"Computed relative turning point between {c1} and {c2} motors: [{p.x},{p.y}]")
+            rospy.loginfo(f"Computed relative turning point between {c1+1} and {c2+1} motors: [{p.x:.4f},{p.y:.4f}]")
             partial_turning_points.append(p)
     
     if not partial_turning_points:
         return None
-    
+
     relative_turning_point = Point()
     relative_turning_point.x = sum([p.x for p in partial_turning_points])/len(partial_turning_points)
     relative_turning_point.y = sum([p.y for p in partial_turning_points])/len(partial_turning_points)
-    rospy.loginfo(f"Computed turning point: [{relative_turning_point.x},{relative_turning_point.y}]")
+    rospy.loginfo(f"Computed turning point: [{relative_turning_point.x:.4f},{relative_turning_point.y:.4f}]")
     return relative_turning_point
 
 
@@ -125,10 +125,10 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
         m4_y, m4_x = PlatformStatics.M4_Y - turning_point.y, PlatformStatics.M4_X - turning_point.x
 
         target_servo_angles = [
-            limit_angle(PlatformStatics.M1_IN_PLACE_TURN * math.atan2(-m1_y, m1_x)),
-            limit_angle(PlatformStatics.M2_IN_PLACE_TURN * math.atan2(-m2_y, m2_x)),
-            limit_angle(PlatformStatics.M3_IN_PLACE_TURN * math.atan2(-m3_y, m3_x)),
-            limit_angle(PlatformStatics.M4_IN_PLACE_TURN * math.atan2(-m4_y, m4_x))
+            limit_angle(PlatformStatics.M1_ANGLE_COEFFICIENT * math.atan2(-m1_y, m1_x)),
+            limit_angle(PlatformStatics.M2_ANGLE_COEFFICIENT * math.atan2(-m2_y, m2_x)),
+            limit_angle(PlatformStatics.M3_ANGLE_COEFFICIENT * math.atan2(-m3_y, m3_x)),
+            limit_angle(PlatformStatics.M4_ANGLE_COEFFICIENT * math.atan2(-m4_y, m4_x))
         ]
     else:
         target_servo_angles = [
@@ -145,42 +145,42 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
     rospy.loginfo(f"Delta servo angles[deg] {_print_radians_in_degrees(delta_servo_angles)}")
 
     increment_angles = []
-    for delta_servo_angle in delta_servo_angles:
-        delta_max_time_necessary = PlatformStatics.TURN_VELOCITY / delta_servo_angle
+    for delta_servo_angle, current_servo_angle, target_servo_angle in zip(delta_servo_angles, current_servo_angles, target_servo_angles):
+        delta_max_time_necessary = abs(delta_servo_angle / PlatformStatics.TURN_VELOCITY)
         rospy.loginfo(f"Max time necessary to do the turn of the servos {delta_max_time_necessary}")
-        if delta_max_time_necessary != 0:
-            increment_servo_angle = abs(request.duration / delta_max_time_necessary) * delta_servo_angle
-            increment_angles.append(increment_servo_angle)
+        if delta_max_time_necessary > request.duration:
+            increment_servo_angle = request.duration / delta_max_time_necessary * delta_servo_angle
+            increment_angles.append(increment_servo_angle + current_servo_angle)
         else:
-            increment_angles.append(0.0)
-    rospy.loginfo(f"Increment servo angles[deg] {_print_radians_in_degrees(increment_angles)}")
+            increment_angles.append(target_servo_angle)
+    rospy.loginfo(f"Current servo angles with increment[deg] {_print_radians_in_degrees(increment_angles)}")
     
     request.motor1.servo.angle = increment_angles[0]
     request.motor2.servo.angle = increment_angles[1]
     request.motor3.servo.angle = increment_angles[2]
     request.motor4.servo.angle = increment_angles[3]
-    request.motor1.servo.angle_provided = increment_angles[0] != platform_status.motor1.servo.angle
-    request.motor2.servo.angle_provided = increment_angles[1] != platform_status.motor2.servo.angle
-    request.motor3.servo.angle_provided = increment_angles[2] != platform_status.motor3.servo.angle
-    request.motor4.servo.angle_provided = increment_angles[3] != platform_status.motor4.servo.angle
+    request.motor1.servo.angle_provided = abs(increment_angles[0] - platform_status.motor1.servo.angle) > PlatformStatics.MIN_ANGLE_DIFF
+    request.motor2.servo.angle_provided = abs(increment_angles[1] - platform_status.motor2.servo.angle) > PlatformStatics.MIN_ANGLE_DIFF
+    request.motor3.servo.angle_provided = abs(increment_angles[2] - platform_status.motor3.servo.angle) > PlatformStatics.MIN_ANGLE_DIFF
+    request.motor4.servo.angle_provided = abs(increment_angles[3] - platform_status.motor4.servo.angle) > PlatformStatics.MIN_ANGLE_DIFF
 
     next_turning_point = compute_relative_turning_point(*tuple(increment_angles))
-    if next_turning_point:
+    if next_turning_point and (next_turning_point.x > 0.001 or next_turning_point.y > 0.001):
         turn_radius = math.sqrt(next_turning_point.x**2 + next_turning_point.y**2)
         m1_radius = math.sqrt((PlatformStatics.M1_X + next_turning_point.x)**2 + (PlatformStatics.M1_Y + next_turning_point.y)**2)
         m2_radius = math.sqrt((PlatformStatics.M2_X + next_turning_point.x)**2 + (PlatformStatics.M2_Y + next_turning_point.y)**2)
         m3_radius = math.sqrt((PlatformStatics.M3_X + next_turning_point.x)**2 + (PlatformStatics.M3_Y + next_turning_point.y)**2)
         m4_radius = math.sqrt((PlatformStatics.M4_X + next_turning_point.x)**2 + (PlatformStatics.M4_Y + next_turning_point.y)**2)
-        rospy.loginfo(f"platform/m1/m2/m3/m4 turning radiuses: {turn_radius}/{m1_radius}/{m2_radius}/{m3_radius}/{m4_radius}")
+        rospy.loginfo(f"platform/m1/m2/m3/m4 turning radiuses: {turn_radius:.4f}/{m1_radius:.4f}/{m2_radius:.4f}/{m3_radius:.4f}/{m4_radius:.4f}")
 
         m1_coeficient = max(m1_radius/turn_radius, PlatformStatics.MIN_TURN_COEF)
         m2_coeficient = max(m2_radius/turn_radius, PlatformStatics.MIN_TURN_COEF)
         m3_coeficient = max(m3_radius/turn_radius, PlatformStatics.MIN_TURN_COEF)
         m4_coeficient = max(m4_radius/turn_radius, PlatformStatics.MIN_TURN_COEF)
-        m1_coeficient = m1_coeficient if turning_point.y > PlatformStatics.M1_Y else -m1_coeficient
-        m2_coeficient = -m2_coeficient if turning_point.y < PlatformStatics.M2_Y else m2_coeficient
-        m3_coeficient = -m3_coeficient if turning_point.y < PlatformStatics.M3_Y else m3_coeficient
-        m4_coeficient = m4_coeficient if turning_point.y > PlatformStatics.M4_Y else -m4_coeficient
+        m1_coeficient = m1_coeficient if next_turning_point.y > PlatformStatics.M1_Y else -m1_coeficient
+        m2_coeficient = -m2_coeficient if next_turning_point.y < PlatformStatics.M2_Y else m2_coeficient
+        m3_coeficient = -m3_coeficient if next_turning_point.y < PlatformStatics.M3_Y else m3_coeficient
+        m4_coeficient = m4_coeficient if next_turning_point.y > PlatformStatics.M4_Y else -m4_coeficient
 
 
         # m1_coeficient = m1_coeficient if x > M1_X else -m1_coeficient
@@ -202,11 +202,6 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
         request.motor2.velocity = velocity
         request.motor3.velocity = velocity
         request.motor4.velocity = velocity
-    
-    request.motor1.distance = request.motor1.velocity * request.duration
-    request.motor2.distance = request.motor1.velocity * request.duration
-    request.motor3.distance = request.motor1.velocity * request.duration
-    request.motor4.distance = request.motor1.velocity * request.duration
     
     rospy.loginfo(f"m1/m2/m3/m4 motor velocities: {request.motor1.velocity}/{request.motor2.velocity}/{request.motor3.velocity}/{request.motor4.velocity}")
 

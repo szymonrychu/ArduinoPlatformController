@@ -190,25 +190,21 @@ class Request(Message):
     def from_MoveRequest(m:MoveRequest):
         r = Request()
         r.motor1 = MotorStatus()
-        r.motor1.distance = round(m.motor1.distance, 3)
         r.motor1.velocity = round(m.motor1.velocity, 3)
         if m.motor1.servo.angle_provided:
             r.motor1.angle = round(m.motor1.servo.angle, 5)
             
         r.motor2 = MotorStatus()
-        r.motor2.distance = round(m.motor2.distance, 3)
         r.motor2.velocity = round(m.motor2.velocity, 3)
         if m.motor2.servo.angle_provided:
             r.motor2.angle = round(m.motor2.servo.angle, 5)
 
         r.motor3 = MotorStatus()
-        r.motor3.distance = round(m.motor3.distance, 3)
         r.motor3.velocity = round(m.motor3.velocity, 3)
         if m.motor3.servo.angle_provided:
             r.motor3.angle = round(m.motor3.servo.angle, 5)
 
         r.motor4 = MotorStatus()
-        r.motor4.distance = round(m.motor4.distance, 3)
         r.motor4.velocity = round(m.motor4.velocity, 3)
         if m.motor4.servo.angle_provided:
             r.motor4.angle = round(m.motor4.servo.angle, 5)

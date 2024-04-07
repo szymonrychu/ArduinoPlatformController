@@ -69,21 +69,25 @@ class JoyPlatformController(ROSNode):
         self._last_platform_status = status
 
     def _send_request(self, event=None):
-        velocity = 0.0
-        if abs(self._last_joy.axes[1]) > 0.01:
-            velocity = 10*PlatformStatics.MOVE_VELOCITY * self._last_joy.axes[1]
+        # rel_velocity = self._last_joy.axes[1]
+        rel_velocity = 0.7
         
         # turn_radius = self._last_joy.axes[0]
         # if turn_radius > 0.01:
         #     turn_radius = 1 - turn_radius
         # elif turn_radius < -0.01:
         #     turn_radius = -1 + turn_radius
+        turn_radius = 0.2
+
+
+        velocity = 0.0
+        if abs(rel_velocity) > 0.01:
+            velocity = PlatformStatics.MOVE_VELOCITY * rel_velocity
         
-        turn_radius = 0.1
         turning_point = None
-        if abs(turn_radius) > 0.01:
+        if abs(turn_radius) > 0.0001:
             turning_point = Point()
-            turning_point.x = 10.0 * turn_radius
+            turning_point.x = turn_radius
         
             rospy.loginfo(f"Requested move with turning point [{turning_point.x},{turning_point.y}] and velocity {velocity}")
         else:
