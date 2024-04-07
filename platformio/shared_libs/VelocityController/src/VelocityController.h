@@ -22,7 +22,7 @@
 #endif
 
 #ifndef VELOCITY_CONTROLLER_I
-#define VELOCITY_CONTROLLER_I 0.1
+#define VELOCITY_CONTROLLER_I 0.0
 #endif
 
 #ifndef VELOCITY_CONTROLLER_D
@@ -216,7 +216,7 @@ public:
   void resetDistanceVelocity(){
     if(!this->isFresh_){
       this->lastDistance = this->distance;
-      this->velocityPID.reset(this->distance);
+      this->velocityPID.reset();
       this->velocity = 0;
       this->velocityTarget = 0;
       this->isFresh_ = true;

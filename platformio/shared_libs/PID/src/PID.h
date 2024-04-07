@@ -72,28 +72,28 @@ public:
         }
         this->input = input;
 
-        error = input - result;
+        error = this->input - this->result;
         // if(abs(error) < PID_DELTA_TOLERANCE){
         //     error = 0;
         // }
 
-        integralSteering += kI*error*timeDiff;
-        float errorDelta = (previousError - error)/timeDiff;
+        this->integralSteering += kI*error*timeDiff;
+        float errorDelta = (this->previousError - error)/timeDiff;
 
         proportionalSteering = kP*error;
         deriverativeSteering = kD*errorDelta;
 
-        if(integralSteering >  PID_MAX_INTEGRAL) integralSteering = PID_MAX_INTEGRAL;
-        if(integralSteering < -PID_MAX_INTEGRAL) integralSteering = -PID_MAX_INTEGRAL;
+        if(this->integralSteering >  PID_MAX_INTEGRAL) this->integralSteering = PID_MAX_INTEGRAL;
+        if(this->integralSteering < -PID_MAX_INTEGRAL) this->integralSteering = -PID_MAX_INTEGRAL;
 
-        pidSteering = proportionalSteering + integralSteering + deriverativeSteering;
+        pidSteering = proportionalSteering + this->integralSteering + deriverativeSteering;
 
         // if(maxDeadSpace > pidSteering && pidSteering > 0) pidSteering = maxDeadSpace;
         // if(minDeadSpace < pidSteering && pidSteering < 0) pidSteering = minDeadSpace;
         if(pidSteering > this->highLimit) pidSteering = this->highLimit;
         if(pidSteering < this->lowLimit) pidSteering = this->lowLimit;
 
-        previousError = error;
+        this->previousError = error;
         return pidSteering;
     }
 
@@ -111,10 +111,10 @@ public:
     }
 
     void reset(float currentDistance=0.0f){
-        input = currentDistance;
-        previousError = 0;
-        integralSteering = 0;
-        result = 0;
+        this->input = currentDistance;
+        this->previousError = 0;
+        this->integralSteering = 0;
+        this->result = 0;
     }
 
 };
