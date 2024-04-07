@@ -103,6 +103,7 @@ class ServoStatus(BaseModel):
 class MotorStatus(ServoStatus):
     velocity: Optional[float] = None
     distance: Optional[float] = None
+    angle: Optional[float] = None
 
 class GPSStatus(BaseModel):
     fix_quality: Optional[int] = -1
@@ -129,6 +130,12 @@ class GPSStatus(BaseModel):
             nav_sat_status.status = NavSatStatus.STATUS_NO_FIX
         nav_sat_fix.status = nav_sat_status
         return nav_sat_fix
+    
+class MotorServoStatuses(Message):
+    motor1_servo: ServoStatus
+    motor2_servo: ServoStatus
+    motor3_servo: ServoStatus
+    motor4_servo: ServoStatus
 
 
 class StatusResponse(Message):

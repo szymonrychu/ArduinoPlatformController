@@ -19,25 +19,11 @@ from std_msgs.msg import String, Duration
 from geometry_msgs.msg import Point, PoseStamped, Pose, TransformStamped, Point, PointStamped
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 
+from .ros_helpers import ROSNode
 from .log_utils import env2log
 from .message_utils import parse_response, GPSStatus, StatusResponse, BatteryStatus, IMUStatus, MotorStatus, ServoStatus
-from .odom_handler import OdomHandler
 from .serial_utils import SerialWrapper
 from .tf_helpers import *
-
-class ROSNode():
-
-    def __init__(self, node_name='robot_platform'):
-        rospy.init_node(node_name, log_level=env2log())
-
-    def start(self):
-        rospy.spin()
-
-    def is_running(self):
-        return not rospy.is_shutdown()
-
-    def stop(self, reason='', *_args, **_kwargs):
-        rospy.signal_shutdown(reason)
 
 
 class SerialROSNode(ROSNode, SerialWrapper):
@@ -95,23 +81,19 @@ class WheelController(SerialROSNode):
             'motor4': {}
         }
 
-        if raw_data.motor1.angle_provided:
-            raw_request['motor1']['angle'] = raw_data.motor1.angle
-        if raw_data.motor2.angle_provided:
-            raw_request['motor2']['angle'] = raw_data.motor2.angle
-        if raw_data.motor3.angle_provided:
-            raw_request['motor3']['angle'] = raw_data.motor3.angle
-        if raw_data.motor4.angle_provided:
-            raw_request['motor4']['angle'] = raw_data.motor4.angle
+        if raw_data.motor1.servo.angle_provided:
+            raw_request['motor1']['angle'] = raw_data.motor1.servo.angle
+        if raw_data.motor2.servo.angle_provided:
+            raw_request['motor2']['angle'] = raw_data.motor2.servo.angle
+        if raw_data.motor3.servo.angle_provided:
+            raw_request['motor3']['angle'] = raw_data.motor3.servo.angle
+        if raw_data.motor4.servo.angle_provided:
+            raw_request['motor4']['angle'] = raw_data.motor4.servo.angle
 
-        if raw_data.motor1.distance_provided:
-            raw_request['motor1']['angle'] = raw_data.motor1.distance
-        if raw_data.motor2.distance_provided:
-            raw_request['motor2']['angle'] = raw_data.motor2.distance
-        if raw_data.motor3.distance_provided:
-            raw_request['motor3']['angle'] = raw_data.motor3.distance
-        if raw_data.motor4.distance_provided:
-            raw_request['motor4']['angle'] = raw_data.motor4.distance
+        raw_request['motor1']['angle'] = raw_data.motor1.distance
+        raw_request['motor2']['angle'] = raw_data.motor2.distance
+        raw_request['motor3']['angle'] = raw_data.motor3.distance
+        raw_request['motor4']['angle'] = raw_data.motor4.distance
         self.write_data(json.dumps(raw_request))
 
     def parse_serial(self, raw_data:String):

@@ -22,6 +22,7 @@ RUN set -xe;\
         ros-noetic-hector-map-server \
         ros-noetic-rgbd-launch \
         ros-noetic-xacro \
+        ros-noetic-joy \
         vim \
         ;\
     rm -rf /var/lib/apt/lists/*;\

@@ -9,87 +9,78 @@ import rospy
 import tf_conversions
 import tf2_ros
 
-from math import pi as PI
-from typing import Optional
-from uuid import UUID
+# from math import pi as PI
+# from typing import Optional
+# from uuid import UUID
 
-from std_msgs.msg import String
-from geometry_msgs.msg import PoseStamped, Pose, TransformStamped, Point, PointStamped
-from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
+from .ros_helpers import ROSNode
+from robot_platform.msg import PlatformStatus
+from geometry_msgs.msg import Pose, PoseStamped, Point
 
 from .log_utils import env2log
-from .message_utils import parse_response, GPSStatus, StatusResponse, BatteryStatus, IMUStatus, MotorStatus, ServoStatus
-from .odom_handler import OdomHandler
 from .tf_helpers import *
-
-class ROSNode():
-
-    def __init__(self, node_name='robot_platform'):
-        rospy.init_node(node_name, log_level=env2log())
-
-    def start(self):
-        rospy.spin()
-
-    def is_running(self):
-        return not rospy.is_shutdown()
-
-    def stop(self, reason='', *_args, **_kwargs):
-        rospy.signal_shutdown(reason)
-
+from .odometry_helpers import PlatformStatics
 
 class OdometryHandlerROSNode(ROSNode):
 
     def __init__(self):
         ROSNode.__init__(self)
-        self._current_pose = Pose()
-        self._current_move_duration = 0
-        self._message_counter = 0
+        self.__current_Pose = Pose()
 
-        # self._map_frame_id = rospy.get_param('~map_frame_id')
-        # self._base_link_id = rospy.get_param('~base_link_frame_id')
-        # self._base_link_stabilised_id = rospy.get_param('~base_link_stabilised_frame_id')
-        # self._scan_link_id = rospy.get_param('~scan_link_frame_id')
-        
-
-        gps_state_input_topic = rospy.get_param('~gps_state_input_topic')
-        self._gps_state_publisher = rospy.Publisher(gps_state_input_topic, NavSatFix)
-        imu_state_input_topic = rospy.get_param('~imu_state_input_topic')
-        self._imu_state_publisher = rospy.Publisher(imu_state_input_topic, Imu)
-        wheel_positions_input_topic = rospy.get_param('~wheel_positions_input_topic')
-        rospy.Subscriber(wheel_positions_input_topic, WheelResponse, self._write_raw_data)
+        platform_status_input_topic = rospy.get_param('~platform_status_input_topic')
+        rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
 
         odom_state_output_topic = rospy.get_param('~odom_state_output_topic')
         self._odom_state_publisher = rospy.Publisher(odom_state_output_topic, PoseStamped)
 
-        self._tf_broadcaster = tf2_ros.TransformBroadcaster()
+    def _handle_platform_status(self, status:PlatformStatus):
+        motors = [
+            status.motor1,
+            status.motor2,
+            status.motor3,
+            status.motor4,
+        ]
+        mean_distance = sum([m.distance for m in motors])/len(motors)
 
-        self.write_data('{"move_duration":1,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}')
+        turning_points = []
 
+        for i1 in range(PlatformStatics.MOTOR_NUM):
+            for i2 in range(PlatformStatics.MOTOR_NUM):
+                if i2 >= i1:
+                    continue
 
-    def handle_goal_pose_input_data(self, goal_pose:PoseStamped):
-        pose_delta = substract_points(goal_pose.pose.position, self._current_pose.position)
+                yaw_A, (XA, YA) = motors[i1].servo.angle, PlatformStatics.ROBOT_MOTORS_DIMENSIONS[i1]
+                if i1 % 2 == 1:
+                    yaw_A = -yaw_A
+                
+                yaw_B, (XB, YB) = motors[i2].servo.angle, PlatformStatics.ROBOT_MOTORS_DIMENSIONS[i2]
+                if i2 % 2 == 1:
+                    yaw_B = -yaw_B
+                
+                if abs(yaw_A - yaw_B) < PlatformStatics.MIN_ANGLE_DIFF:
+                    continue
 
-        roll, pitch, yaw = get_rpy_from_quaternion(goal_pose.pose.orientation)
+                p = Point()
+                p.y = ( YA * math.tan(math.pi/2 - yaw_A) + YB * math.tan(math.pi/2 - yaw_B) + XB - XA ) / (math.tan(math.pi/2 - yaw_A) - math.tan(math.pi/2 - yaw_B))
+                p.x = XA - (YA - p.y) * math.tan(math.pi/2 - yaw_A)
 
-        turn_angle = math.atan2(pose_delta.y, pose_delta.x)
-        if abs(turn_angle) > 0.001:
-            for move in self._odom_handler.turn_around_XY(turn_angle):
-                raw_move = move.model_dump_json(exclude_none=True)
-                rospy.loginfo(raw_move)
-                self.write_data(raw_move)
-                time.sleep(move.move_duration)
-        else:
-            rospy.loginfo(f"Ommiting turn in move request- reason: abs(turn_angle) = {turn_angle} <= 0.001")
+                turning_points.append(p)
         
-        move_distance = math.sqrt(pose_delta.x*pose_delta.x + pose_delta.y*pose_delta.y)
-        if abs(move_distance) > 0.01:
-            for move in self._odom_handler.move_forward(move_distance):
-                raw_move = move.model_dump_json(exclude_none=True)
-                rospy.loginfo(raw_move)
-                self.write_data(raw_move)
-                time.sleep(move.move_duration)
-        else:
-            rospy.loginfo(f"Ommiting move_forward in move request- reason: abs(move_distance) = {move_distance} <= 0.001")
+        relative_turning_point = None
+        if turning_points:
+            relative_turning_point = Point()
+            relative_turning_point.x = sum([p.x for p in turning_points])/len(turning_points)
+            relative_turning_point.y = sum([p.y for p in turning_points])/len(turning_points)
+
+            turning_radius = math.sqrt(relative_turning_point.x**2 + relative_turning_point.y**2)
+            full_circle_distance = 2 * math.pi * turning_radius
+            angle_radians_delta = full_circle_distance / mean_distance
+
+            self._current_YAW += angle_radians_delta
+
+        # self.__current_Pose.position.x += motor_status.distance * math.cos(self._current_YAW)
+        # self.__current_Pose.position.y += motor_status.distance * math.sin(self._current_YAW)
+        # self.__current_Pose.orientation = get_quaterion_from_rpy(0.0, 0.0, self._current_YAW)
 
 def main():
     platform = OdometryHandlerROSNode()
