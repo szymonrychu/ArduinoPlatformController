@@ -215,8 +215,8 @@ public:
 
   void resetDistanceVelocity(){
     if(!this->isFresh_){
-      this->velocityPID.reset();
       this->lastDistance = this->distance;
+      this->velocityPID.reset(this->distance);
       this->velocity = 0;
       this->velocityTarget = 0;
       this->isFresh_ = true;
