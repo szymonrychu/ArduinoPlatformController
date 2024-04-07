@@ -109,7 +109,7 @@ def compute_relative_turning_point(m1_angle, m2_angle, m3_angle, m4_angle) -> Op
 
 def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:PlatformStatus, turning_point:Point=None) -> MoveRequest:
     request = MoveRequest()
-    request.duration = round(PlatformStatics.REQUEST_DURATION_COEFFICIENT/autorepeat_rate, 5)
+    request.duration = PlatformStatics.REQUEST_DURATION_COEFFICIENT/autorepeat_rate
     current_servo_angles = [
         platform_status.motor1.servo.angle,
         platform_status.motor2.servo.angle,
@@ -150,7 +150,7 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
         rospy.loginfo(f"Max time necessary to do the turn of the servos {delta_max_time_necessary}")
         if delta_max_time_necessary != 0:
             increment_servo_angle = abs(request.duration / delta_max_time_necessary) * delta_servo_angle
-            increment_angles.append(round(increment_servo_angle, 5))
+            increment_angles.append(increment_servo_angle)
         else:
             increment_angles.append(0.0)
     rospy.loginfo(f"Increment servo angles[deg] {_print_radians_in_degrees(increment_angles)}")
@@ -193,15 +193,15 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
         # m3_coeficient = m3_coeficient if y < M3_Y else -m3_coeficient
         # m4_coeficient = m4_coeficient if y < M4_Y else -m4_coeficient
 
-        request.motor1.velocity = round(m1_coeficient * velocity, 3)
-        request.motor2.velocity = round(m2_coeficient * velocity, 3)
-        request.motor3.velocity = round(m3_coeficient * velocity, 3)
-        request.motor4.velocity = round(m4_coeficient * velocity, 3)
+        request.motor1.velocity = m1_coeficient * velocity
+        request.motor2.velocity = m2_coeficient * velocity
+        request.motor3.velocity = m3_coeficient * velocity
+        request.motor4.velocity = m4_coeficient * velocity
     else:
-        request.motor1.velocity = round(velocity, 3)
-        request.motor2.velocity = round(velocity, 3)
-        request.motor3.velocity = round(velocity, 3)
-        request.motor4.velocity = round(velocity, 3)
+        request.motor1.velocity = velocity
+        request.motor2.velocity = velocity
+        request.motor3.velocity = velocity
+        request.motor4.velocity = velocity
     
     request.motor1.distance = request.motor1.velocity * request.duration
     request.motor2.distance = request.motor1.velocity * request.duration

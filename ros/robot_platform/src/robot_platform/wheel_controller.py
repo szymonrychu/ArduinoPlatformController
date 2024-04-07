@@ -75,7 +75,7 @@ class WheelController(SerialROSNode):
     def _handle_wheel_inputs(self, raw_data:MoveRequest):
         r = Request.from_MoveRequest(raw_data)
         rospy.loginfo(f"requesting: {str(r)}, '{r.model_dump_json()}'")
-        self.write_data(r.model_dump_json())
+        self.write_data(r.model_dump_json(exclude_none=True))
 
     def parse_serial(self, raw_data:String):
         rospy_time_now = rospy.Time.now()
