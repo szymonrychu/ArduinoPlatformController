@@ -87,7 +87,7 @@ class IMUStatus(BaseModel):
         t.transform.rotation = imu.orientation
         return t
 
-class ServoStatus(BaseModel):
+class ServoStatus(Message):
     angle: Optional[float] = None
     
     def parse_ROS_TF(self, child_frame_id:str, base_frame_id:str, translation:Vector3 = None, timestamp:rospy.Time=None) -> TransformStamped:
