@@ -49,7 +49,7 @@ class PlatformStatics:
 
 
     TURN_VELOCITY = 0.78535# 45degrees in 1s /
-    MOVE_VELOCITY = 0.5
+    MOVE_VELOCITY = 0.7
     MIN_ANGLE_DIFF = 0.001
     REQUEST_DURATION_COEFFICIENT = 1.5 # how much additional time to count into a move, so we get overlapped requests
 
@@ -187,16 +187,16 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
         m4_coeficient = m4_coeficient if _if_between(next_turning_point.x, 0, PlatformStatics.M4_X) else -m4_coeficient
 
         if max_delta_servo_angle < PlatformStatics.MIN_ANGLE_DIFF:
-            request.motor1.velocity = m1_coeficient * velocity
-            request.motor2.velocity = m2_coeficient * velocity
-            request.motor3.velocity = m3_coeficient * velocity
-            request.motor4.velocity = m4_coeficient * velocity
+            request.motor1.velocity = PlatformStatics.MOVE_VELOCITY * m1_coeficient * velocity
+            request.motor2.velocity = PlatformStatics.MOVE_VELOCITY * m2_coeficient * velocity
+            request.motor3.velocity = PlatformStatics.MOVE_VELOCITY * m3_coeficient * velocity
+            request.motor4.velocity = PlatformStatics.MOVE_VELOCITY * m4_coeficient * velocity
     else:
         if max_delta_servo_angle < PlatformStatics.MIN_ANGLE_DIFF:
-            request.motor1.velocity = velocity
-            request.motor2.velocity = velocity
-            request.motor3.velocity = velocity
-            request.motor4.velocity = velocity
+            request.motor1.velocity = PlatformStatics.MOVE_VELOCITY * velocity
+            request.motor2.velocity = PlatformStatics.MOVE_VELOCITY * velocity
+            request.motor3.velocity = PlatformStatics.MOVE_VELOCITY * velocity
+            request.motor4.velocity = PlatformStatics.MOVE_VELOCITY * velocity
     
     rospy.logdebug(f"m1/m2/m3/m4 motor velocities: {request.motor1.velocity}/{request.motor2.velocity}/{request.motor3.velocity}/{request.motor4.velocity}")
 
