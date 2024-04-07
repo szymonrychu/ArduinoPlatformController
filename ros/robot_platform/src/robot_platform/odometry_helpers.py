@@ -109,7 +109,7 @@ def compute_relative_turning_point(m1_angle, m2_angle, m3_angle, m4_angle) -> Op
 
 def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:PlatformStatus, turning_point:Point=None) -> MoveRequest:
     request = MoveRequest()
-    request.duration = PlatformStatics.REQUEST_DURATION_COEFFICIENT/autorepeat_rate
+    request.duration = round(PlatformStatics.REQUEST_DURATION_COEFFICIENT/autorepeat_rate, 5)
     current_servo_angles = [
         platform_status.motor1.servo.angle,
         platform_status.motor2.servo.angle,
@@ -125,10 +125,10 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
         m4_y, m4_x = PlatformStatics.M4_Y - turning_point.y, PlatformStatics.M4_X - turning_point.x
 
         target_servo_angles = [
-            round(limit_angle(PlatformStatics.M1_IN_PLACE_TURN * math.atan2(-m1_y, m1_x)), 5),
-            round(limit_angle(PlatformStatics.M2_IN_PLACE_TURN * math.atan2(-m2_y, m2_x)), 5),
-            round(limit_angle(PlatformStatics.M3_IN_PLACE_TURN * math.atan2(-m3_y, m3_x)), 5),
-            round(limit_angle(PlatformStatics.M4_IN_PLACE_TURN * math.atan2(-m4_y, m4_x)), 5)
+            limit_angle(PlatformStatics.M1_IN_PLACE_TURN * math.atan2(-m1_y, m1_x)),
+            limit_angle(PlatformStatics.M2_IN_PLACE_TURN * math.atan2(-m2_y, m2_x)),
+            limit_angle(PlatformStatics.M3_IN_PLACE_TURN * math.atan2(-m3_y, m3_x)),
+            limit_angle(PlatformStatics.M4_IN_PLACE_TURN * math.atan2(-m4_y, m4_x))
         ]
     else:
         target_servo_angles = [
@@ -150,7 +150,7 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
         rospy.loginfo(f"Max time necessary to do the turn of the servos {delta_max_time_necessary}")
         if delta_max_time_necessary != 0:
             increment_servo_angle = abs(request.duration / delta_max_time_necessary) * delta_servo_angle
-            increment_angles.append(increment_servo_angle)
+            increment_angles.append(round(increment_servo_angle, 5))
         else:
             increment_angles.append(0.0)
     rospy.loginfo(f"Increment servo angles[deg] {_print_radians_in_degrees(increment_angles)}")

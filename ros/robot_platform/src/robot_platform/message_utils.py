@@ -189,31 +189,31 @@ class Request(Message):
     @staticmethod
     def from_MoveRequest(m:MoveRequest):
         r = Request()
-        r.motor1.distance = m.motor1.distance
-        r.motor1.velocity = m.motor1.velocity
+        r.motor1.distance = round(m.motor1.distance, 3)
+        r.motor1.velocity = round(m.motor1.velocity, 3)
         if m.motor1.servo.angle_provided:
-            r.motor1.angle = m.motor1.servo.angle
+            r.motor1.angle = round(m.motor1.servo.angle, 5)
             
-        r.motor2.distance = m.motor2.distance
-        r.motor2.velocity = m.motor2.velocity
+        r.motor2.distance = round(m.motor2.distance, 3)
+        r.motor2.velocity = round(m.motor2.velocity, 3)
         if m.motor2.servo.angle_provided:
-            r.motor2.angle = m.motor2.servo.angle
+            r.motor2.angle = round(m.motor2.servo.angle, 5)
 
-        r.motor3.distance = m.motor3.distance
-        r.motor3.velocity = m.motor3.velocity
+        r.motor3.distance = round(m.motor3.distance, 3)
+        r.motor3.velocity = round(m.motor3.velocity, 3)
         if m.motor3.servo.angle_provided:
-            r.motor3.angle = m.motor3.servo.angle
+            r.motor3.angle = round(m.motor3.servo.angle, 5)
 
-        r.motor4.distance = m.motor4.distance
-        r.motor4.velocity = m.motor4.velocity
+        r.motor4.distance = round(m.motor4.distance, 3)
+        r.motor4.velocity = round(m.motor4.velocity, 3)
         if m.motor4.servo.angle_provided:
-            r.motor4.angle = m.motor4.servo.angle
+            r.motor4.angle = round(m.motor4.servo.angle, 5)
         
         if m.pan.angle_provided:
-            r.pan.angle = m.pan.angle
+            r.pan.angle = round(m.pan.angle, 5)
         if m.tilt.angle_provided:
-            r.tilt.angle = m.tilt.angle
-        r.move_duration = m.duration
+            r.tilt.angle = round(m.tilt.angle, 5)
+        r.move_duration = round(m.duration, 3)
         return r
     
 
