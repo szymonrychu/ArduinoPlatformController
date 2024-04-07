@@ -21,7 +21,7 @@ from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 
 from .ros_helpers import ROSNode
 from .log_utils import env2log
-from .message_utils import parse_response, GPSStatus, StatusResponse, BatteryStatus, IMUStatus, MotorStatus, ServoStatus
+from .message_utils import parse_response, Request
 from .serial_utils import SerialWrapper
 from .tf_helpers import *
 
@@ -73,28 +73,9 @@ class WheelController(SerialROSNode):
         self.write_data('{"move_duration":1,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}')
 
     def _handle_wheel_inputs(self, raw_data:MoveRequest):
-        raw_request = {
-            'move_duration': raw_data.duration,
-            'motor1': {},
-            'motor2': {},
-            'motor3': {},
-            'motor4': {}
-        }
-
-        if raw_data.motor1.servo.angle_provided:
-            raw_request['motor1']['angle'] = raw_data.motor1.servo.angle
-        if raw_data.motor2.servo.angle_provided:
-            raw_request['motor2']['angle'] = raw_data.motor2.servo.angle
-        if raw_data.motor3.servo.angle_provided:
-            raw_request['motor3']['angle'] = raw_data.motor3.servo.angle
-        if raw_data.motor4.servo.angle_provided:
-            raw_request['motor4']['angle'] = raw_data.motor4.servo.angle
-
-        raw_request['motor1']['angle'] = raw_data.motor1.distance
-        raw_request['motor2']['angle'] = raw_data.motor2.distance
-        raw_request['motor3']['angle'] = raw_data.motor3.distance
-        raw_request['motor4']['angle'] = raw_data.motor4.distance
-        self.write_data(json.dumps(raw_request))
+        r = Request.from_MoveRequest(raw_data)
+        rospy.loginfo(f"requesting: {str(r)}")
+        self.write_data(r.model_dump_json())
 
     def parse_serial(self, raw_data:String):
         rospy_time_now = rospy.Time.now()

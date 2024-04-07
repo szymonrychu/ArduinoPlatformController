@@ -5,7 +5,7 @@ import json
 import rospy
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import TransformStamped, Vector3, PoseStamped
-from robot_platform.msg import PlatformStatus
+from robot_platform.msg import PlatformStatus, MoveRequest
 
 from .tf_helpers import get_quaterion_from_rpy
 
@@ -185,6 +185,32 @@ class Request(Message):
     pan: Optional[ServoStatus] = ServoStatus()
     tilt: Optional[ServoStatus] = ServoStatus()
     move_duration: Optional[float] = 0.0
+
+    @staticmethod
+    def from_MoveRequest(m:MoveRequest):
+        r = Request()
+        r.motor1.distance = m.motor1.distance
+        if m.motor1.servo.angle_provided:
+            r.motor1.angle = m.motor1.servo.angle
+            
+        r.motor2.distance = m.motor2.distance
+        if m.motor2.servo.angle_provided:
+            r.motor2.angle = m.motor2.servo.angle
+
+        r.motor3.distance = m.motor3.distance
+        if m.motor3.servo.angle_provided:
+            r.motor3.angle = m.motor3.servo.angle
+
+        r.motor4.distance = m.motor4.distance
+        if m.motor4.servo.angle_provided:
+            r.motor4.angle = m.motor4.servo.angle
+        
+        if m.pan.angle_provided:
+            r.pan.angle = m.pan.angle
+        if m.tilt.angle_provided:
+            r.tilt.angle = m.tilt.angle
+        return r
+
 
 
 def parse_response(raw_input:str) -> StatusResponse:
