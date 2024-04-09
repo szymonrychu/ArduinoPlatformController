@@ -149,11 +149,11 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
 
     max_angle_reachable = request.duration * PlatformStatics.TURN_VELOCITY
     increment_angles = []
-    for delta_servo_angle, current_servo_angle, target_servo_angle in zip(delta_servo_angles, current_servo_angles, target_servo_angles):
-        if delta_servo_angle > max_angle_reachable:
-            increment_angles.append(max_angle_reachable)
-        elif delta_servo_angle < -max_angle_reachable:
-            increment_angles.append(-max_angle_reachable)
+    for delta_servo_angle, current_servo_angle in zip(delta_servo_angles, current_servo_angles):
+        if delta_servo_angle > current_servo_angle + max_angle_reachable:
+            increment_angles.append(current_servo_angle + max_angle_reachable)
+        elif delta_servo_angle < current_servo_angle - max_angle_reachable:
+            increment_angles.append(current_servo_angle - max_angle_reachable)
         else:
             increment_angles.append(delta_servo_angle)
 
