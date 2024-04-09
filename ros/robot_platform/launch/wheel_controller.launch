@@ -92,5 +92,10 @@
     -->
     <param name="tf_map_scanmatch_transform_frame_name" value="$(arg tf_map_scanmatch_transform_frame_name)" />
   </node>
+  
+  <include file="$(find robot_platform)/launch/joy_controller.launch">
+    <arg name="move_request_output_topic" value="$(arg wheel_positions_input_topic)" />
+    <arg name="platform_status_input_topic" value="$(arg platform_status_output_topic)" />
+  </include>
 
 </launch>
