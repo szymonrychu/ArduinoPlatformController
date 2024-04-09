@@ -100,9 +100,9 @@ class JoyPlatformController(ROSNode):
                 turning_point = Point()
                 turning_point.x = turn_radius
             
-                rospy.loginfo(f"Requested move with turning point [{turning_point.x},{turning_point.y}] and velocity {velocity}")
-            else:
-                rospy.loginfo(f"Requested move with velocity {velocity}")
+            #     rospy.loginfo(f"Requested move with turning point [{turning_point.x},{turning_point.y}] and velocity {velocity}")
+            # else:
+            #     rospy.loginfo(f"Requested move with velocity {velocity}")
 
             r = compute_next_request(velocity, request_rate, self._last_platform_status, turning_point)
             self._move_request_publisher.publish(r)
