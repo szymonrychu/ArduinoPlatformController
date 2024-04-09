@@ -150,14 +150,14 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
     max_angle_reachable = request.duration * PlatformStatics.TURN_VELOCITY
     increment_angles = []
     for delta_servo_angle, current_servo_angle in zip(delta_servo_angles, current_servo_angles):
-        if delta_servo_angle > current_servo_angle + max_angle_reachable:
-            increment_angles.append(current_servo_angle + max_angle_reachable)
-        elif delta_servo_angle < current_servo_angle - max_angle_reachable:
-            increment_angles.append(current_servo_angle - max_angle_reachable)
-        # elif abs(delta_servo_angle) > PlatformStatics.MIN_ANGLE_DIFF:
-        #     increment_angles.append(delta_servo_angle)
-        else:
-            increment_angles.append(current_servo_angle)
+        # if delta_servo_angle > current_servo_angle + max_angle_reachable:
+        #     increment_angles.append(current_servo_angle + max_angle_reachable)
+        # elif delta_servo_angle < current_servo_angle - max_angle_reachable:
+        #     increment_angles.append(current_servo_angle - max_angle_reachable)
+        # # elif abs(delta_servo_angle) > PlatformStatics.MIN_ANGLE_DIFF:
+        # #     increment_angles.append(delta_servo_angle)
+        # else:
+        increment_angles.append(current_servo_angle)
 
     rospy.logdebug(f"Current servo angles with increment[deg] {_print_radians_in_degrees(increment_angles)}")
     
