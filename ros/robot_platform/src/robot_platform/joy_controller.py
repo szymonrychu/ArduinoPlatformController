@@ -43,7 +43,7 @@ Index	Axis
 5	TRIGGERRIGHT
 '''
 
-request_rate = 1.0/10.0
+request_rate = 1.0/1.0
 
 class JoyPlatformController(ROSNode):
 
