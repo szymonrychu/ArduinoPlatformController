@@ -147,15 +147,16 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
     rospy.logdebug(f"Delta servo angles[deg] {_print_radians_in_degrees(delta_servo_angles)}")
     max_delta_servo_angle  = max(delta_servo_angles)
 
+    max_angle_reachable = request.duration * PlatformStatics.TURN_VELOCITY
     increment_angles = []
     for delta_servo_angle, current_servo_angle, target_servo_angle in zip(delta_servo_angles, current_servo_angles, target_servo_angles):
-        delta_max_time_necessary = abs(delta_servo_angle / PlatformStatics.TURN_VELOCITY)
-        rospy.logdebug(f"Max time necessary to do the turn of the servos {delta_max_time_necessary}")
-        if delta_max_time_necessary > request.duration:
-            increment_servo_angle = request.duration / delta_max_time_necessary * delta_servo_angle
-            increment_angles.append(increment_servo_angle + current_servo_angle)
+        if delta_servo_angle > max_angle_reachable:
+            increment_angles.append(max_angle_reachable)
+        elif delta_servo_angle < -max_angle_reachable:
+            increment_angles.append(-max_angle_reachable)
         else:
-            increment_angles.append(target_servo_angle)
+            increment_angles.append(delta_servo_angle)
+
     rospy.logdebug(f"Current servo angles with increment[deg] {_print_radians_in_degrees(increment_angles)}")
     
     request.motor1.servo.angle = increment_angles[0]
