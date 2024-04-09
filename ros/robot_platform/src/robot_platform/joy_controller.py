@@ -43,6 +43,8 @@ Index	Axis
 5	TRIGGERRIGHT
 '''
 
+request_rate = 1.0/5.0
+
 class JoyPlatformController(ROSNode):
 
     def __init__(self):
@@ -60,7 +62,7 @@ class JoyPlatformController(ROSNode):
         self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
 
-        rospy.Timer(rospy.Duration(1.0), self._send_request)
+        rospy.Timer(rospy.Duration(request_rate), self._send_request)
 
     def _handle_joystick_updates(self, data:Joy):
         self._last_joy = data
@@ -102,7 +104,7 @@ class JoyPlatformController(ROSNode):
             else:
                 rospy.loginfo(f"Requested move with velocity {velocity}")
 
-            r = compute_next_request(velocity, 1.0, self._last_platform_status, turning_point)
+            r = compute_next_request(velocity, request_rate, self._last_platform_status, turning_point)
             self._move_request_publisher.publish(r)
 
 
