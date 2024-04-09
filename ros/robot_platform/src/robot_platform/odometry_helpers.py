@@ -154,8 +154,8 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
             increment_angles.append(current_servo_angle + max_angle_reachable)
         elif delta_servo_angle < current_servo_angle - max_angle_reachable:
             increment_angles.append(current_servo_angle - max_angle_reachable)
-        elif abs(delta_servo_angle) > PlatformStatics.MIN_ANGLE_DIFF:
-            increment_angles.append(delta_servo_angle)
+        # elif abs(delta_servo_angle) > PlatformStatics.MIN_ANGLE_DIFF:
+        #     increment_angles.append(delta_servo_angle)
         else:
             increment_angles.append(0.0)
 
