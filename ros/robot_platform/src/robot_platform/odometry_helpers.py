@@ -157,7 +157,7 @@ def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:
         # # elif abs(delta_servo_angle) > PlatformStatics.MIN_ANGLE_DIFF:
         # #     increment_angles.append(delta_servo_angle)
         # else:
-        increment_angles.append(current_servo_angle)
+        increment_angles.append(delta_servo_angle)
 
     rospy.logdebug(f"Current servo angles with increment[deg] {_print_radians_in_degrees(increment_angles)}")
     
