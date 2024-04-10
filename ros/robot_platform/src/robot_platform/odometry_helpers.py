@@ -172,6 +172,7 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
     request.motor3.servo.angle_provided = True
     request.motor4.servo.angle_provided = True
     
+    can_move_wheels_continously = True
     velocity_coefficients = []
     if turning_point and (abs(turning_point.x) > 0.001 or abs(turning_point.y) > 0.001):
         turn_radius = math.sqrt(turning_point.x**2 + turning_point.y**2)
@@ -180,12 +181,14 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
 
             is_within_robot_width = min(0, m_x) < turning_point.x and turning_point.x < max(0, m_x)
             c = -1.0 if is_within_robot_width else 1.0
-
+            
             velocity_coefficients.append( c * motor_turn_radius / turn_radius)
+            if can_move_wheels_continously and is_within_robot_width:
+                can_move_wheels_continously = False
     else:
         velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
     
-    if max(delta_servo_angles) < PlatformStatics.MIN_ANGLE_DIFF:
+    if can_move_wheels_continously or max(delta_servo_angles) < PlatformStatics.MIN_ANGLE_DIFF:
         request.motor1.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[0] * velocity
         request.motor2.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[1] * velocity
         request.motor3.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[2] * velocity
