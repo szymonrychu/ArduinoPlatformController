@@ -152,6 +152,12 @@ class StatusResponse(Message):
     pan: ServoStatus
     tilt: ServoStatus
 
+    @property
+    def motor_list(self) -> List[MotorStatus]:
+        return [
+            self.motor1, self.motor2, self.motor3, self.motor4
+        ]
+
     def parse_ROS(self, header_frame_id:str, timestamp:rospy.Time=None) -> PlatformStatus:
         platform_status = PlatformStatus()
         platform_status.header.stamp = timestamp or rospy.Time.now()
@@ -234,3 +240,4 @@ def parse_response(raw_input:str) -> StatusResponse:
     except AttributeError as _attribute_error:
         rospy.logerr(f"Couldn't parse Pydantic: '{raw_input}'")
         return None
+

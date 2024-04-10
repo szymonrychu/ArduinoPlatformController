@@ -6,6 +6,7 @@ import math
 import numpy as np
 import json
 
+from .odometry_helpers import PlatformStatics
 import rospy
 import tf_conversions
 import tf2_ros
@@ -51,6 +52,7 @@ class WheelController(SerialROSNode):
     def __init__(self):
         SerialROSNode.__init__(self)
         self._message_counter = 0
+        self._motor_distances = [0.0] * PlatformStatics.MOTOR_NUM
         self._header_frame_id = rospy.get_param('~header_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
@@ -69,6 +71,8 @@ class WheelController(SerialROSNode):
         self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState)
         self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix)
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
+
+        self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
         self.write_data('{"move_duration":1,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}')
 
@@ -101,6 +105,20 @@ class WheelController(SerialROSNode):
         if self._message_counter == 0:
             rospy.loginfo(f"Battery level: {response.battery.voltage}V")
         self._message_counter = (self._message_counter + 1) % 100
+
+        transforms = [
+            create_static_transform('base', 'laser', 0.0, 0.0, 0, 0, 0, math.pi, rospy_time_now)
+        ]
+        for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
+            transforms.append(create_static_transform('base', f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
+            transforms.append(create_static_transform(f"motor{c+1}base", f"motor{c+1}servo", 0, 0, 0, 0, 0, motor_status.angle, rospy_time_now))
+            self._motor_distances[c] += motor_status.distance
+            motor_twist = motor_status.distance / PlatformStatics.WHEEL_RADIUS
+            transforms.append(create_static_transform(f"motor{c+1}servo", f"motor{c+1}wheel", 0, 0, 0, 0, motor_twist, 0, rospy_time_now))
+        
+        for transform in transforms:
+            self._tf2_broadcaster.sendTransform(transform)
+
 
     def _write_raw_data(self, ros_data:String):
         self.write_data(ros_data.data)

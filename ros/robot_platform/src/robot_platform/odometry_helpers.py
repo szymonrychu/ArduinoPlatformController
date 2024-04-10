@@ -50,6 +50,8 @@ class PlatformStatics:
     MIN_ANGLE_DIFF = 0.01
     REQUEST_DURATION_COEFFICIENT = 1.5 # how much additional time to count into a move, so we get overlapped requests
 
+    WHEEL_RADIUS = 0.13
+
 
 def limit_angle(angle:float) -> float:
     if angle > math.pi/2:
