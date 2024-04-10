@@ -43,7 +43,7 @@ Index	Axis
 5	TRIGGERRIGHT
 '''
 
-request_rate = 0.1
+duration = 0.1
 
 class JoyPlatformController(ROSNode):
 
@@ -63,7 +63,7 @@ class JoyPlatformController(ROSNode):
         self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
 
-        rospy.Timer(rospy.Duration(request_rate), self._send_request)
+        rospy.Timer(rospy.Duration(duration), self._send_request)
 
     def _handle_joystick_updates(self, data:Joy):
         self._last_joy = data
@@ -104,16 +104,13 @@ class JoyPlatformController(ROSNode):
             #     rospy.loginfo(f"Requested move with turning point [{turning_point.x},{turning_point.y}] and velocity {velocity}")
             # else:
             #     rospy.loginfo(f"Requested move with velocity {velocity}")
-            target_servo_angles = compute_target_servo_angles(turning_point)
-            delta_servo_angles = compute_delta_servo_angles(target_servo_angles, self._last_platform_status)
-            limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, request_rate)
+            
             # limited_deltas_differ = False
             # for new_delta, old_delta in zip(limited_deltas, self._last_limited_deltas):
             #     if new_delta != old_delta:
             #         limited_deltas_differ = True
             #         break
-            new_target_servo_angles = compute_new_angle_updates(limited_deltas, self._last_platform_status)
-            r = create_request(velocity, request_rate, new_target_servo_angles)
+            r = create_request(velocity, duration, self._last_platform_status, turning_point)
             self._move_request_publisher.publish(r)
 
 
