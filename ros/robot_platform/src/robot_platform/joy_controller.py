@@ -105,7 +105,7 @@ class JoyPlatformController(ROSNode):
             # else:
             #     rospy.loginfo(f"Requested move with velocity {velocity}")
             target_servo_angles = compute_target_servo_angles(turning_point)
-            delta_servo_angles = compute_delta_servo_angles(target_servo_angles)
+            delta_servo_angles = compute_delta_servo_angles(target_servo_angles, self._last_platform_status)
             limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, 1.0/request_rate)
             limited_deltas_differ = False
             for new_delta, old_delta in zip(limited_deltas, self._last_limited_deltas):
