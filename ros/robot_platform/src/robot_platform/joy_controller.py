@@ -112,7 +112,6 @@ class JoyPlatformController(ROSNode):
                 if new_delta != old_delta:
                     limited_deltas_differ = True
                     break
-            limited_deltas = limited_deltas if limited_deltas_differ else None
             r = create_request(velocity, request_rate, limited_deltas)
             self._move_request_publisher.publish(r)
 
