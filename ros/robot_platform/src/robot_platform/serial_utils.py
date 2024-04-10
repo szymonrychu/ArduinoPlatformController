@@ -30,6 +30,7 @@ class SerialWrapper():
             self._serial.write('{}\n'.format(raw_data).encode())
             return True
         except TypeError:
-            tb = traceback.format_exc()
-            rospy.loginfo(str(tb))
             return False
+        except serial.SerialException:
+            return False
+

@@ -181,7 +181,7 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
 
             is_within_robot_width = min(0, m_x) < turning_point.x and turning_point.x < max(0, m_x)
             c = -1.0 if is_within_robot_width else 1.0
-            
+
             velocity_coefficients.append( c * motor_turn_radius / turn_radius)
             if can_move_wheels_continously and is_within_robot_width:
                 can_move_wheels_continously = False
@@ -195,48 +195,6 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
         request.motor4.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[3] * velocity
 
     return request
-
-
-
-
-    next_turning_point = turning_point
-    if next_turning_point and (abs(next_turning_point.x) > 0.001 or abs(next_turning_point.y) > 0.001):
-        turn_radius = math.sqrt(next_turning_point.x**2 + next_turning_point.y**2)
-        m1_radius = math.sqrt((PlatformStatics.M1_X - next_turning_point.x)**2 + (PlatformStatics.M1_Y + next_turning_point.y)**2)
-        m2_radius = math.sqrt((PlatformStatics.M2_X - next_turning_point.x)**2 + (PlatformStatics.M2_Y + next_turning_point.y)**2)
-        m3_radius = math.sqrt((PlatformStatics.M3_X - next_turning_point.x)**2 + (PlatformStatics.M3_Y + next_turning_point.y)**2)
-        m4_radius = math.sqrt((PlatformStatics.M4_X - next_turning_point.x)**2 + (PlatformStatics.M4_Y + next_turning_point.y)**2)
-        rospy.logdebug(f"platform/m1/m2/m3/m4 turning radiuses: {turn_radius:.4f}/{m1_radius:.4f}/{m2_radius:.4f}/{m3_radius:.4f}/{m4_radius:.4f}")
-
-        m1_coeficient = max(m1_radius/turn_radius, PlatformStatics.MIN_TURN_COEF)
-        m2_coeficient = max(m2_radius/turn_radius, PlatformStatics.MIN_TURN_COEF)
-        m3_coeficient = max(m3_radius/turn_radius, PlatformStatics.MIN_TURN_COEF)
-        m4_coeficient = max(m4_radius/turn_radius, PlatformStatics.MIN_TURN_COEF)
-        
-        m1_coeficient = -m1_coeficient if _if_between(next_turning_point.x, 0, PlatformStatics.M1_X) else m1_coeficient
-        m2_coeficient = -m2_coeficient if _if_between(next_turning_point.x, PlatformStatics.M2_X, 0) else m2_coeficient
-        m3_coeficient = -m3_coeficient if _if_between(next_turning_point.x, PlatformStatics.M3_X, 0) else m3_coeficient
-        m4_coeficient = -m4_coeficient if _if_between(next_turning_point.x, 0, PlatformStatics.M4_X) else m4_coeficient
-
-        if max_delta_servo_angle < PlatformStatics.MIN_ANGLE_DIFF:
-            request.motor1.velocity = PlatformStatics.MOVE_VELOCITY * m1_coeficient * velocity
-            request.motor2.velocity = PlatformStatics.MOVE_VELOCITY * m2_coeficient * velocity
-            request.motor3.velocity = PlatformStatics.MOVE_VELOCITY * m3_coeficient * velocity
-            request.motor4.velocity = PlatformStatics.MOVE_VELOCITY * m4_coeficient * velocity
-    else:
-        if max_delta_servo_angle < PlatformStatics.MIN_ANGLE_DIFF:
-            request.motor1.velocity = PlatformStatics.MOVE_VELOCITY * velocity
-            request.motor2.velocity = PlatformStatics.MOVE_VELOCITY * velocity
-            request.motor3.velocity = PlatformStatics.MOVE_VELOCITY * velocity
-            request.motor4.velocity = PlatformStatics.MOVE_VELOCITY * velocity
-    
-    rospy.logdebug(f"m1/m2/m3/m4 motor velocities: {request.motor1.velocity}/{request.motor2.velocity}/{request.motor3.velocity}/{request.motor4.velocity}")
-
-    return request
-
-
-
-
 
 
 # class Deltable():

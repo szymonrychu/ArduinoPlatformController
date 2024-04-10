@@ -74,7 +74,9 @@ class WheelController(SerialROSNode):
 
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
-        self.write_data('{"move_duration":1,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}')
+        result = self.write_data('{"move_duration":1,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}')
+        if not result:
+            self.stop()
 
     def _handle_wheel_inputs(self, raw_data:MoveRequest):
         r = Request.from_MoveRequest(raw_data)
