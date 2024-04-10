@@ -147,10 +147,10 @@ def limit_delta_servo_velocity_angles(delta_servo_angles:List[float], duration:f
     return result
 
 def compute_new_angle_updates(delta_servo_angles:List[float], platform_status:PlatformStatus) -> List[float]:
-    delta_servo_angles = []
+    target_angles = []
     for delta_angle, motor_status in zip(delta_servo_angles, _get_motor_list_from_platform_status(platform_status)):
-        delta_servo_angles.append(delta_angle + motor_status.servo.angle)
-    return delta_servo_angles
+        target_angles.append(delta_angle + motor_status.servo.angle)
+    return target_angles
 
 def create_request(velocity:float, duration:float, motor_servo_angle_deltas:List[float] = None) -> MoveRequest:
     request = MoveRequest()
