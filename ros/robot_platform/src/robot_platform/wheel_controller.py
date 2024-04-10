@@ -110,7 +110,7 @@ class WheelController(SerialROSNode):
         self._message_counter = (self._message_counter + 1) % 100
 
         transforms = [
-            create_static_transform('base', 'laser', 0.0, 0.0, 0, 0, 0, math.pi, rospy_time_now)
+            create_static_transform('base', 'scan', 0.0, 0.0, 0, 0, 0, math.pi, rospy_time_now)
         ]
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
             transforms.append(create_static_transform('base', f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
