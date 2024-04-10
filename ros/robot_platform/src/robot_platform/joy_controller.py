@@ -43,7 +43,7 @@ Index	Axis
 5	TRIGGERRIGHT
 '''
 
-request_rate = 10.0
+request_rate = 0.1
 
 class JoyPlatformController(ROSNode):
 
@@ -106,14 +106,14 @@ class JoyPlatformController(ROSNode):
             #     rospy.loginfo(f"Requested move with velocity {velocity}")
             target_servo_angles = compute_target_servo_angles(turning_point)
             delta_servo_angles = compute_delta_servo_angles(target_servo_angles, self._last_platform_status)
-            limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, 1.0/request_rate)
+            limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, request_rate)
             limited_deltas_differ = False
             for new_delta, old_delta in zip(limited_deltas, self._last_limited_deltas):
                 if new_delta != old_delta:
                     limited_deltas_differ = True
                     break
             limited_deltas = limited_deltas if limited_deltas_differ else None
-            r = create_request(velocity, 1.0/request_rate, limited_deltas)
+            r = create_request(velocity, request_rate, limited_deltas)
             self._move_request_publisher.publish(r)
 
 
