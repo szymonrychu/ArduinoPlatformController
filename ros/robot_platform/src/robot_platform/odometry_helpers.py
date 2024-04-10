@@ -4,7 +4,7 @@ from .tf_helpers import *
 from typing import List, Optional
 
 import math
-from robot_platform.msg import PlatformStatus, MoveRequest
+from robot_platform.msg import PlatformStatus, MoveRequest, Motor
 from geometry_msgs.msg import Point
 
 
@@ -18,13 +18,11 @@ class PlatformStatics:
 
     # LEFT BACK
     M1_IN_PLACE_TURN = -1.0
-    M1_ANGLE_COEFFICIENT = 1.0
     M1_X = -(ROBOT_WIDTH/2) 
     M1_Y = -(ROBOT_LENGTH/2)
 
     # RIGHT BACK
     M2_IN_PLACE_TURN = -1.0
-    M2_ANGLE_COEFFICIENT = 1.0
     M2_X = (ROBOT_WIDTH/2) 
     M2_Y = -(ROBOT_LENGTH/2)
 
@@ -36,7 +34,6 @@ class PlatformStatics:
 
     # LEFT FRONT
     M4_IN_PLACE_TURN = -1.0
-    M4_ANGLE_COEFFICIENT = 1.0
     M4_X = -(ROBOT_WIDTH/2) 
     M4_Y = (ROBOT_LENGTH/2)
 
@@ -108,6 +105,62 @@ def compute_relative_turning_point(m1_angle, m2_angle, m3_angle, m4_angle) -> Op
 
 def _if_between(x, a, b):
     return (a > x and x > b)
+
+def _get_motor_list_from_platform_status(platform_status:PlatformStatus) -> List[Motor]:
+    return [
+        platform_status.motor1,
+        platform_status.motor2,
+        platform_status.motor3,
+        platform_status.motor4
+    ]
+
+
+def compute_target_servo_angles(turning_point:Point=None) -> List[float]:
+    if not turning_point:
+        return [0.0] * PlatformStatics.MOTOR_NUM
+    
+    relative_turning_points = []
+    for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
+        relative_turning_points.append((m_x - turning_point.x, m_y - turning_point.y))
+    
+    target_angles = []
+    for (tp_x, tp_y) in relative_turning_points:
+        target_angles.append(limit_angle(math.atan2(-tp_y, tp_x)))
+    
+    return target_angles
+
+def compute_delta_servo_angles(target_angles:List[float], platform_status:PlatformStatus) -> List[float]:
+    delta_servo_angles = []
+    for target_angle, motor_status in zip(target_angles, _get_motor_list_from_platform_status(platform_status)):
+        delta_servo_angles.append(target_angle - motor_status.servo.angle)
+    return delta_servo_angles
+
+def limit_delta_servo_velocity_angles(delta_servo_angles:List[float], duration:float) -> List[float]:
+    max_abs_delta_servo_angle = max([abs(a) for a in delta_servo_angles])
+    max_possible_servo_angle = min([max_abs_delta_servo_angle, duration * PlatformStatics.TURN_VELOCITY])
+    delta_servo_coefficient = max_possible_servo_angle / max_abs_delta_servo_angle
+    result = []
+    for delta_servo_angle in delta_servo_angles:
+        result.append(delta_servo_coefficient * delta_servo_angle)
+    return result
+
+def create_request(velocity:float, duration:float, motor_servo_angle_deltas:List[float] = None) -> MoveRequest:
+    request = MoveRequest()
+    request.duration = PlatformStatics.REQUEST_DURATION_COEFFICIENT * duration
+    if motor_servo_angle_deltas:
+        request.motor1.servo.angle = motor_servo_angle_deltas[0]
+        request.motor2.servo.angle = motor_servo_angle_deltas[1]
+        request.motor3.servo.angle = motor_servo_angle_deltas[2]
+        request.motor4.servo.angle = motor_servo_angle_deltas[3]
+        request.motor1.servo.angle_provided = True
+        request.motor2.servo.angle_provided = True
+        request.motor3.servo.angle_provided = True
+        request.motor4.servo.angle_provided = True
+    return request
+
+
+
+
 
 def compute_next_request(velocity:float, autorepeat_rate:float, platform_status:PlatformStatus, turning_point:Point=None) -> MoveRequest:
     request = MoveRequest()

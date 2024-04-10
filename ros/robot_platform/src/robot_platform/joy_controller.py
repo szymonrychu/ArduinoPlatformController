@@ -2,7 +2,7 @@
 import math
 import signal
 
-from .odometry_helpers import PlatformStatics, compute_next_request
+from .odometry_helpers import PlatformStatics, compute_delta_servo_angles, compute_next_request, compute_target_servo_angles, create_request, limit_delta_servo_velocity_angles
 import rospy
 from .ros_helpers import ROSNode
 
@@ -51,6 +51,7 @@ class JoyPlatformController(ROSNode):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
         self._last_joy = Joy()
+        self._last_limited_deltas = [0.0] * PlatformStatics.MOTOR_NUM
         self._autorepeat_rate = rospy.get_param('~autorepeat_rate')
         joy_input_topic = rospy.get_param('~joy_topic')
         joy_output_topic = rospy.get_param('~joy_feedback_topic')
@@ -103,8 +104,16 @@ class JoyPlatformController(ROSNode):
             #     rospy.loginfo(f"Requested move with turning point [{turning_point.x},{turning_point.y}] and velocity {velocity}")
             # else:
             #     rospy.loginfo(f"Requested move with velocity {velocity}")
-
-            r = compute_next_request(velocity, request_rate, self._last_platform_status, turning_point)
+            target_servo_angles = compute_target_servo_angles(turning_point)
+            delta_servo_angles = compute_delta_servo_angles(target_servo_angles)
+            limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, 1.0/request_rate)
+            limited_deltas_differ = False
+            for new_delta, old_delta in zip(limited_deltas, self._last_limited_deltas):
+                if new_delta != old_delta:
+                    limited_deltas_differ = True
+                    break
+            limited_deltas = limited_deltas if limited_deltas_differ else None
+            r = create_request(velocity, 1.0/request_rate, limited_deltas)
             self._move_request_publisher.publish(r)
 
 
