@@ -137,6 +137,8 @@ def compute_delta_servo_angles(target_angles:List[float], platform_status:Platfo
 
 def limit_delta_servo_velocity_angles(delta_servo_angles:List[float], duration:float) -> List[float]:
     max_abs_delta_servo_angle = max([abs(a) for a in delta_servo_angles])
+    if max_abs_delta_servo_angle == 0:
+        return delta_servo_angles
     max_possible_servo_angle = min([max_abs_delta_servo_angle, duration * PlatformStatics.TURN_VELOCITY])
     delta_servo_coefficient = max_possible_servo_angle / max_abs_delta_servo_angle
     result = []
