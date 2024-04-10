@@ -2,7 +2,7 @@
 import math
 import signal
 
-from .odometry_helpers import PlatformStatics, compute_delta_servo_angles, compute_next_request, compute_target_servo_angles, create_request, limit_delta_servo_velocity_angles
+from .odometry_helpers import PlatformStatics, compute_delta_servo_angles, compute_new_angle_updates, compute_next_request, compute_target_servo_angles, create_request, limit_delta_servo_velocity_angles
 import rospy
 from .ros_helpers import ROSNode
 
@@ -107,12 +107,13 @@ class JoyPlatformController(ROSNode):
             target_servo_angles = compute_target_servo_angles(turning_point)
             delta_servo_angles = compute_delta_servo_angles(target_servo_angles, self._last_platform_status)
             limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, request_rate)
-            limited_deltas_differ = False
-            for new_delta, old_delta in zip(limited_deltas, self._last_limited_deltas):
-                if new_delta != old_delta:
-                    limited_deltas_differ = True
-                    break
-            r = create_request(velocity, request_rate, limited_deltas)
+            # limited_deltas_differ = False
+            # for new_delta, old_delta in zip(limited_deltas, self._last_limited_deltas):
+            #     if new_delta != old_delta:
+            #         limited_deltas_differ = True
+            #         break
+            new_target_servo_angles = compute_new_angle_updates(limited_deltas, self._last_platform_status)
+            r = create_request(velocity, request_rate, new_target_servo_angles)
             self._move_request_publisher.publish(r)
 
 
