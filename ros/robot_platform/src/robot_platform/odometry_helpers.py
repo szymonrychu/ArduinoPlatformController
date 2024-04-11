@@ -53,7 +53,7 @@ class PlatformStatics:
     WHEEL_RADIUS = 0.13
 
 def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:float, mb_y:float) -> Optional[Point]:
-    if abs(m_a.angle - m_b.angle) < PlatformStatics.MIN_ANGLE_DIFF:
+    if abs(m_a - m_b) < PlatformStatics.MIN_ANGLE_DIFF:
         return None
 
     tg90mA = math.tan(math.pi/2 - m_a)
