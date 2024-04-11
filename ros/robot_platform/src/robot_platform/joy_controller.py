@@ -94,6 +94,7 @@ class JoyPlatformController(ROSNode):
 
 
             velocity = 0.0
+            boost = 0.0
             if abs(rel_velocity) > 0.01:
                 boost = 0.55* -(self._last_joy.axes[4]-1)/2
                 velocity = -PlatformStatics.MOVE_VELOCITY * (rel_velocity + boost)
