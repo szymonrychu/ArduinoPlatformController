@@ -40,12 +40,12 @@ class SafeSerialWrapper(SerialWrapper):
     def __init__(self, *args, **kwargs):
         self._read_lock = Lock()
         self._write_lock = Lock()
-        super(SerialWrapper, self).__init__(*args, **kwargs)
+        SerialWrapper.__init__(self, *args, **kwargs)
     
     def read_data(self):
         with self._read_lock:
-            return super(SerialWrapper, self).read_data()
+            return SerialWrapper.read_data(self)
     
     def write_data(self, raw_data):
         with self._write_lock:
-            return super().write_data(raw_data)
+            return SerialWrapper.write_data(self, raw_data)
