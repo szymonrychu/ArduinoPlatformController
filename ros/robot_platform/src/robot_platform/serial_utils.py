@@ -1,6 +1,7 @@
 import serial
 import traceback
 import time
+from threading import Lock
 
 import rospy
         
@@ -34,3 +35,17 @@ class SerialWrapper():
         except serial.SerialException:
             return False
 
+class SafeSerialWrapper(SerialWrapper):
+
+    def __init__(self, *args, **kwargs):
+        self._read_lock = Lock()
+        self._write_lock = Lock()
+        super(SerialWrapper, self).__init__(*args, **kwargs)
+    
+    def read_data(self):
+        with self._read_lock:
+            return super(SerialWrapper, self).read_data()
+    
+    def write_data(self, raw_data):
+        with self._write_lock:
+            return super().write_data(raw_data)

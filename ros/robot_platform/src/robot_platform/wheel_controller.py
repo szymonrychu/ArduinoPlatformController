@@ -23,17 +23,17 @@ from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 from .ros_helpers import ROSNode
 from .log_utils import env2log
 from .message_utils import parse_response, Request
-from .serial_utils import SerialWrapper
+from .serial_utils import SafeSerialWrapper
 from .tf_helpers import *
 
 
-class SerialROSNode(ROSNode, SerialWrapper):
+class SerialROSNode(ROSNode, SafeSerialWrapper):
 
     def __init__(self):
         ROSNode.__init__(self)
         serial_dev = rospy.get_param('~serial_dev')
         serial_baudrate = rospy.get_param('~serial_baudrate')
-        SerialWrapper.__init__(self, serial_dev, serial_baudrate)
+        SafeSerialWrapper.__init__(self, serial_dev, serial_baudrate)
     
     def start(self):
         rospy.Timer(rospy.Duration(0.001), self.__handle_serial)
