@@ -101,16 +101,7 @@ class JoyPlatformController(ROSNode):
             if abs(turn_radius) > 0.0001:
                 turning_point = Point()
                 turning_point.x = turn_radius
-            
-            #     rospy.loginfo(f"Requested move with turning point [{turning_point.x},{turning_point.y}] and velocity {velocity}")
-            # else:
-            #     rospy.loginfo(f"Requested move with velocity {velocity}")
-            
-            # limited_deltas_differ = False
-            # for new_delta, old_delta in zip(limited_deltas, self._last_limited_deltas):
-            #     if new_delta != old_delta:
-            #         limited_deltas_differ = True
-            #         break
+
             r = create_request(velocity, duration, self._last_platform_status, turning_point)
             self._move_request_publisher.publish(r)
 

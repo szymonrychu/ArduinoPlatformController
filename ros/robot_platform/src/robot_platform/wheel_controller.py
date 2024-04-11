@@ -6,7 +6,7 @@ import math
 import numpy as np
 import json
 
-from .odometry_helpers import PlatformStatics
+from .odometry_helpers import PlatformStatics, compute_relative_turning_point
 import rospy
 import tf_conversions
 import tf2_ros
@@ -112,6 +112,10 @@ class WheelController(SerialROSNode):
         transforms = [
             create_static_transform('base', 'scan', 0.0, 0.0, 0, 0, 0, -math.pi/2, rospy_time_now)
         ]
+        computed_turning_point = compute_relative_turning_point(response.motor_list)
+        if computed_turning_point:
+            transforms.append(create_static_transform('base', 'computed_turning_point', computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
+
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
             transforms.append(create_static_transform('base', f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
             transforms.append(create_static_transform(f"motor{c+1}base", f"motor{c+1}servo", 0, 0, 0, 0, 0, -motor_status.angle, rospy_time_now))
