@@ -73,14 +73,14 @@ class JoyPlatformController(ROSNode):
 
     def _send_request(self, event=None):
         if self._last_joy.axes:
-            rel_velocity = -0.45 * self._last_joy.axes[1]
+            rel_velocity = -0.25 * self._last_joy.axes[1]
             if rel_velocity < 0:
                 rel_velocity = rel_velocity
             elif rel_velocity > 0:
                 rel_velocity = rel_velocity
             # rel_velocity = 0.3
             
-            turn_radius = round(-0.9 * self._last_joy.axes[0], 2)
+            turn_radius = round(-0.95 * self._last_joy.axes[0], 2)
             if turn_radius < 0:
                 turn_radius = max(turn_radius, -0.99)
             elif turn_radius > 0:
@@ -95,7 +95,7 @@ class JoyPlatformController(ROSNode):
             velocity = 0.0
             boost = 1.0
             if abs(rel_velocity) > 0.01:
-                boost = 1.0 + (-self._last_joy.axes[3]+1)/2
+                boost = 1.0 + 3*(-self._last_joy.axes[3]+1)/2
                 velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
 
             rospy.loginfo(self._last_joy.axes)
