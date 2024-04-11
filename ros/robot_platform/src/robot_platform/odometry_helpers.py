@@ -46,7 +46,7 @@ class PlatformStatics:
 
 
     TURN_VELOCITY = 1.04719755 # 60degrees in 1s /
-    MOVE_VELOCITY = 0.7
+    MOVE_VELOCITY = 1.5
     MIN_ANGLE_DIFF = 0.01
     REQUEST_DURATION_COEFFICIENT = 1.5 # how much additional time to count into a move, so we get overlapped requests
 
