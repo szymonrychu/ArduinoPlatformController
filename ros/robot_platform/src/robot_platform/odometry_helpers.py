@@ -102,7 +102,8 @@ def compute_relative_turning_point(motors:List[Motor]) -> Optional[Point]:
             if turning_point:
                 partial_turning_points.append(turning_point)
     turning_point = compute_mean_turning_point(partial_turning_points)
-    rospy.loginfo(f"mean: [{turning_point.x},{turning_point.y}]")
+    if turning_point:
+        rospy.loginfo(f"mean: [{turning_point.x},{turning_point.y}]")
     return turning_point
 
 def _if_between(x, a, b):
