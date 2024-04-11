@@ -93,13 +93,9 @@ class JoyPlatformController(ROSNode):
 
 
             velocity = 0.0
-            boost = 1.0
+            boost = 1.0 + 3*(-self._last_joy.axes[3]+1)/2
             if abs(rel_velocity) > 0.01:
-                boost = 1.0 + 3*(-self._last_joy.axes[3]+1)/2
                 velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
-
-            rospy.loginfo(self._last_joy.axes)
-            rospy.loginfo([rel_velocity, boost, velocity])
             
             turning_point = None
             if abs(turn_radius) > 0.0001:
