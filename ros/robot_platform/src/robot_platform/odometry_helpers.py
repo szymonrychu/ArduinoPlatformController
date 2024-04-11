@@ -97,13 +97,13 @@ def compute_relative_turning_point(motors:List[Motor]) -> Optional[Point]:
             if c_a >= c_b:
                 continue
             (XA, YA), (XB, YB) = PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_a], PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_b]
-            a_coeff = 1.0 if XA > 0 else -1.0
-            b_coeff = 1.0 if XB > 0 else -1.0
-            turning_point = compute_turning_point(a_coeff * motor_a.angle, XA, YA, b_coeff * motor_b.angle, XB, YB)
+            turning_point = compute_turning_point(motor_a.angle, XA, YA, motor_b.angle, XB, YB)
+            rospy.loginfo(f"motor{c_a+1} motor{c_b+1}: [{turning_point.x},{turning_point.y}]")
             if turning_point:
                 partial_turning_points.append(turning_point)
-    
-    return compute_mean_turning_point(partial_turning_points)
+    turning_point = compute_mean_turning_point(partial_turning_points)
+    rospy.loginfo(f"mean: [{turning_point.x},{turning_point.y}]")
+    return turning_point
 
 def _if_between(x, a, b):
     return (a > x and x > b)
