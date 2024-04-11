@@ -72,6 +72,7 @@ class JoyPlatformController(ROSNode):
         self._last_platform_status = status
 
     def _send_request(self, event=None):
+        rospy.loginfo(self._last_joy)
         if self._last_joy.axes:
             rel_velocity = round(-0.45 * self._last_joy.axes[1], 2)
             if rel_velocity < 0:
