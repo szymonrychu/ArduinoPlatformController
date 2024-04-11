@@ -52,12 +52,12 @@ class PlatformStatics:
 
     WHEEL_RADIUS = 0.13
 
-def compute_turning_point(m_a:Motor, ma_x:float, ma_y:float, m_b:Motor, mb_x:float, mb_y:float) -> Optional[Point]:
+def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:float, mb_y:float) -> Optional[Point]:
     if abs(m_a.angle - m_b.angle) < PlatformStatics.MIN_ANGLE_DIFF:
         return None
 
-    tg90mA = math.tan(math.pi/2 - m_a.angle)
-    tg90mB = math.tan(math.pi/2 - m_b.angle)
+    tg90mA = math.tan(math.pi/2 - m_a)
+    tg90mB = math.tan(math.pi/2 - m_b)
     p = Point()
     p.x = (tg90mA * tg90mB) * (ma_y + mb_y + mb_x/tg90mB - ma_x/tg90mA)
     p.y = (p.x + mb_x)/tg90mB
@@ -97,7 +97,9 @@ def compute_relative_turning_point(motors:List[Motor]) -> Optional[Point]:
             if c_a >= c_b:
                 continue
             (XA, YA), (XB, YB) = PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_a], PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_b]
-            turning_point = compute_turning_point(motor_a, XA, YA, motor_b, XB, YB)
+            a_coeff = 1.0 if XA > 0 else -1.0
+            b_coeff = 1.0 if XB > 0 else -1.0
+            turning_point = compute_turning_point(a_coeff * motor_a.angle, XA, YA, b_coeff * motor_b.angle, XB, YB)
             if turning_point:
                 partial_turning_points.append(turning_point)
     
