@@ -193,7 +193,7 @@ def motor_request_to_status(request:MoveRequest) -> List[MotorStatus]:
     return motors
 
 def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None) -> Optional[MoveRequest]:
-    if abs(velocity) < PlatformStatics.MAX_DISTANCE_TOLERANCE / duration:
+    if abs(velocity) < PlatformStatics.MAX_DISTANCE_TOLERANCE / duration and not turning_point:
         return None
 
     target_servo_angles = compute_target_servo_angles(turning_point)
