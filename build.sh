@@ -10,6 +10,8 @@ git add -A
 git stash
 git stash drop || true
 
+git pull
+
 ./install_services.sh
 
 readonly GIT_REPO_SHORT_SHA="$(git rev-parse HEAD)"
