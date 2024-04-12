@@ -6,7 +6,7 @@ import math
 import numpy as np
 import json
 
-from .odometry_helpers import PlatformStatics, compute_relative_turning_point
+from .odometry_helpers import PlatformStatics, compute_relative_turning_point, compute_turning_radius_yaw_delta
 import rospy
 import tf_conversions
 import tf2_ros
@@ -53,6 +53,9 @@ class WheelController(SerialROSNode):
         SerialROSNode.__init__(self)
         self._message_counter = 0
         self._motor_distances = [0.0] * PlatformStatics.MOTOR_NUM
+        self._total_yaw = 0.0
+        self._total_X = 0.0
+        self._total_Y = 0.0
         self._header_frame_id = rospy.get_param('~header_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
@@ -65,12 +68,14 @@ class WheelController(SerialROSNode):
         battery_state_output_topic = rospy.get_param('~battery_state_output_topic')
         gps_state_output_topic = rospy.get_param('~gps_state_output_topic')
         imu_state_output_topic = rospy.get_param('~imu_state_output_topic')
+        odometry_output_topic = rospy.get_param('~odometry_output_topic')
 
         rospy.Subscriber(wheel_positions_input_topic, MoveRequest, self._handle_wheel_inputs)
         self._platform_status_publisher = rospy.Publisher(platform_status_output_topic, PlatformStatus)
         self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState)
         self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix)
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
+        self._odometry_publisher = rospy.Publisher(odometry_output_topic, PoseStamped)
 
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
@@ -114,7 +119,20 @@ class WheelController(SerialROSNode):
         ]
         computed_turning_point = compute_relative_turning_point(response.motor_list)
         if computed_turning_point:
+            turning_radius, yaw_delta = compute_turning_radius_yaw_delta(computed_turning_point, response.motor_list)
+            self._total_yaw += yaw_delta
+            y = turning_radius * math.sin(yaw_delta)
+            self._total_Y += y
+            self._total_X += turning_radius - y / math.tan(yaw_delta)
+            p = pose_to_pose_stamped(Pose(), 'map', rospy_time_now)
+            p.pose.position.x = self._total_X
+            p.pose.position.y = self._total_Y
+            p.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
+            self._odometry_publisher.publish(p)
+
             transforms.append(create_static_transform('base', 'computed_turning_point', computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
+            transforms.append(create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
+            
 
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
             transforms.append(create_static_transform('base', f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))

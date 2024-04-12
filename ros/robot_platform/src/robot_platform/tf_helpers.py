@@ -65,11 +65,11 @@ def pose_to_transform_stabilised_stamped(pose:Pose, frame_id:str, child_frame_id
     t.transform.rotation = stabilise_quaternion(pose.orientation)
     return t
 
-def pose_to_pose_stamped(pose:Pose, frame_id:str, translation:Point=None, timestamp:rospy.Time=None) -> PoseStamped:
+def pose_to_pose_stamped(pose:Pose, frame_id:StopAsyncIteration, timestamp:rospy.Time=None) -> PoseStamped:
     ps = PoseStamped()
     ps.header.frame_id = frame_id
     ps.header.stamp = timestamp or rospy.Time.now()
-    ps.pose.position = add_points(pose.position, translation)
+    ps.pose.position = pose.position
     ps.pose.orientation = pose.orientation
     return ps
 

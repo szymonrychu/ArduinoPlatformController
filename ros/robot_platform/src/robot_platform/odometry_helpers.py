@@ -110,6 +110,13 @@ def _print_radians_in_degrees(angle_rad_list:List[float], round_:int = 4):
     else:
         return r[0]
 
+def compute_turning_radius_yaw_delta(relative_turning_point:Point, motors:List[Motor]) -> Tuple[float]:
+    motors_num = len(motors)
+    mean_distance_delta = sum([m.distance for m in motors]) / motors_num
+    turning_radius = math.sqrt(relative_turning_point.x ** 2 + relative_turning_point.y ** 2)
+    yaw_delta = mean_distance_delta / turning_radius
+    return (turning_radius, yaw_delta)
+
 def compute_relative_turning_point(motors:List[Motor]) -> Optional[Point]:
     partial_turning_points = []
     for c_a, motor_a in enumerate(motors):
@@ -125,9 +132,11 @@ def compute_relative_turning_point(motors:List[Motor]) -> Optional[Point]:
     turning_point = None
     if check_if_points_are_close(partial_turning_points):
         turning_point = compute_mean_turning_point(partial_turning_points)
+
         if turning_point:
             rospy.loginfo(f"mean: [{turning_point.x},{turning_point.y}]")
     return turning_point
+
 
 def _if_between(x, a, b):
     return (a > x and x > b)
