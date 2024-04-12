@@ -208,6 +208,7 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
     can_move_wheels_continously = True
     velocity_coefficients = []
     if turning_point and (abs(turning_point.x) > 0.001 or abs(turning_point.y) > 0.001):
+        can_move_wheels_continously = compute_relative_turning_point([request.motor1, request.motor2, request.motor3, request.motor4]) != None
         turn_radius = math.sqrt(turning_point.x**2 + turning_point.y**2)
         for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
             motor_turn_radius = math.sqrt((m_x - turning_point.x)**2 + (m_y + turning_point.y)**2)
