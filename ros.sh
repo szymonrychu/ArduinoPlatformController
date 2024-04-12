@@ -2,19 +2,17 @@
 
 set -euo nounset
 
+readonly ROS_PACKAGE="${1}"
+readonly ROS_LAUNCH_FILE="${2}"
 readonly GIT_REPO_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 cd "${GIT_REPO_ROOT}"
 
 readonly GIT_REPO_SHORT_SHA="$(git rev-parse HEAD)"
-readonly GIT_CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
 rm -rf /tmp/ros
 mkdir -p /tmp/ros
 chown -R 1000:1000 /tmp/ros
-
-docker build \
-  --tag "ros:${GIT_REPO_SHORT_SHA}" .
 
 docker run \
   --rm \
@@ -26,6 +24,6 @@ docker run \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
   -v /tmp/ros:/home/ros/.ros \
-  "ros:${GIT_REPO_SHORT_SHA}" roslaunch robot_platform wheel_controller.launch
+  "ros:${GIT_REPO_SHORT_SHA}" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"
 
 

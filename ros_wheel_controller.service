@@ -1,11 +1,11 @@
 [Unit]
-Description=code platform service
+Description=ros platform service
 After=network.target
 Wants=network.target
 
 [Service]
 User=szymonri
-ExecStart=SCRIPT_FULL_PATH/code.sh
+ExecStart=SCRIPT_FULL_PATH/ros.sh robot_platform wheel_controller.launch
 
 [Install]
 WantedBy=multi-user.target
