@@ -15,7 +15,7 @@ chown -R 1000:1000 "/tmp/${ROS_PACKAGE}"
 docker run \
   --rm \
   --privileged \
-  --name ros \
+  --name "${ROS_PACKAGE}-${ROS_LAUNCH_FILE}" \
   --add-host mobile-overlord:192.168.1.49 \
   --add-host overlord:192.168.1.50 \
   --network host \
