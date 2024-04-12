@@ -48,6 +48,7 @@ class PlatformStatics:
     TURN_VELOCITY = 1.04719755 # 60degrees in 1s /
     MOVE_VELOCITY = 1.5
     MIN_ANGLE_DIFF = 0.01
+    MAX_DISTANCE_TOLERANCE = 0.01
     REQUEST_DURATION_COEFFICIENT = 1.5 # how much additional time to count into a move, so we get overlapped requests
 
     WHEEL_RADIUS = 0.13
@@ -59,8 +60,8 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
     tg90mA = math.tan(math.pi/2 - m_a)
     tg90mB = math.tan(math.pi/2 - m_b)
     p = Point()
-    p.x = (tg90mA * tg90mB) * (ma_y + mb_y + mb_x/tg90mB - ma_x/tg90mA)
-    p.y = (p.x + mb_x)/tg90mB
+    p.y = (tg90mA * ma_y - tg90mB * mb_y - ma_x - mb_x) / (tg90mA + tg90mB)
+    p.x = tg90mA * (ma_y - p.y) - ma_x
     return p
 
 def compute_mean_turning_point(points:List[Point]) -> Optional[Point]:
@@ -72,6 +73,21 @@ def compute_mean_turning_point(points:List[Point]) -> Optional[Point]:
     p.x = sum([w.x for w in points])/points_len
     p.y = sum([w.y for w in points])/points_len
     return p
+
+def check_if_points_are_close(points:List[Point]) -> bool:
+    if not points:
+        return False
+
+    point_cordinate_deltas = []
+    for c_a, pa in enumerate(points):
+        for c_b, pb in enumerate(points):
+            if c_a >= c_b:
+                continue
+            point_cordinate_deltas.append(pa.x - pb.x)
+            point_cordinate_deltas.append(pa.y - pb.y)
+    max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas])
+    return max_coordinate_delta < PlatformStatics.MAX_DISTANCE_TOLERANCE
+
 
 def limit_angle(angle:float) -> float:
     if angle > math.pi/2:
@@ -101,9 +117,12 @@ def compute_relative_turning_point(motors:List[Motor]) -> Optional[Point]:
             if turning_point:
                 rospy.loginfo(f"motor{c_a+1} motor{c_b+1}: [{turning_point.x},{turning_point.y}]")
                 partial_turning_points.append(turning_point)
-    turning_point = compute_mean_turning_point(partial_turning_points)
-    if turning_point:
-        rospy.loginfo(f"mean: [{turning_point.x},{turning_point.y}]")
+    
+    turning_point = None
+    if check_if_points_are_close(partial_turning_points):
+        turning_point = compute_mean_turning_point(partial_turning_points)
+        if turning_point:
+            rospy.loginfo(f"mean: [{turning_point.x},{turning_point.y}]")
     return turning_point
 
 def _if_between(x, a, b):
