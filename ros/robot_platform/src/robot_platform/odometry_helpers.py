@@ -1,4 +1,5 @@
 
+from .message_utils import MotorStatus
 from .tf_helpers import *
 
 from typing import List, Optional
@@ -117,7 +118,7 @@ def compute_turning_radius_yaw_delta(relative_turning_point:Point, motors:List[M
     yaw_delta = mean_distance_delta / turning_radius
     return (turning_radius, yaw_delta)
 
-def compute_relative_turning_point(motors:List[Motor]) -> Optional[Point]:
+def compute_relative_turning_point(motors:List[MotorStatus]) -> Optional[Point]:
     partial_turning_points = []
     for c_a, motor_a in enumerate(motors):
         for c_b, motor_b in enumerate(motors):
@@ -187,6 +188,14 @@ def compute_new_angle_updates(delta_servo_angles:List[float], platform_status:Pl
         target_angles.append(delta_angle + motor_status.servo.angle)
     return target_angles
 
+def motor_request_to_status(request:MoveRequest) -> List[MotorStatus]:
+    motors = []
+    for motor_request in [request.motor1, request.motor2, request.motor3, request.motor4]:
+        motor = MotorStatus()
+        motor.velocity = motor_request.velocity
+        motor.angle = motor_request.servo.angle
+    return motors
+
 def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None) -> MoveRequest:
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, platform_status)
@@ -207,8 +216,8 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
     
     can_move_wheels_continously = True
     velocity_coefficients = []
-    if turning_point and (abs(turning_point.x) > 0.001 or abs(turning_point.y) > 0.001):
-        can_move_wheels_continously = compute_relative_turning_point([request.motor1, request.motor2, request.motor3, request.motor4]) != None
+    if turning_point and (abs(turning_point.x) > PlatformStatics.MAX_DISTANCE_TOLERANCE or abs(turning_point.y) > PlatformStatics.MAX_DISTANCE_TOLERANCE):
+        can_move_wheels_continously = compute_relative_turning_point(motor_request_to_status(request)) != None
         turn_radius = math.sqrt(turning_point.x**2 + turning_point.y**2)
         for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
             motor_turn_radius = math.sqrt((m_x - turning_point.x)**2 + (m_y + turning_point.y)**2)
