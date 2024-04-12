@@ -58,7 +58,8 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
         return None
 
     tg90mA = math.tan(math.pi/2 - m_a) if m_a != 0 and m_a else 0.0
-    tg90mB = math.tan(math.pi/2 - m_b) if m_b != 0 and m_b else 0.0
+    tg90mB = math.tan(math.pi/2 + m_b) if m_b != 0 and m_b else 0.0
+    
     if tg90mA == 0 or tg90mB == 0 or tg90mA + tg90mB == 0:
         return None
 
