@@ -123,7 +123,7 @@ def compute_relative_turning_point(motors:List[Motor]) -> Optional[Point]:
                 partial_turning_points.append(turning_point)
     
     turning_point = None
-    if check_if_points_are_close(partial_turning_points) or True:
+    if check_if_points_are_close(partial_turning_points):
         turning_point = compute_mean_turning_point(partial_turning_points)
         if turning_point:
             rospy.loginfo(f"mean: [{turning_point.x},{turning_point.y}]")
