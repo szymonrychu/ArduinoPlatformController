@@ -8,9 +8,9 @@ readonly GIT_REPO_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 cd "${GIT_REPO_ROOT}"
 
-rm -rf /tmp/ros
-mkdir -p /tmp/ros
-chown -R 1000:1000 /tmp/ros
+rm -rf "/tmp/${ROS_PACKAGE}"
+mkdir -p "/tmp/${ROS_PACKAGE}"
+chown -R 1000:1000 "/tmp/${ROS_PACKAGE}"
 
 docker run \
   --rm \
@@ -21,5 +21,5 @@ docker run \
   --network host \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
-  -v /tmp/ros:/home/ros/.ros \
+  -v "/tmp/${ROS_PACKAGE}:/home/ros/.ros" \
   "arduino-platform-controller:latest" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"
