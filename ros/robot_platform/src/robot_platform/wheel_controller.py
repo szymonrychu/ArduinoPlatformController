@@ -135,7 +135,7 @@ class WheelController(SerialROSNode):
         p = pose_to_pose_stamped(Pose(), 'map', rospy_time_now)
         p.pose.position.x = self._total_X
         p.pose.position.y = self._total_Y
-        p.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
+        p.pose.orientation = get_quaterion_from_rpy(0, 0, -self._total_yaw)
         self._odometry_publisher.publish(p)
         transforms.append(create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
 

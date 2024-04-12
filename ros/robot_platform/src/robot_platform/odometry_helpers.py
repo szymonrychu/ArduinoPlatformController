@@ -115,7 +115,7 @@ def compute_turning_radius_yaw_delta(relative_turning_point:Point, motors:List[M
     motors_num = len(motors)
     mean_distance_delta = sum([m.distance for m in motors]) / motors_num
     turning_radius = math.sqrt(relative_turning_point.x ** 2 + relative_turning_point.y ** 2)
-    yaw_delta = - mean_distance_delta / turning_radius
+    yaw_delta = mean_distance_delta / turning_radius
     return (turning_radius, yaw_delta)
 
 def compute_relative_turning_point(motors:List[MotorStatus]) -> Optional[Point]:
