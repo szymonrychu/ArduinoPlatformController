@@ -8,9 +8,9 @@ readonly GIT_REPO_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 cd "${GIT_REPO_ROOT}"
 
-rm -rf "/tmp/${ROS_PACKAGE}"
-mkdir -p "/tmp/${ROS_PACKAGE}"
-chown -R 1000:1000 "/tmp/${ROS_PACKAGE}"
+rm -rf "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}"
+mkdir -p "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}"
+chown -R 1000:1000 "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}"
 
 docker run \
   --rm \
