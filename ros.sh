@@ -21,5 +21,5 @@ docker run \
   --network host \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
-  -v "/tmp/${ROS_PACKAGE}:/home/ros/.ros" \
+  -v "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}:/home/ros/.ros" \
   "arduino-platform-controller:latest" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"
