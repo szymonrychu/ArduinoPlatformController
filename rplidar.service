@@ -1,0 +1,13 @@
+[Unit]
+Description=ros platform service
+After=network.target
+Wants=network.target
+
+[Service]
+User=szymonri
+ExecStart=SCRIPT_FULL_PATH/ros.sh rplidar_ros rplidar.launch
+
+[Install]
+WantedBy=multi-user.target
+
+

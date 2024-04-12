@@ -23,5 +23,3 @@ docker run \
   -v /dev:/dev \
   -v /tmp/ros:/home/ros/.ros \
   "ros:latest" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"
-
-
