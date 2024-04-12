@@ -8,8 +8,6 @@ readonly GIT_REPO_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 cd "${GIT_REPO_ROOT}"
 
-readonly GIT_REPO_SHORT_SHA="$(git rev-parse HEAD)"
-
 rm -rf /tmp/ros
 mkdir -p /tmp/ros
 chown -R 1000:1000 /tmp/ros
@@ -24,6 +22,6 @@ docker run \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
   -v /tmp/ros:/home/ros/.ros \
-  "ros:${GIT_REPO_SHORT_SHA}" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"
+  "ros:latest" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"
 
 
