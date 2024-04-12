@@ -88,7 +88,7 @@ def check_if_points_are_close(points:List[Point]) -> bool:
                 continue
             point_cordinate_deltas.append(pa.x - pb.x)
             point_cordinate_deltas.append(pa.y - pb.y)
-    max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas])
+    max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas]) if point_cordinate_deltas else PlatformStatics.MAX_DISTANCE_TOLERANCE
     return max_coordinate_delta < PlatformStatics.MAX_DISTANCE_TOLERANCE
 
 
@@ -122,7 +122,7 @@ def compute_relative_turning_point(motors:List[Motor]) -> Optional[Point]:
                 partial_turning_points.append(turning_point)
     
     turning_point = None
-    if check_if_points_are_close(partial_turning_points):
+    if check_if_points_are_close(partial_turning_points) or True:
         turning_point = compute_mean_turning_point(partial_turning_points)
         if turning_point:
             rospy.loginfo(f"mean: [{turning_point.x},{turning_point.y}]")
