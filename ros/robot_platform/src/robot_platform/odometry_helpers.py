@@ -57,8 +57,8 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
     if abs(m_a - m_b) < PlatformStatics.MIN_ANGLE_DIFF:
         return None
 
-    tg90mA = math.tan(math.pi/2 - m_a)
-    tg90mB = math.tan(math.pi/2 - m_b)
+    tg90mA = math.tan(math.pi/2 - m_a) if m_a != 0 and m_a != math.pi/2 else 0.0
+    tg90mB = math.tan(math.pi/2 - m_b) if m_b != 0 and m_b != math.pi/2 else 0.0
     p = Point()
     p.y = (tg90mA * ma_y - tg90mB * mb_y - ma_x - mb_x) / (tg90mA + tg90mB)
     p.x = tg90mA * (ma_y - p.y) - ma_x
