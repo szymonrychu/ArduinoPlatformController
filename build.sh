@@ -10,9 +10,11 @@ git add -A
 git stash
 git stash drop
 
+./install_services.sh
+
 readonly GIT_REPO_SHORT_SHA="$(git rev-parse HEAD)"
 
 docker build \
-  --tag "ros:${GIT_REPO_SHORT_SHA}" .
+  --tag "arduino-platform-controller:${GIT_REPO_SHORT_SHA}" .
 
-docker tag "ros:${GIT_REPO_SHORT_SHA}" ros:latest
+docker tag "arduino-platform-controller:${GIT_REPO_SHORT_SHA}" ros:latest

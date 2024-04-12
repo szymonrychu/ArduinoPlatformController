@@ -22,4 +22,4 @@ docker run \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
   -v /tmp/ros:/home/ros/.ros \
-  "ros:latest" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"
+  "arduino-platform-controller:latest" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"
