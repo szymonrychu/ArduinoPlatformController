@@ -8,7 +8,7 @@ cd "${GIT_REPO_ROOT}"
 
 git add -A
 git stash
-git stash drop
+git stash drop || true
 
 ./install_services.sh
 
