@@ -129,15 +129,15 @@ class WheelController(SerialROSNode):
             transforms.append(create_static_transform('base', 'computed_turning_point', computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
         else:
             mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
-            self._total_X += mean_distance_delta * math.asin(-self._total_yaw)
-            self._total_Y += mean_distance_delta * math.acos(-self._total_yaw)
+            self._total_X += mean_distance_delta * math.asin(self._total_yaw)
+            self._total_Y += mean_distance_delta * math.acos(self._total_yaw)
 
         p = pose_to_pose_stamped(Pose(), 'map', rospy_time_now)
         p.pose.position.x = self._total_X
         p.pose.position.y = self._total_Y
-        p.pose.orientation = get_quaterion_from_rpy(0, 0, -self._total_yaw)
+        p.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
         self._odometry_publisher.publish(p)
-        transforms.append(create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, -self._total_yaw, rospy_time_now))
+        transforms.append(create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
 
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
             transforms.append(create_static_transform('base', f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
