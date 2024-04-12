@@ -196,12 +196,14 @@ def motor_request_to_status(request:MoveRequest) -> List[MotorStatus]:
         motor.angle = motor_request.servo.angle
     return motors
 
-def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None) -> MoveRequest:
+def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None) -> Optional[MoveRequest]:
+    if abs(velocity) < PlatformStatics.MAX_DISTANCE_TOLERANCE / duration:
+        return None
+
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, platform_status)
     limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, duration)
     motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, platform_status)
-
     request = MoveRequest()
     request.duration = PlatformStatics.REQUEST_DURATION_COEFFICIENT * duration
 

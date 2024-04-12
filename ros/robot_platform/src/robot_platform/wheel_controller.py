@@ -57,7 +57,7 @@ class WheelController(SerialROSNode):
         self._total_X = 0.0
         self._total_Y = 0.0
         self._header_frame_id = rospy.get_param('~header_frame_id')
-        self._last_transform_stamped = None
+        self._last_transform_stamped = create_static_transform('map', 'base', 0, 0, 0, 0, 0, 0, rospy.Time.now())
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         raw_output_topic = rospy.get_param('~raw_output_topic')
