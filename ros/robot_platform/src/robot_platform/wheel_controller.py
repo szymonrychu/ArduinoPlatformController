@@ -122,9 +122,8 @@ class WheelController(SerialROSNode):
             turning_radius, yaw_delta = compute_turning_radius_yaw_delta(computed_turning_point, response.motor_list)
             if yaw_delta != 0:
                 self._total_yaw += yaw_delta
-                y = turning_radius * math.sin(yaw_delta)
-                self._total_Y += y
-                self._total_X += turning_radius - y / math.tan(yaw_delta)
+                self._total_Y += turning_radius * math.sin(yaw_delta) * 1.0 if yaw_delta > 0 else -1.0
+                self._total_X += turning_radius * math.cos(yaw_delta) * 1.0 if yaw_delta > 0 else -1.0
 
             transforms.append(create_static_transform('base', 'computed_turning_point', computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
         else:
