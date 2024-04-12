@@ -57,6 +57,7 @@ class WheelController(SerialROSNode):
         self._total_X = 0.0
         self._total_Y = 0.0
         self._header_frame_id = rospy.get_param('~header_frame_id')
+        self._last_transform_stamped = None
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         raw_output_topic = rospy.get_param('~raw_output_topic')
@@ -132,8 +133,11 @@ class WheelController(SerialROSNode):
             self._odometry_publisher.publish(p)
 
             transforms.append(create_static_transform('base', 'computed_turning_point', computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
-            transforms.append(create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
-            
+            self._last_transform_stamped = create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now)
+        else:
+            self._last_transform_stamped.header.stamp = rospy_time_now
+        
+        transforms.append(self._last_transform_stamped)            
 
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
             transforms.append(create_static_transform('base', f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
