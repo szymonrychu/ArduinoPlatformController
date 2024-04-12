@@ -57,7 +57,6 @@ class WheelController(SerialROSNode):
         self._total_X = 0.0
         self._total_Y = 0.0
         self._header_frame_id = rospy.get_param('~header_frame_id')
-        self._last_transform_stamped = create_static_transform('map', 'base', 0, 0, 0, 0, 0, 0, rospy.Time.now())
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         raw_output_topic = rospy.get_param('~raw_output_topic')
@@ -126,16 +125,20 @@ class WheelController(SerialROSNode):
                 y = turning_radius * math.sin(yaw_delta)
                 self._total_Y += y
                 self._total_X += turning_radius - y / math.tan(yaw_delta)
-            p = pose_to_pose_stamped(Pose(), 'map', rospy_time_now)
-            p.pose.position.x = self._total_X
-            p.pose.position.y = self._total_Y
-            p.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
-            self._odometry_publisher.publish(p)
 
             transforms.append(create_static_transform('base', 'computed_turning_point', computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
-            self._last_transform_stamped = create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now)
         else:
-            self._last_transform_stamped.header.stamp = rospy_time_now
+            mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
+            self._total_Y += mean_distance_delta * math.asin(self._total_yaw)
+            self._total_X += mean_distance_delta * math.acos(self._total_yaw)
+
+        p = pose_to_pose_stamped(Pose(), 'map', rospy_time_now)
+        p.pose.position.x = self._total_X
+        p.pose.position.y = self._total_Y
+        p.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
+        self._odometry_publisher.publish(p)
+        transforms.append(create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
+
         
         transforms.append(self._last_transform_stamped)            
 
