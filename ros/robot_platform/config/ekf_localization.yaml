@@ -2,7 +2,7 @@
 
 frequency: 10
 two_d_mode: true
-publish_tf: false
+publish_tf: true
 
 # Coordinate frame specification
 odom_frame: odom
