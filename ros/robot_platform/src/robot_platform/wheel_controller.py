@@ -152,7 +152,7 @@ class WheelController(SerialROSNode):
             odometry.twist.covariance[35] = 0.01
         self._odometry_publisher.publish(odometry)
 
-        transforms.append(create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
+        transforms.append(create_static_transform('map', 'base', odometry.pose.pose.position.x, odometry.pose.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
 
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
             transforms.append(create_static_transform('base', f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
