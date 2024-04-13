@@ -5,7 +5,7 @@ Wants=network.target
 
 [Service]
 User=szymonri
-ExecStart=SCRIPT_FULL_PATH/ros.sh robot_platform wheel_controller.launch
+ExecStart=SCRIPT_FULL_PATH/ros.sh robot_platform robot_platform.launch
 
 [Install]
 WantedBy=multi-user.target

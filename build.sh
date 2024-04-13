@@ -20,3 +20,5 @@ docker build \
   --tag "arduino-platform-controller:${GIT_REPO_SHORT_SHA}" .
 
 docker tag "arduino-platform-controller:${GIT_REPO_SHORT_SHA}" arduino-platform-controller:latest
+
+sudo systemctl restart ros
