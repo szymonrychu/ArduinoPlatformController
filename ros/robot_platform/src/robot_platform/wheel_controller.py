@@ -115,6 +115,7 @@ class WheelController(SerialROSNode):
         self._message_counter = (self._message_counter + 1) % 100
 
         transforms = [
+            create_static_transform('wheel_controller', 'base', 0.0, 0.0, 0, 0, 0, 0, rospy_time_now),
             create_static_transform('base', 'scan', 0.0, 0.0, 0, 0, 0, -math.pi/2, rospy_time_now)
         ]
         mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
