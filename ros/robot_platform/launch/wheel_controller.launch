@@ -3,7 +3,7 @@
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
 
-  <arg name="header_frame_id" default="wheel_controller" />
+  <arg name="header_frame_id" default="base" />
 
   <arg name="battery_state_output_topic" default="/robot_platform/battery" />
   <arg name="gps_state_output_topic" default="/robot_platform/gps"/>
