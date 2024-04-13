@@ -135,8 +135,8 @@ class WheelController(SerialROSNode):
 
         odometry = Odometry()
         odometry.header.stamp = rospy_time_now
-        odometry.header.frame_id = "wheel_controller"
-        odometry.child_frame_id = "odom"
+        odometry.header.frame_id = "odom"
+        odometry.child_frame_id = "base"
         odometry.pose.pose.position.x = self._total_X
         odometry.pose.pose.position.y = self._total_Y
         odometry.twist.twist.linear.x = mean_distance_delta / (timestamp - self._last_timestmamp)
@@ -153,6 +153,7 @@ class WheelController(SerialROSNode):
         self._odometry_publisher.publish(odometry)
 
         transforms.append(create_static_transform('odom', 'base', odometry.pose.pose.position.x, odometry.pose.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
+        transforms.append(create_static_transform('wheel_controller', 'base', 0, 0, 0, 0, 0, 0, rospy_time_now))
 
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
             transforms.append(create_static_transform('base', f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
