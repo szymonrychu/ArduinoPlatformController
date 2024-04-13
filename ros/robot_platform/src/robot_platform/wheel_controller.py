@@ -58,7 +58,8 @@ class WheelController(SerialROSNode):
         self._total_X = 0.0
         self._total_Y = 0.0
         self._last_timestmamp = time.time()
-        self._header_frame_id = rospy.get_param('~header_frame_id')
+        self._base_frame_id = rospy.get_param('~base_frame_id')
+        self._odom_frame_id = rospy.get_param('~odom_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         raw_output_topic = rospy.get_param('~raw_output_topic')
@@ -135,8 +136,8 @@ class WheelController(SerialROSNode):
 
         odometry = Odometry()
         odometry.header.stamp = rospy_time_now
-        odometry.header.frame_id = "base"
-        odometry.child_frame_id = "odom"
+        odometry.header.frame_id = self._base_frame_id
+        odometry.child_frame_id = self._odom_frame_id
         odometry.pose.pose.position.x = self._total_X
         odometry.pose.pose.position.y = self._total_Y
         odometry.twist.twist.linear.x = mean_distance_delta / (timestamp - self._last_timestmamp)
@@ -152,10 +153,10 @@ class WheelController(SerialROSNode):
             odometry.twist.covariance[35] = 0.01
         self._odometry_publisher.publish(odometry)
 
-        transforms.append(create_static_transform('odom', 'base', odometry.pose.pose.position.x, odometry.pose.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
+        transforms.append(create_static_transform(self._base_frame_id, self._odom_frame_id, odometry.pose.pose.position.x, odometry.pose.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
 
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
-            transforms.append(create_static_transform('base', f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
+            transforms.append(create_static_transform(self._base_frame_id, f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
             transforms.append(create_static_transform(f"motor{c+1}base", f"motor{c+1}servo", 0, 0, 0, 0, 0, -motor_status.angle, rospy_time_now))
             self._motor_distances[c] += motor_status.distance
             motor_twist = motor_status.distance / PlatformStatics.WHEEL_RADIUS
