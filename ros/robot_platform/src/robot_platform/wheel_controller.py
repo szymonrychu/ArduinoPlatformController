@@ -57,7 +57,7 @@ class WheelController(SerialROSNode):
         self._total_yaw = 0.0
         self._total_X = 0.0
         self._total_Y = 0.0
-        self._last_rospy_timestamp = rospy.Time.now()
+        self._last_timestmamp = time.time()
         self._header_frame_id = rospy.get_param('~header_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
