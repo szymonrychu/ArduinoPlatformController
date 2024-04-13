@@ -18,6 +18,7 @@ from uuid import UUID
 from robot_platform.msg import PlatformStatus, MoveRequest
 from std_msgs.msg import String, Duration
 from geometry_msgs.msg import Point, PoseStamped, Pose, TransformStamped, Point, PointStamped
+from nav_msgs.msg import Odometry
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 
 from .ros_helpers import ROSNode
@@ -56,6 +57,7 @@ class WheelController(SerialROSNode):
         self._total_yaw = 0.0
         self._total_X = 0.0
         self._total_Y = 0.0
+        self._last_rospy_timestamp = rospy.Time.now()
         self._header_frame_id = rospy.get_param('~header_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
@@ -75,7 +77,7 @@ class WheelController(SerialROSNode):
         self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState)
         self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix)
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
-        self._odometry_publisher = rospy.Publisher(odometry_output_topic, PoseStamped)
+        self._odometry_publisher = rospy.Publisher(odometry_output_topic, Odometry)
 
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
@@ -92,6 +94,7 @@ class WheelController(SerialROSNode):
 
     def parse_serial(self, raw_data:String):
         rospy_time_now = rospy.Time.now()
+        timestamp = time.time()
 
         response = parse_response(raw_data)
         if not response:
@@ -115,11 +118,11 @@ class WheelController(SerialROSNode):
         self._message_counter = (self._message_counter + 1) % 100
 
         transforms = [
-            create_static_transform('wheel_controller', 'base', 0.0, 0.0, 0, 0, 0, 0, rospy_time_now),
             create_static_transform('base', 'scan', 0.0, 0.0, 0, 0, 0, -math.pi/2, rospy_time_now)
         ]
         mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
         computed_turning_point = compute_relative_turning_point(response.motor_list)
+        yaw_delta = 0.0
         if computed_turning_point:
             turning_radius, yaw_delta = compute_turning_radius_yaw_delta(computed_turning_point, response.motor_list)
             if abs(mean_distance_delta) > 0:
@@ -130,11 +133,25 @@ class WheelController(SerialROSNode):
         self._total_X -= mean_distance_delta * math.asin(self._total_yaw)
         self._total_Y += mean_distance_delta * math.acos(self._total_yaw)
 
-        p = pose_to_pose_stamped(Pose(), 'map', rospy_time_now)
-        p.pose.position.x = self._total_X
-        p.pose.position.y = self._total_Y
-        p.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
-        self._odometry_publisher.publish(p)
+        odometry = Odometry()
+        odometry.header.stamp = rospy_time_now
+        odometry.header.frame_id = "odom"
+        odometry.child_frame_id = "base_link"
+        odometry.pose.pose.position.x = self._total_X
+        odometry.pose.pose.position.y = self._total_Y
+        odometry.twist.twist.linear.x = mean_distance_delta / (timestamp - self._last_timestmamp)
+        odometry.twist.twist.angular.z = yaw_delta / (timestamp - self._last_timestmamp)
+
+        if odometry.twist.twist.linear.x  == 0 and odometry.twist.twist.angular.z == 0:
+            odometry.twist.covariance[0] = 0.01 / 1000
+            odometry.twist.covariance[7] = 0.01 / 1000
+            odometry.twist.covariance[35] = 0.01 / 1000000
+        else:
+            odometry.twist.covariance[0] = 0.01
+            odometry.twist.covariance[7] = 0.01
+            odometry.twist.covariance[35] = 0.01
+        self._odometry_publisher.publish(odometry)
+
         transforms.append(create_static_transform('map', 'base', p.pose.position.x, p.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
 
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
@@ -146,6 +163,8 @@ class WheelController(SerialROSNode):
         
         for transform in transforms:
             self._tf2_broadcaster.sendTransform(transform)
+        
+        self._last_timestmamp = timestamp
 
 
     def _write_raw_data(self, ros_data:String):
