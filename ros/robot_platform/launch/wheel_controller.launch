@@ -18,7 +18,7 @@
     <param name="serial_dev" type="string" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_13671670-if00" />
     <param name="serial_baudrate" type="int" value="115200" />
 
-    <param name="header_frame_id" type="string" value="$(arg header_frame_id)" />
+    <param name="base_frame_id" type="string" value="$(arg base_frame_id)" />
     
     <param name="raw_input_topic" type="string" value="/robot_platform/raw_serial_request" />
     <param name="raw_output_topic" type="string" value="/robot_platform/raw_serial_response" />
