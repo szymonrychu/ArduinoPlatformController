@@ -135,8 +135,8 @@ class WheelController(SerialROSNode):
 
         odometry = Odometry()
         odometry.header.stamp = rospy_time_now
-        odometry.header.frame_id = "odom"
-        odometry.child_frame_id = "base"
+        odometry.header.frame_id = "base"
+        odometry.child_frame_id = "odom"
         odometry.pose.pose.position.x = self._total_X
         odometry.pose.pose.position.y = self._total_Y
         odometry.twist.twist.linear.x = mean_distance_delta / (timestamp - self._last_timestmamp)
