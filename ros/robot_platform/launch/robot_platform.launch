@@ -24,7 +24,7 @@
     <arg name="imu_state_output_topic" value="$(arg imu_state_output_topic)" />
     <arg name="wheel_positions_input_topic" value="$(arg wheel_positions_input_topic)" />
     <arg name="platform_status_output_topic" value="$(arg platform_status_output_topic)" />
-    <arg name="odometry_output_topic" type="string" value="$(arg odom_state_output_topic)" />
+    <arg name="odom_state_output_topic" type="string" value="$(arg odom_state_output_topic)" />
     <arg name="pose_output_topic" type="string" value="$(arg pose_output_topic)" />
   </include>
   
