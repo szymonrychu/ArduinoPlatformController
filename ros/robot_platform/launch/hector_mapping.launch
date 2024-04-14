@@ -13,7 +13,7 @@
   <arg name="base_frame" default="base"/>
   <arg name="pub_map_odom_transform" default="true"/>
   <arg name="scan_subscriber_queue_size" default="5"/>
-  <arg name="scan_topic" default="scan"/>
+  <arg name="scan_topic" default="laser"/>
   <arg name="map_size" default="2048"/>
   
   <!-- <arg name="odom_frame" default="odom"/>
@@ -23,15 +23,9 @@
 
   <param name="/use_sim_time" value="false"/>
 
-  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
+  <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
     <rosparam command="load" file="$(find robot_platform)/params/ekf_localization.yaml" />
-
-   <!--  Placeholder for output topic remapping
-    <remap from="odometry/filtered" to=""/>
-    <remap from="accel/filtered" to=""/>
-    -->
-
-  </node>
+  </node> -->
 
   <node pkg="hector_mapping" type="hector_mapping" name="hector_mapping" output="screen">
   
