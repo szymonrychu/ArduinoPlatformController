@@ -64,6 +64,7 @@ class JoyPlatformController(ROSNode):
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
 
         rospy.Timer(rospy.Duration(duration), self._send_request)
+        self.spin()
 
     def _handle_joystick_updates(self, data:Joy):
         self._last_joy = data
