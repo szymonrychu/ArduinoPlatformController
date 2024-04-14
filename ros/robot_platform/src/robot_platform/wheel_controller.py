@@ -72,6 +72,7 @@ class WheelController(SerialROSNode):
         gps_state_output_topic = rospy.get_param('~gps_state_output_topic')
         imu_state_output_topic = rospy.get_param('~imu_state_output_topic')
         odometry_output_topic = rospy.get_param('~odometry_output_topic')
+        pose_output_topic = rospy.get_param('~pose_output_topic')
 
         rospy.Subscriber(wheel_positions_input_topic, MoveRequest, self._handle_wheel_inputs)
         self._platform_status_publisher = rospy.Publisher(platform_status_output_topic, PlatformStatus)
@@ -79,6 +80,7 @@ class WheelController(SerialROSNode):
         self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix)
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
         self._odometry_publisher = rospy.Publisher(odometry_output_topic, Odometry)
+        self._pose_publisher = rospy.Publisher(pose_output_topic, PoseStamped)
 
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
@@ -140,6 +142,7 @@ class WheelController(SerialROSNode):
         odometry.child_frame_id = self._odom_frame_id
         odometry.pose.pose.position.x = self._total_X
         odometry.pose.pose.position.y = self._total_Y
+        odometry.pose.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
         odometry.twist.twist.linear.x = mean_distance_delta / (timestamp - self._last_timestmamp)
         odometry.twist.twist.angular.z = yaw_delta / (timestamp - self._last_timestmamp)
 
@@ -152,6 +155,12 @@ class WheelController(SerialROSNode):
             odometry.twist.covariance[7] = 0.01
             odometry.twist.covariance[35] = 0.01
         self._odometry_publisher.publish(odometry)
+
+        pose_stamped = PoseStamped()
+        pose_stamped.header = odometry.header
+        pose_stamped.pose = odometry.pose.pose
+        self._pose_publisher.publish(pose_stamped)
+
 
         transforms.append(create_static_transform(self._base_frame_id, self._odom_frame_id, odometry.pose.pose.position.x, odometry.pose.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
 
