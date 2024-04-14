@@ -5,11 +5,12 @@
   <env name="ROS_LOG_DIR" value="/tmp/"/>
 
   <arg name="geotiff_map_file_path" default="$(find robot_platform)/maps"/>
-  <arg name="trajectory_source_frame_name" default="/base_link"/>
+  <arg name="trajectory_source_frame_name" default="base_link"/>
   <arg name="trajectory_update_rate" default="4"/>
   <arg name="trajectory_publish_rate" default="0.25"/>
   <arg name="map_file_base_name" default="hector_slam_map"/>
   <arg name="tf_map_scanmatch_transform_frame_name" default="scanmatcher_frame"/>
+  <arg name="pub_map_scanmatch_transform" default="true"/>
   <arg name="base_frame" default="base"/>
   <arg name="pub_map_odom_transform" default="true"/>
   <arg name="scan_subscriber_queue_size" default="5"/>
@@ -18,8 +19,8 @@
   
   <!-- <arg name="odom_frame" default="odom"/>
   <arg name="map_frame" default="odom"/> -->
-  <arg name="odom_frame" default="/robot_platform/odom"/>
-  <arg name="map_frame" default="/robot_platform/odom"/>
+  <arg name="odom_frame" default="odom"/>
+  <arg name="map_frame" default="odom"/>
 
   <param name="/use_sim_time" value="false"/>
 
@@ -66,6 +67,7 @@
       <param name="pub_drawings" value="true"/>
       <param name="pub_debug_output" value="true"/>
     -->
+    <param name="pub_map_scanmatch_transform" type="bool" value="$(arg pub_map_scanmatch_transform)" />
     <param name="tf_map_scanmatch_transform_frame_name" value="$(arg tf_map_scanmatch_transform_frame_name)" />
   </node>
 
