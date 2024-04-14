@@ -28,33 +28,21 @@ from .serial_utils import SafeSerialWrapper
 from .tf_helpers import *
 
 
-class SerialROSNode(ROSNode, SafeSerialWrapper):
+class WheelController(ROSNode, SafeSerialWrapper):
 
     def __init__(self):
         ROSNode.__init__(self)
-        serial_dev = rospy.get_param('~serial_dev')
-        serial_baudrate = rospy.get_param('~serial_baudrate')
-        SafeSerialWrapper.__init__(self, serial_dev, serial_baudrate)
-        rospy.Timer(rospy.Duration(0.001), self.__handle_serial)
-
-    def __handle_serial(self, *_args, **_kwargs):
-        raw_data = self.read_data()
-        if raw_data:
-            self.parse_serial(raw_data)
-
-    def parse_serial(self, raw_data):
-        pass
-
-class WheelController(SerialROSNode):
-
-    def __init__(self):
-        SerialROSNode.__init__(self)
         self._message_counter = 0
         self._motor_distances = [0.0] * PlatformStatics.MOTOR_NUM
         self._total_yaw = 0.0
         self._total_X = 0.0
         self._total_Y = 0.0
         self._last_timestmamp = time.time()
+
+        serial_dev = rospy.get_param('~serial_dev')
+        serial_baudrate = rospy.get_param('~serial_baudrate')
+        SafeSerialWrapper.__init__(self, serial_dev, serial_baudrate)
+
         self._base_frame_id = rospy.get_param('~base_frame_id')
         self._odom_frame_id = rospy.get_param('~odom_frame_id')
         self._laser_frame_id = rospy.get_param('~laser_frame_id')
@@ -80,6 +68,8 @@ class WheelController(SerialROSNode):
         self._odometry_publisher = rospy.Publisher(odometry_output_topic, Odometry)
         self._pose_publisher = rospy.Publisher(pose_output_topic, PoseStamped)
 
+        rospy.Timer(rospy.Duration(0.001), self._handle_serial)
+
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
         self.spin()
@@ -87,6 +77,12 @@ class WheelController(SerialROSNode):
         result = self.write_data('{"move_duration":1,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}')
         if not result:
             self.stop()
+    
+
+    def _handle_serial(self, *_args, **_kwargs):
+        raw_data = self.read_data()
+        if raw_data:
+            self.parse_serial(raw_data)
 
     def _handle_wheel_inputs(self, raw_data:MoveRequest):
         r = Request.from_MoveRequest(raw_data)
