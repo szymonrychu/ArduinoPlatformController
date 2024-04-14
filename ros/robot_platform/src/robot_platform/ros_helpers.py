@@ -3,8 +3,8 @@ from .log_utils import env2log
 
 class ROSNode():
 
-    def __init__(self, node_name='robot_platform'):
-        rospy.init_node(node_name, log_level=env2log())
+    def __init__(self, name='robot_platform'):
+        rospy.init_node(name, log_level=env2log())
 
     def start(self):
         rospy.spin()
