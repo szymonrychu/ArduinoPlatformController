@@ -158,7 +158,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._pose_publisher.publish(pose_stamped)
 
 
-        transforms.append(create_static_transform(self._base_frame_id, self._odom_frame_id, -odometry.pose.pose.position.x, -odometry.pose.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
+        transforms.append(create_static_transform(self._base_frame_id, self._odom_frame_id, -odometry.pose.pose.position.x, odometry.pose.pose.position.y, 0, 0, 0, -self._total_yaw, rospy_time_now))
 
         for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
             transforms.append(create_static_transform(self._base_frame_id, f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
