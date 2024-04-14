@@ -35,10 +35,7 @@ class SerialROSNode(ROSNode, SafeSerialWrapper):
         serial_dev = rospy.get_param('~serial_dev')
         serial_baudrate = rospy.get_param('~serial_baudrate')
         SafeSerialWrapper.__init__(self, serial_dev, serial_baudrate)
-    
-    def start(self):
         rospy.Timer(rospy.Duration(0.001), self.__handle_serial)
-        ROSNode.start(self)
 
     def __handle_serial(self, *_args, **_kwargs):
         raw_data = self.read_data()
@@ -84,6 +81,8 @@ class WheelController(SerialROSNode):
         self._pose_publisher = rospy.Publisher(pose_output_topic, PoseStamped)
 
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
+
+        self.spin()
 
         result = self.write_data('{"move_duration":1,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}')
         if not result:

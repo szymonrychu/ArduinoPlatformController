@@ -6,7 +6,7 @@ class ROSNode():
     def __init__(self, name='robot_platform'):
         rospy.init_node(name, log_level=env2log())
 
-    def start(self):
+    def spin(self):
         rospy.spin()
 
     def is_running(self):
