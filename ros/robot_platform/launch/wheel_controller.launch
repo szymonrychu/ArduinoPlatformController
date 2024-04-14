@@ -22,6 +22,7 @@
 
     <param name="base_frame_id" type="string" value="$(arg base_frame_id)" />
     <param name="odom_frame_id" type="string" value="$(arg odom_frame_id)" />
+    <param name="laser_frame_id" type="string" value="$(arg laser_frame_id)" />
     
     <param name="raw_input_topic" type="string" value="/robot_platform/raw_serial_request" />
     <param name="raw_output_topic" type="string" value="/robot_platform/raw_serial_response" />
