@@ -5,6 +5,7 @@
 
   <arg name="base_frame_id" default="base_link" />
   <arg name="odom_frame_id" default="odom" />
+  <arg name="laser_frame_id" default="scan" />
 
   <arg name="battery_state_output_topic" default="/robot_platform/battery" />
   <arg name="gps_state_output_topic" default="/robot_platform/gps"/>
