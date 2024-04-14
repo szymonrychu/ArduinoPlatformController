@@ -172,8 +172,7 @@ class WheelController(SerialROSNode):
             motor_twist = motor_status.distance / PlatformStatics.WHEEL_RADIUS
             transforms.append(create_static_transform(f"motor{c+1}servo", f"motor{c+1}wheel", 0, 0, 0, 0, motor_twist, 0, rospy_time_now))
         
-        for transform in transforms:
-            self._tf2_broadcaster.sendTransform(transform)
+        self._tf2_broadcaster.sendTransform(transforms)
         
         self._last_timestmamp = timestamp
 
