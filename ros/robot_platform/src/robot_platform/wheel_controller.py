@@ -61,12 +61,12 @@ class WheelController(ROSNode, SafeSerialWrapper):
         pose_output_topic = rospy.get_param('~pose_output_topic')
 
         rospy.Subscriber(wheel_positions_input_topic, MoveRequest, self._handle_wheel_inputs)
-        self._platform_status_publisher = rospy.Publisher(platform_status_output_topic, PlatformStatus)
-        self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState)
-        self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix)
-        self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu)
-        self._odometry_publisher = rospy.Publisher(odometry_output_topic, Odometry)
-        self._pose_publisher = rospy.Publisher(pose_output_topic, PoseStamped)
+        self._platform_status_publisher = rospy.Publisher(platform_status_output_topic, PlatformStatus, queue_size=10)
+        self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState, queue_size=10)
+        self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix, queue_size=10)
+        self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu, queue_size=10)
+        self._odometry_publisher = rospy.Publisher(odometry_output_topic, Odometry, queue_size=10)
+        self._pose_publisher = rospy.Publisher(pose_output_topic, PoseStamped, queue_size=10)
 
         rospy.Timer(rospy.Duration(0.001), self._handle_serial)
 
