@@ -52,6 +52,7 @@ class JoyPlatformController(ROSNode):
         self._last_platform_status = PlatformStatus()
         self._last_joy = Joy()
         self._last_limited_deltas = [0.0] * PlatformStatics.MOTOR_NUM
+        self._last_request = None
         self._autorepeat_rate = rospy.get_param('~autorepeat_rate')
         joy_input_topic = rospy.get_param('~joy_topic')
         joy_output_topic = rospy.get_param('~joy_feedback_topic')
@@ -104,8 +105,9 @@ class JoyPlatformController(ROSNode):
                 turning_point.x = turn_radius
 
             r = create_request(velocity, duration, self._last_platform_status, turning_point)
-            if r:
+            if self._last_request != r:
                 self._move_request_publisher.publish(r)
+            self._last_request = r
 
 
 
