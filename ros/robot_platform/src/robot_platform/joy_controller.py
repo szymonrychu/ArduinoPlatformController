@@ -105,9 +105,8 @@ class JoyPlatformController(ROSNode):
                 turning_point.x = turn_radius
 
             r = create_request(velocity, duration, self._last_platform_status, turning_point)
-            if self._last_request != r:
+            if r:
                 self._move_request_publisher.publish(r)
-            self._last_request = r
 
 
 

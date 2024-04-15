@@ -192,6 +192,18 @@ def motor_request_to_status(request:MoveRequest) -> List[MotorStatus]:
         motor.angle = motor_request.servo.angle
     return motors
 
+def non_empty_request(request:MoveRequest):
+    r = request.motor1.servo.angle_provided
+    r = r or request.motor2.servo.angle_provided
+    r = r or request.motor3.servo.angle_provided
+    r = r or request.motor4.servo.angle_provided
+    r = r or abs(request.motor1.velocity) > 0
+    r = r or abs(request.motor2.velocity) > 0
+    r = r or abs(request.motor3.velocity) > 0
+    r = r or abs(request.motor4.velocity) > 0
+    return r
+
+
 def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None) -> Optional[MoveRequest]:
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, platform_status)
@@ -232,4 +244,5 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
         request.motor3.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[2] * velocity
         request.motor4.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[3] * velocity
 
-    return request
+    if non_empty_request(r):
+        return request
