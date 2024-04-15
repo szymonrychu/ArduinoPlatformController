@@ -244,5 +244,5 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
         request.motor3.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[2] * velocity
         request.motor4.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[3] * velocity
 
-    if non_empty_request(r):
+    if non_empty_request(request):
         return request
