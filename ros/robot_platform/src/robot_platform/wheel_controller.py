@@ -92,84 +92,87 @@ class WheelController(ROSNode, SafeSerialWrapper):
             self.stop()
 
     def parse_serial(self, raw_data:String):
-        rospy_time_now = rospy.Time.now()
-        timestamp = time.time()
+        try:
+            rospy_time_now = rospy.Time.now()
+            timestamp = time.time()
 
-        response = parse_response(raw_data)
-        if not response:
-            return
-        self._current_move_duration = response.move_duration
+            response = parse_response(raw_data)
+            if not response:
+                return
+            self._current_move_duration = response.move_duration
 
-        raw_string = String()
-        raw_string.data = raw_data
-        self._raw_log_publisher.publish(raw_string)
+            raw_string = String()
+            raw_string.data = raw_data
+            self._raw_log_publisher.publish(raw_string)
 
-        platform_status = response.parse_ROS(self._base_frame_id, rospy_time_now)
+            platform_status = response.parse_ROS(self._base_frame_id, rospy_time_now)
 
-        self._platform_status_publisher.publish(platform_status)
-        self._battery_state_publisher.publish(platform_status.battery)
-        self._imu_state_publisher.publish(platform_status.imu)
-        if platform_status.gps:
-            self._gps_state_publisher.publish(platform_status.gps)
+            self._platform_status_publisher.publish(platform_status)
+            self._battery_state_publisher.publish(platform_status.battery)
+            self._imu_state_publisher.publish(platform_status.imu)
+            if platform_status.gps:
+                self._gps_state_publisher.publish(platform_status.gps)
 
-        if self._message_counter == 0:
-            rospy.loginfo(f"Battery level: {response.battery.voltage}V")
-        self._message_counter = (self._message_counter + 1) % 100
+            if self._message_counter == 0:
+                rospy.loginfo(f"Battery level: {response.battery.voltage}V")
+            self._message_counter = (self._message_counter + 1) % 100
 
-        transforms = [
-            create_static_transform(self._base_frame_id, self._laser_frame_id, 0.0, 0.0, 0, 0, 0, -math.pi/2, rospy_time_now)
-        ]
-        mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
-        computed_turning_point = compute_relative_turning_point(response.motor_list)
-        yaw_delta = 0.0
-        if computed_turning_point:
-            turning_radius, yaw_delta = compute_turning_radius_yaw_delta(computed_turning_point, response.motor_list)
-            if abs(mean_distance_delta) > 0:
-                self._total_yaw -= yaw_delta if computed_turning_point.x > 0 else -yaw_delta
+            transforms = [
+                create_static_transform(self._base_frame_id, self._laser_frame_id, 0.0, 0.0, 0, 0, 0, -math.pi/2, rospy_time_now)
+            ]
+            mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
+            computed_turning_point = compute_relative_turning_point(response.motor_list)
+            yaw_delta = 0.0
+            if computed_turning_point:
+                turning_radius, yaw_delta = compute_turning_radius_yaw_delta(computed_turning_point, response.motor_list)
+                if abs(mean_distance_delta) > 0:
+                    self._total_yaw -= yaw_delta if computed_turning_point.x > 0 else -yaw_delta
 
-            transforms.append(create_static_transform(self._base_frame_id, 'computed_turning_point', computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
+                transforms.append(create_static_transform(self._base_frame_id, 'computed_turning_point', computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
+            
+            self._total_X -= mean_distance_delta * math.asin(self._total_yaw)
+            self._total_Y += mean_distance_delta * math.acos(self._total_yaw)
 
-        self._total_X -= mean_distance_delta * math.asin(self._total_yaw)
-        self._total_Y += mean_distance_delta * math.acos(self._total_yaw)
+            odometry = Odometry()
+            odometry.header.stamp = rospy_time_now
+            odometry.header.frame_id = self._base_frame_id
+            odometry.child_frame_id = self._odom_frame_id
+            odometry.pose.pose.position.x = self._total_X
+            odometry.pose.pose.position.y = self._total_Y
+            odometry.pose.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
+            odometry.twist.twist.linear.x = mean_distance_delta / (timestamp - self._last_timestmamp)
+            odometry.twist.twist.angular.z = yaw_delta / (timestamp - self._last_timestmamp)
 
-        odometry = Odometry()
-        odometry.header.stamp = rospy_time_now
-        odometry.header.frame_id = self._base_frame_id
-        odometry.child_frame_id = self._odom_frame_id
-        odometry.pose.pose.position.x = self._total_X
-        odometry.pose.pose.position.y = self._total_Y
-        odometry.pose.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
-        odometry.twist.twist.linear.x = mean_distance_delta / (timestamp - self._last_timestmamp)
-        odometry.twist.twist.angular.z = yaw_delta / (timestamp - self._last_timestmamp)
+            if odometry.twist.twist.linear.x  == 0 and odometry.twist.twist.angular.z == 0:
+                odometry.twist.covariance[0] = 0.01 / 1000
+                odometry.twist.covariance[7] = 0.01 / 1000
+                odometry.twist.covariance[35] = 0.01 / 1000000
+            else:
+                odometry.twist.covariance[0] = 0.01
+                odometry.twist.covariance[7] = 0.01
+                odometry.twist.covariance[35] = 0.01
+            self._odometry_publisher.publish(odometry)
 
-        if odometry.twist.twist.linear.x  == 0 and odometry.twist.twist.angular.z == 0:
-            odometry.twist.covariance[0] = 0.01 / 1000
-            odometry.twist.covariance[7] = 0.01 / 1000
-            odometry.twist.covariance[35] = 0.01 / 1000000
-        else:
-            odometry.twist.covariance[0] = 0.01
-            odometry.twist.covariance[7] = 0.01
-            odometry.twist.covariance[35] = 0.01
-        self._odometry_publisher.publish(odometry)
-
-        pose_stamped = PoseStamped()
-        pose_stamped.header = odometry.header
-        pose_stamped.pose = odometry.pose.pose
-        self._pose_publisher.publish(pose_stamped)
+            pose_stamped = PoseStamped()
+            pose_stamped.header = odometry.header
+            pose_stamped.pose = odometry.pose.pose
+            self._pose_publisher.publish(pose_stamped)
 
 
-        transforms.append(create_static_transform(self._odom_frame_id, self._base_frame_id, odometry.pose.pose.position.x, odometry.pose.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
+            transforms.append(create_static_transform(self._odom_frame_id, self._base_frame_id, odometry.pose.pose.position.x, odometry.pose.pose.position.y, 0, 0, 0, self._total_yaw, rospy_time_now))
 
-        for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
-            transforms.append(create_static_transform(self._base_frame_id, f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
-            transforms.append(create_static_transform(f"motor{c+1}base", f"motor{c+1}servo", 0, 0, 0, 0, 0, -motor_status.angle, rospy_time_now))
-            self._motor_distances[c] += motor_status.distance
-            motor_twist = motor_status.distance / PlatformStatics.WHEEL_RADIUS
-            transforms.append(create_static_transform(f"motor{c+1}servo", f"motor{c+1}wheel", 0, 0, 0, 0, motor_twist, 0, rospy_time_now))
-        
-        self._tf2_broadcaster.sendTransform(transforms)
-        
-        self._last_timestmamp = timestamp
+            for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
+                transforms.append(create_static_transform(self._base_frame_id, f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
+                transforms.append(create_static_transform(f"motor{c+1}base", f"motor{c+1}servo", 0, 0, 0, 0, 0, -motor_status.angle, rospy_time_now))
+                self._motor_distances[c] += motor_status.distance
+                motor_twist = motor_status.distance / PlatformStatics.WHEEL_RADIUS
+                transforms.append(create_static_transform(f"motor{c+1}servo", f"motor{c+1}wheel", 0, 0, 0, 0, motor_twist, 0, rospy_time_now))
+            
+            self._tf2_broadcaster.sendTransform(transforms)
+            
+            self._last_timestmamp = timestamp
+        except ValueError as e:
+            rospy.logwarn(str(e))
 
 
     def _write_raw_data(self, ros_data:String):
