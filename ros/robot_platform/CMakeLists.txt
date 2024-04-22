@@ -31,7 +31,7 @@ catkin_package(
 )
 
 catkin_install_python(
-  PROGRAMS nodes/wheel_controller nodes/joy_controller
+  PROGRAMS nodes/wheel_controller nodes/joy_controller nodes/path_controller
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

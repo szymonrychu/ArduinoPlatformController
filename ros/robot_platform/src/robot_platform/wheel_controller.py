@@ -118,7 +118,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
             self._message_counter = (self._message_counter + 1) % 100
 
             transforms = [
-                # create_static_transform(self._base_frame_id, self._laser_frame_id, 0.0, 0.0, 0, 0, 0, -math.pi/2, rospy_time_now)
+                create_static_transform(self._base_frame_id, self._laser_frame_id, 0.0, 0.0, 0, 0, 0, -math.pi/2, rospy_time_now)
             ]
             mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
             computed_turning_point = compute_relative_turning_point(response.motor_list)
