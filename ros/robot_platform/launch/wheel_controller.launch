@@ -4,7 +4,7 @@
   <env name="ROS_LOG_DIR" value="/tmp/"/>
 
   <arg name="base_frame_id" default="base_link" />
-  <arg name="odom_frame_id" default="raw_odom" />
+  <arg name="odom_frame_id" default="odom" />
   <arg name="laser_frame_id" default="laser" />
 
   <arg name="battery_state_output_topic" default="/robot_platform/battery" />
