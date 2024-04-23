@@ -157,10 +157,10 @@ odom0_twist_rejection_threshold: 1
 
 imu0: /robot_platform/imu
 imu0_config: [false, false, false, # x, y, z
-               true, true, true,   # roll, pitch, yaw
-               true, true, true,   # vx, vy, vz
-               true, true, true,   # vroll, vpitch, vyaw
-               true, true, true]   # ax, ay, az
+              true, true, true,    # roll, pitch, yaw
+              true, true, true,    # vx, vy, vz
+              true, true, true,    # vroll, vpitch, vyaw
+              false, false, false] # ax, ay, az
 imu0_nodelay: false
 imu0_differential: false
 imu0_relative: true
