@@ -32,8 +32,8 @@
     <arg name="frame_id" value="$(arg scan_topic)" />
   </include>
 
-  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
+  <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
     <rosparam command="load" file="$(find robot_platform)/config/ekf_localization.yaml"/>
-  </node>
+  </node> -->
 
 </launch>
