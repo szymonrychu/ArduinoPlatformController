@@ -4,7 +4,7 @@
 
   <arg name="pub_map_odom_transform" default="true"/>
   <arg name="pub_map_scanmatch_transform" default="true"/>
-  <arg name="map_size" default="4096"/>
+  <arg name="map_size" default="1024"/>
   <arg name="scan_subscriber_queue_size" default="5"/>
   <arg name="tf_map_scanmatch_transform_frame_name" default="scanmatcher_frame"/>
   <arg name="trajectory_update_rate" default="5"/>
