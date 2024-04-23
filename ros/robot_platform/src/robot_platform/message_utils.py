@@ -61,19 +61,19 @@ class IMUStatus(BaseModel):
         )
 
 
-        imu.angular_velocity.x = self.gyroscope.x
-        imu.angular_velocity.y = self.gyroscope.y
-        imu.angular_velocity.z = self.gyroscope.z
-        imu.angular_velocity_covariance = (
-            0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01
-        )
+        # imu.angular_velocity.x = self.gyroscope.x
+        # imu.angular_velocity.y = self.gyroscope.y
+        # imu.angular_velocity.z = self.gyroscope.z
+        # imu.angular_velocity_covariance = (
+        #     0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01
+        # )
 
-        imu.linear_acceleration.x = self.accelerometer.x
-        imu.linear_acceleration.y = self.accelerometer.y
-        imu.linear_acceleration.z = self.accelerometer.z
-        imu.linear_acceleration_covariance = (
-            0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01
-        )
+        # imu.linear_acceleration.x = self.accelerometer.x
+        # imu.linear_acceleration.y = self.accelerometer.y
+        # imu.linear_acceleration.z = self.accelerometer.z
+        # imu.linear_acceleration_covariance = (
+        #     0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01
+        # )
         return imu
     
     def parse_ROS_TF(self, child_frame_id:str, base_frame_id:str, translation:Vector3 = None, timestamp:rospy.Time=None) -> TransformStamped:
