@@ -23,7 +23,17 @@ RUN set -xe;\
         ros-noetic-hector-mapping \
         ros-noetic-xacro \
         ros-noetic-joy \
-        gstreamer-1.0 \
+        gstreamer1.0-tools \
+        gstreamer1.0-alsa \
+        gstreamer1.0-plugins-base \
+        gstreamer1.0-plugins-good \
+        gstreamer1.0-plugins-bad \
+        gstreamer1.0-plugins-ugly \
+        gstreamer1.0-libav \
+        libgstreamer1.0-dev \
+        libgstreamer-plugins-base1.0-dev \
+        libgstreamer-plugins-good1.0-dev \
+        libgstreamer-plugins-bad1.0-dev \
         vim \
         ;\
     rm -rf /var/lib/apt/lists/*;\
