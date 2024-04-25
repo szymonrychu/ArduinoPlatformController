@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find robot_platform)/launch/jetson_csi_cam.launch">
+    <arg name="sensor_id" value="0" />
+  </include>
+  <include file="$(find robot_platform)/launch/jetson_csi_cam.launch">
+    <arg name="sensor_id" value="1" />
+  </include>
+</launch>
