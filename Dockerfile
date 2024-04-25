@@ -22,7 +22,6 @@ RUN set -xe;\
         ros-noetic-hector-localization \
         ros-noetic-hector-map-server \
         ros-noetic-hector-mapping \
-        ros-noetic-rgbd-launch \
         ros-noetic-xacro \
         ros-noetic-joy \
         vim \
