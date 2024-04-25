@@ -10,6 +10,7 @@ RUN set -xe;\
         cmake \
         curl \
         git \
+        libfreenect-dev \
         python3-pip \
         python3-tf-conversions \
         python3-tf2-ros \
@@ -21,19 +22,9 @@ RUN set -xe;\
         ros-noetic-hector-localization \
         ros-noetic-hector-map-server \
         ros-noetic-hector-mapping \
+        ros-noetic-rgbd-launch \
         ros-noetic-xacro \
         ros-noetic-joy \
-        gstreamer1.0-tools \
-        gstreamer1.0-alsa \
-        gstreamer1.0-plugins-base \
-        gstreamer1.0-plugins-good \
-        gstreamer1.0-plugins-bad \
-        gstreamer1.0-plugins-ugly \
-        gstreamer1.0-libav \
-        libgstreamer1.0-dev \
-        libgstreamer-plugins-base1.0-dev \
-        libgstreamer-plugins-good1.0-dev \
-        libgstreamer-plugins-bad1.0-dev \
         vim \
         ;\
     rm -rf /var/lib/apt/lists/*;\
