@@ -23,6 +23,7 @@ RUN set -xe;\
         ros-noetic-hector-mapping \
         ros-noetic-xacro \
         ros-noetic-joy \
+        gstreamer-1.0 \
         vim \
         ;\
     rm -rf /var/lib/apt/lists/*;\
