@@ -10,8 +10,9 @@ RUN set -xe;\
         cmake \
         curl \
         git \
-        gstreamer-1.0 \
+        libfreenect \
         libfreenect-dev \
+        gstreamer-1.0 \
         python3-pip \
         python3-tf-conversions \
         python3-tf2-ros \
