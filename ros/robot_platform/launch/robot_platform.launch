@@ -48,6 +48,8 @@
   <include file="$(find rplidar_ros)/launch/rplidar.launch">
     <arg name="frame_id" value="$(arg scan_topic)" />
   </include>
+  
+  <include file="$(find freeenect_launch)/launch/examples/freenect-registered-xyzrgb.launch" />
 
   <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
     <rosparam command="load" file="$(find robot_platform)/config/ekf_localization.yaml"/>
