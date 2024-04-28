@@ -6,7 +6,7 @@
   <arg name="base_frame_id" default="base_link" />
   <arg name="base_footprint_frame_id" default="base_footprint" />
   <arg name="odom_frame_id" default="odom" />
-  <arg name="laser_frame_id" default="base_scan" />
+  <arg name="laser_frame_id" default="laser" />
   <arg name="computed_turning_point_frame_id" default="computed_turning_point" />
   <arg name="imu_frame_id" default="base_imu" />
   <arg name="camera_frame_id" default="camera_link" />
