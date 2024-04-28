@@ -49,7 +49,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._laser_frame_id = rospy.get_param('~laser_frame_id')
         self._computed_turning_point_frame_id = rospy.get_param('~computed_turning_point_frame_id')
         self._imu_frame_id = rospy.get_param('~imu_frame_id')
-        self._camera_frame_id = rospy.get_param('~imu_frame_id')
+        self._camera_frame_id = rospy.get_param('~camera_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         raw_output_topic = rospy.get_param('~raw_output_topic')

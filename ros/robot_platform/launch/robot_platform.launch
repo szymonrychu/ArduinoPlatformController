@@ -18,7 +18,7 @@
   <arg name="base_frame_id" default="base_link" />
   <arg name="base_footprint_frame_id" default="base_footprint" />
 
-  <arg name="scan_topic" default="base_scan"/>
+  <arg name="scan_topic" default="laser"/>
   <arg name="battery_state_output_topic" default="/robot_platform/battery" />
   <arg name="gps_state_output_topic" default="/robot_platform/gps"/>
   <arg name="imu_state_output_topic" default="/robot_platform/imu"/>
