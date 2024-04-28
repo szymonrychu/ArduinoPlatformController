@@ -49,6 +49,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._laser_frame_id = rospy.get_param('~laser_frame_id')
         self._computed_turning_point_frame_id = rospy.get_param('~computed_turning_point_frame_id')
         self._imu_frame_id = rospy.get_param('~imu_frame_id')
+        self._camera_frame_id = rospy.get_param('~imu_frame_id')
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         raw_output_topic = rospy.get_param('~raw_output_topic')
@@ -122,7 +123,8 @@ class WheelController(ROSNode, SafeSerialWrapper):
 
             transforms = [
                 create_static_transform(self._base_footprint_frame_id, self._base_frame_id, 0.0, 0.0, 0.07, 0, 0, 0, rospy_time_now),
-                create_static_transform(self._base_frame_id, self._laser_frame_id, 0.0, 0.0, 0.14, 0, 0, -math.pi/2, rospy_time_now)
+                create_static_transform(self._base_frame_id, self._laser_frame_id, 0.0, 0.0, 0.14, 0, 0, -math.pi/2, rospy_time_now),
+                create_static_transform(self._base_frame_id, self._camera_frame_id, 0.0, 0.0, 0, 0, 0, 0, rospy_time_now)
             ]
             mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
             computed_turning_point = compute_relative_turning_point(response.motor_list)
