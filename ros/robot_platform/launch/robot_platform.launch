@@ -2,7 +2,7 @@
   <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
   <env name="ROS_LOG_DIR" value="/tmp/"/>
 
-  <arg name="pub_map_scanmatch_transform" default="true"/>
+  <arg name="pub_map_scanmatch_transform" default="false"/>
   <arg name="map_size" default="2048"/>
   <arg name="scan_subscriber_queue_size" default="5"/>
   <arg name="tf_map_scanmatch_transform_frame_name" default="scanmatcher_frame"/>

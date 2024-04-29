@@ -1,0 +1,23 @@
+digraph G {
+"base_footprint" -> "base_link"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"odom" -> "base_footprint"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "laser"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "camera_link"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "computed_turning_point"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "motor1base"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"motor1base" -> "motor1servo"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"motor1servo" -> "motor1wheel"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "motor2base"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"motor2base" -> "motor2servo"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"motor2servo" -> "motor2wheel"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "motor3base"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"motor3base" -> "motor3servo"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"motor3servo" -> "motor3wheel"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "motor4base"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"motor4base" -> "motor4servo"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+"motor4servo" -> "motor4wheel"[label="Broadcaster: /wheel_controller\nAverage rate: 8.334 Hz\nMost recent transform: 1714378674.932 ( 0.096 sec old)\nBuffer length: 4.800 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1714378675.028"[ shape=plaintext ] ;
+ }->"odom";
+}
