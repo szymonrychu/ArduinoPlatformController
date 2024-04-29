@@ -82,4 +82,10 @@
     <param name="plugins" type="string" value="hector_geotiff_plugins/TrajectoryMapWriter" />
   </node>
 
+  <node pkg="hector_exploration_node" type="exploration_planner_node" name="hector_exploration_node" output="screen">
+
+    <rosparam file="$(find robot_platform)/config/costmap.yaml" command="load" />
+
+  </node>
+
 </launch>
