@@ -62,7 +62,7 @@
     
     <!-- Frame names -->
     <param name="map_frame" value="$(arg map_frame_id)" />
-    <param name="base_frame" value="$(arg base_frame_id)" />
+    <param name="base_frame" value="$(arg base_footprint_frame_id)" />
     <param name="odom_frame" value="$(arg odom_frame_id)" />
     
     <!-- Tf use -->
