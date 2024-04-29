@@ -31,6 +31,7 @@ RUN set -xe;\
         ros-noetic-pcl-conversions \
         ros-noetic-pcl-ros \
         ros-noetic-geodesy \
+        ros-noetic-urdf \
         ros-noetic-xacro \
         ros-noetic-joy \
         vim \
