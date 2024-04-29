@@ -134,7 +134,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
                 if abs(mean_distance_delta) > 0:
                     self._total_yaw -= yaw_delta if computed_turning_point.x > 0 else -yaw_delta
 
-                transforms.append(create_static_transform(self._base_frame_id, self._imu_frame_id, computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
+                transforms.append(create_static_transform(self._base_frame_id, self._computed_turning_point_frame_id, computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
             
             self._total_X -= mean_distance_delta * math.asin(self._total_yaw)
             self._total_Y += mean_distance_delta * math.acos(self._total_yaw)
