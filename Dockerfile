@@ -23,6 +23,11 @@ RUN set -xe;\
         ros-noetic-hector-map-server \
         ros-noetic-hector-mapping \
         ros-noetic-rgbd-launch \
+        ros-noetic-robot-navigation \
+        ros-noetic-base-local-planner \
+        ros-noetic-dwa-local-planner \
+        ros-noetic-mpc-local-planner \
+        ros-noetic-teb-local-planner \
         ros-noetic-xacro \
         ros-noetic-joy \
         vim \
