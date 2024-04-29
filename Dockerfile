@@ -51,6 +51,16 @@ RUN set -xe;\
         source /opt/ros/${ROS_DISTRO}/setup.bash;\
         rosdep update"
 
+RUN set -xe;\
+    bash -c "\
+        source /opt/ros/${ROS_DISTRO}/setup.bash;\
+        cd /home/ros/catkin_ws/src;\
+        sudo chown -R ros .;\
+        git clone https://github.com/catkin/catkin_simple;\
+        git clone https://github.com/ethz-asl/ceres_catkin;\
+        catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/${ROS_DISTRO} install;\
+        rm -rf ./*"
+
 COPY ./ros/ /home/ros/catkin_ws/src/
 
 RUN set -xe;\
