@@ -58,8 +58,9 @@ RUN set -xe;\
         sudo chown -R ros .;\
         git clone https://github.com/catkin/catkin_simple;\
         git clone https://github.com/ethz-asl/ceres_catkin;\
+        cd ..
         catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/${ROS_DISTRO} install;\
-        rm -rf catkin_simple ceres_catkin"
+        rm -rf src/catkin_simple src/ceres_catkin"
 
 COPY ./ros/ /home/ros/catkin_ws/src/
 
