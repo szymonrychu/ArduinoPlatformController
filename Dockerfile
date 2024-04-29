@@ -28,6 +28,7 @@ RUN set -xe;\
         ros-noetic-dwa-local-planner \
         ros-noetic-mpc-local-planner \
         ros-noetic-teb-local-planner \
+        ros-noetic-pcl-conversions \
         ros-noetic-xacro \
         ros-noetic-joy \
         vim \
