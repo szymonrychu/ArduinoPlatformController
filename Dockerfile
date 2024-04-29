@@ -59,7 +59,7 @@ RUN set -xe;\
         git clone https://github.com/catkin/catkin_simple;\
         git clone https://github.com/ethz-asl/ceres_catkin;\
         catkin_make -DCMAKE_INSTALL_PREFIX=/opt/ros/${ROS_DISTRO} install;\
-        rm -rf ./*"
+        rm -rf catkin_simple ceres_catkin"
 
 COPY ./ros/ /home/ros/catkin_ws/src/
 
