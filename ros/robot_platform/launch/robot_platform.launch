@@ -26,7 +26,7 @@
   <arg name="wheel_positions_input_topic" default="/robot_platform/wheel_request"/>
   <arg name="platform_status_output_topic" default="/robot_platform/status"/>
 
-  <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 /map /odom 100"/>
+  <!-- <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 /map /odom 100"/> -->
 
   <include file="$(find robot_platform)/launch/joy_controller.launch">
     <arg name="move_request_output_topic" value="$(arg wheel_positions_input_topic)" />
