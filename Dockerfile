@@ -32,6 +32,7 @@ RUN set -xe;\
         ros-noetic-pcl-ros \
         ros-noetic-geodesy \
         ros-noetic-urdf \
+        ros-noetic-fuse-loss \
         ros-noetic-xacro \
         ros-noetic-joy \
         vim \
