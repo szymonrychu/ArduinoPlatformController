@@ -28,11 +28,9 @@ RUN set -xe;\
         ros-noetic-dwa-local-planner \
         ros-noetic-mpc-local-planner \
         ros-noetic-teb-local-planner \
-        ros-noetic-pcl-conversions \
-        ros-noetic-pcl-ros \
-        ros-noetic-geodesy \
         ros-noetic-urdf \
-        ros-noetic-fuse-loss \
+        ros-noetic-global-planner \
+        ros-noetic-move-base \
         ros-noetic-xacro \
         ros-noetic-joy \
         vim \
