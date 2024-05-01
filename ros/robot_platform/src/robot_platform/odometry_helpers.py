@@ -66,8 +66,8 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
 
     p = Point()
     # p.x = -(tg90mA * ma_y - tg90mB * mb_y - ma_x - mb_x) / (tg90mA + tg90mB)
-    p.y = (tg90mA * ma_y - ma_x)
-    # p.y = (tg90mA * ma_x - ma_y)
+    # p.y = (tg90mA * ma_y - ma_x)
+    p.y = (tg90mA * ma_x - ma_y)
     return p
 
 def compute_mean_turning_point(points:List[Point]) -> Optional[Point]:
@@ -128,6 +128,7 @@ def compute_relative_turning_point(motors:List[MotorStatus]) -> Optional[Point]:
             (XA, YA), (XB, YB) = PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_a], PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_b]
             turning_point = compute_turning_point(motor_a.angle, XA, YA, motor_b.angle, XB, YB)
             if turning_point:
+                rospy.loginfo(f"{c_a+1}/{c_b+1}: [{turning_point.x},{turning_point.y}]")
                 partial_turning_points.append(turning_point)
     
     turning_point = None
