@@ -127,8 +127,8 @@ def compute_relative_turning_point(motors:List[MotorStatus]) -> Optional[Point]:
                 continue
             (XA, YA), (XB, YB) = PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_a], PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_b]
             turning_point = compute_turning_point(motor_a.angle, XA, YA, motor_b.angle, XB, YB)
-            rospy.loginfo(f"{c_a+1}/{c_b+1}: [{turning_point.x},{turning_point.y}]")
             if turning_point:
+                rospy.loginfo(f"{c_a+1}/{c_b+1}: [{turning_point.x},{turning_point.y}]")
                 partial_turning_points.append(turning_point)
     
     turning_point = None
