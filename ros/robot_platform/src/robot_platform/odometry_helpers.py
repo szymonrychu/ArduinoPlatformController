@@ -66,7 +66,8 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
 
     p = Point()
     # p.x = -(tg90mA * ma_y - tg90mB * mb_y - ma_x - mb_x) / (tg90mA + tg90mB)
-    p.y = - (tg90mB * ma_x - ma_y)
+    # p.x = - (tg90mA * ma_y - ma_x)
+    p.y = (tg90mA * ma_x - ma_y)
     return p
 
 def compute_mean_turning_point(points:List[Point]) -> Optional[Point]:
