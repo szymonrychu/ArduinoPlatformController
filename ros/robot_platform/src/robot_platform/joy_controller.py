@@ -96,13 +96,13 @@ class JoyPlatformController(ROSNode):
 
             velocity = 0.0
             boost = 1.0 + 3*(-self._last_joy.axes[3]+1)/2
-            if abs(rel_velocity) > 0.01:
+            if abs(rel_velocity) > PlatformStatics.MOVE_VELOCITY/100.0:
                 velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
             
             turning_point = None
-            if abs(turn_radius) > 0.0001:
+            if abs(turn_radius) > PlatformStatics.MIN_ANGLE_DIFF:
                 turning_point = Point()
-                turning_point.y = turn_radius
+                turning_point.y = -turn_radius
 
             r = create_request(velocity, duration, self._last_platform_status, turning_point)
             if r:
