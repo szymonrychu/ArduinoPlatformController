@@ -131,12 +131,12 @@ class WheelController(ROSNode, SafeSerialWrapper):
         if computed_turning_point:
             turning_radius, yaw_delta = compute_turning_radius_yaw_delta(computed_turning_point, response.motor_list)
             if abs(mean_distance_delta) > 0:
-                self._total_yaw -= yaw_delta if computed_turning_point.x > 0 else -yaw_delta
+                self._total_yaw -= yaw_delta if computed_turning_point.y > 0 else -yaw_delta
 
             transforms.append(create_static_transform(self._base_footprint_frame_id, self._computed_turning_point_frame_id, computed_turning_point.x, computed_turning_point.y, 0, 0, 0, 0, rospy_time_now))
         
-        self._total_X -= mean_distance_delta * math.sin(self._total_yaw)
-        self._total_Y += mean_distance_delta * math.cos(self._total_yaw)
+        self._total_X += mean_distance_delta * math.cos(self._total_yaw)
+        self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
         odometry = Odometry()
         odometry.header.stamp = rospy_time_now
