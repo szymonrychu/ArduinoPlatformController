@@ -102,7 +102,7 @@ class JoyPlatformController(ROSNode):
             turning_point = None
             if abs(turn_radius) > 0.0001:
                 turning_point = Point()
-                turning_point.x = turn_radius
+                turning_point.y = turn_radius
 
             r = create_request(velocity, duration, self._last_platform_status, turning_point)
             if r:
