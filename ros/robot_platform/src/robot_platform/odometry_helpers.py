@@ -19,8 +19,8 @@ class PlatformStatics:
 
     # LEFT BACK
     M1_IN_PLACE_TURN = -1.0
-    M1_Y = -(ROBOT_WIDTH/2) 
-    M1_X = (ROBOT_LENGTH/2)
+    M1_Y = (ROBOT_WIDTH/2) 
+    M1_X = -(ROBOT_LENGTH/2)
 
     # RIGHT BACK
     M2_IN_PLACE_TURN = -1.0
@@ -30,8 +30,8 @@ class PlatformStatics:
     # RIGHT FRONT
     M3_IN_PLACE_TURN = -1.0
     M3_ANGLE_COEFFICIENT = 1.0
-    M3_Y = (ROBOT_WIDTH/2) 
-    M3_X = -(ROBOT_LENGTH/2)
+    M3_Y = -(ROBOT_WIDTH/2) 
+    M3_X = (ROBOT_LENGTH/2)
 
     # LEFT FRONT
     M4_IN_PLACE_TURN = -1.0
