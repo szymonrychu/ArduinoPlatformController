@@ -122,7 +122,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
 
         transforms = [
             create_static_transform(self._base_footprint_frame_id, self._base_frame_id, 0.0, 0.0, 0.07, 0, 0, 0, rospy_time_now),
-            create_static_transform(self._base_frame_id, self._laser_frame_id, 0.0, 0.08, 0.14, 0, 0, 0, rospy_time_now),
+            create_static_transform(self._base_frame_id, self._laser_frame_id, 0.0, 0.08, 0.14, 0, 0, math.pi, rospy_time_now),
             create_static_transform(self._base_frame_id, self._camera_frame_id, 0.0, 0.0, 0, 0, 0, 0, rospy_time_now)
         ]
         mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
@@ -169,12 +169,12 @@ class WheelController(ROSNode, SafeSerialWrapper):
         imu_tf2_transform.transform.rotation = platform_status.imu.orientation
         transforms.append(imu_tf2_transform)
 
-        for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
-            transforms.append(create_static_transform(self._base_frame_id, f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
-            transforms.append(create_static_transform(f"motor{c+1}base", f"motor{c+1}servo", 0, 0, 0, 0, 0, -motor_status.angle, rospy_time_now))
-            self._motor_distances[c] += motor_status.distance
-            motor_twist = motor_status.distance / PlatformStatics.WHEEL_RADIUS
-            transforms.append(create_static_transform(f"motor{c+1}servo", f"motor{c+1}wheel", 0, 0, 0, 0, motor_twist, 0, rospy_time_now))
+        # for c, (m_x, m_y), motor_status in zip([c for c in range(PlatformStatics.MOTOR_NUM)], PlatformStatics.ROBOT_MOTORS_DIMENSIONS, response.motor_list):
+        #     transforms.append(create_static_transform(self._base_frame_id, f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
+        #     transforms.append(create_static_transform(f"motor{c+1}base", f"motor{c+1}servo", 0, 0, 0, 0, 0, -motor_status.angle, rospy_time_now))
+        #     self._motor_distances[c] += motor_status.distance
+        #     motor_twist = motor_status.distance / PlatformStatics.WHEEL_RADIUS
+        #     transforms.append(create_static_transform(f"motor{c+1}servo", f"motor{c+1}wheel", 0, 0, 0, 0, motor_twist, 0, rospy_time_now))
         
         self._tf2_broadcaster.sendTransform(transforms)
         
