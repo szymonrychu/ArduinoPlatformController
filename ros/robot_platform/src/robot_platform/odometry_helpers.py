@@ -59,7 +59,7 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
         return None
 
     tg90mA = math.tan(m_a) if abs(m_a) != math.pi/2 else 0.0
-    tg90mB = math.tan(m_b) if abs(m_b) != math.pi/2 else 0.0
+    tg90mB = math.tan(-m_b) if abs(m_b) != math.pi/2 else 0.0
     
     # if tg90mA == 0 or tg90mB == 0 or tg90mA + tg90mB == 0:
     #     return None
@@ -67,7 +67,7 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
     p = Point()
     # p.x = -(tg90mA * ma_y - tg90mB * mb_y - ma_x - mb_x) / (tg90mA + tg90mB)
     # p.y = (tg90mA * ma_y - ma_x)
-    p.y = (tg90mA * ma_x - ma_y)
+    p.y = -(tg90mA * ma_y - tg90mB * mb_y - ma_x - mb_x) / (tg90mA + tg90mB)
     return p
 
 def compute_mean_turning_point(points:List[Point]) -> Optional[Point]:
