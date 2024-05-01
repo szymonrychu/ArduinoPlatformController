@@ -58,8 +58,8 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
     if abs(m_a - m_b) < PlatformStatics.MIN_ANGLE_DIFF:
         return None
 
-    tg90mA = math.tan(math.pi/2 + m_a) if m_a != 0 and m_a else 0.0
-    tg90mB = math.tan(math.pi/2 - m_b) if m_b != 0 and m_b else 0.0
+    tg90mA = math.tan(m_a) if m_a != 0 and m_a else 0.0
+    tg90mB = math.tan(m_b) if m_b != 0 and m_b else 0.0
     
     if tg90mA == 0 or tg90mB == 0 or tg90mA + tg90mB == 0:
         return None
@@ -128,7 +128,6 @@ def compute_relative_turning_point(motors:List[MotorStatus]) -> Optional[Point]:
             (XA, YA), (XB, YB) = PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_a], PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_b]
             turning_point = compute_turning_point(motor_a.angle, XA, YA, motor_b.angle, XB, YB)
             if turning_point:
-                rospy.loginfo(f"{c_a+1}/{c_b+1}: [{turning_point.x},{turning_point.y}]")
                 partial_turning_points.append(turning_point)
     
     turning_point = None
