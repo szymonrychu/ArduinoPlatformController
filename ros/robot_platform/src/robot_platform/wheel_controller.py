@@ -164,9 +164,9 @@ class WheelController(ROSNode, SafeSerialWrapper):
         pose_stamped.pose = odometry.pose.pose
         self._pose_publisher.publish(pose_stamped)
 
-        transforms.append(create_static_transform(self._odom_frame_id, self._base_frame_id, 0, 0, 0, 0, 0, self._total_yaw, rospy_time_now))
+        transforms.append(create_static_transform(self._odom_frame_id, self._computed_turning_point_frame_id, 0, 0, 0, 0, 0, self._total_yaw, rospy_time_now))
         
-        imu_tf2_transform = create_static_transform(self._base_frame_id, self._computed_turning_point_frame_id, 0, 0, 0, 0, 0, 0, rospy_time_now)
+        imu_tf2_transform = create_static_transform(self._computed_turning_point_frame_id, self._computed_turning_point_frame_id, 0, 0, 0, 0, 0, 0, rospy_time_now)
         imu_tf2_transform.transform.rotation = platform_status.imu.orientation
         transforms.append(imu_tf2_transform)
 
