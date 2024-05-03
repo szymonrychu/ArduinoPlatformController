@@ -103,6 +103,8 @@ class PathPlatformController(ROSNode):
         if abs(normalize_angle(alfa + yaw)) < math.pi:
             turning_point = compute_turning_point(yaw, X, Y, yaw_a, X_a, Y_a)
             r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
+            if r:
+                self._move_request_publisher.publish(r)
 
         else:
             # going backward
