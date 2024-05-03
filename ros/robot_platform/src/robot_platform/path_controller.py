@@ -98,9 +98,10 @@ class PathPlatformController(ROSNode):
         move_duration = max(duration, move_distance/move_velocity)
         roll, pitch, yaw = get_rpy_from_quaternion(self._last_odometry.pose.pose.orientation)
         roll_a, pitch_a, yaw_a = get_rpy_from_quaternion(next_pose_to_reach.orientation)
+        
+        rospy.loginfo(f"Angles: {yaw}, {alfa}, MoveDistance: {move_distance}")
 
-
-        if abs(normalize_angle(alfa - yaw)) < math.pi:
+        if abs(normalize_angle(yaw - alfa)) < math.pi:
             rospy.loginfo(f"Going forward")
             r = None
             if abs(yaw - alfa) < math.pi/12: # 15deg
