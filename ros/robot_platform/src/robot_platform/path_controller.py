@@ -98,7 +98,7 @@ class PathPlatformController(ROSNode):
         if move_distance < PlatformStatics.MAX_DISTANCE_TOLERANCE:
             return
         
-        move_duration = max(duration, move_distance/move_velocity)
+        move_duration = move_distance/move_velocity
         roll, pitch, yaw = get_rpy_from_quaternion(self._last_odometry.pose.pose.orientation)
         roll_a, pitch_a, yaw_a = get_rpy_from_quaternion(next_pose_to_reach.orientation)
         
