@@ -45,9 +45,9 @@ def get_quaterion_from_rpy(roll:float, pitch:float, yaw:float) -> Quaternion:
     return Quaternion(*q)
 
 def normalize_angle(angle:float):
-    while angle > 2 * math.pi:
+    while angle >= 2 * math.pi:
         angle -= 2 * math.pi
-    while angle < 2* math.pi:
+    while angle <= 2* math.pi:
         angle += 2 * math.pi
     return angle
 
