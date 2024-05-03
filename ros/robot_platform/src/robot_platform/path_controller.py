@@ -101,6 +101,7 @@ class PathPlatformController(ROSNode):
 
 
         if abs(normalize_angle(alfa + yaw)) < math.pi:
+            rospy.loginfo(f"Going forward")
             r = None
             if abs(yaw - alfa) < math.pi/12: # 15deg
                 r = create_request(move_velocity, move_duration, self._last_platform_status, None)
@@ -117,41 +118,7 @@ class PathPlatformController(ROSNode):
                 self._move_request_publisher.publish(r)
 
         else:
-            # going backward
-            pass
-        # if self._last_joy.axes:
-        #     rel_velocity = -0.25 * self._last_joy.axes[1]
-        #     if rel_velocity < 0:
-        #         rel_velocity = rel_velocity
-        #     elif rel_velocity > 0:
-        #         rel_velocity = rel_velocity
-        #     # rel_velocity = 0.3
-            
-        #     turn_radius = round(-0.95 * self._last_joy.axes[0], 2)
-        #     if turn_radius < 0:
-        #         turn_radius = max(turn_radius, -0.99)
-        #     elif turn_radius > 0:
-        #         turn_radius = min(turn_radius, 0.99)
-        #     if turn_radius > 0.01:
-        #         turn_radius = 1 - turn_radius
-        #     elif turn_radius < -0.01:
-        #         turn_radius = -1 - turn_radius
-        #     # turn_radius = -0.2
-
-
-        #     velocity = 0.0
-        #     boost = 1.0 + 3*(-self._last_joy.axes[3]+1)/2
-        #     if abs(rel_velocity) > 0.01:
-        #         velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
-            
-        #     turning_point = None
-        #     if abs(turn_radius) > 0.0001:
-        #         turning_point = Point()
-        #         turning_point.x = turn_radius
-
-        #     r = create_request(velocity, duration, self._last_platform_status, turning_point)
-        #     if r:
-        #         self._move_request_publisher.publish(r)
+            rospy.loginfo(f"Going backward")
 
 
 
