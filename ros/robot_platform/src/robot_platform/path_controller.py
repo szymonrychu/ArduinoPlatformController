@@ -101,8 +101,18 @@ class PathPlatformController(ROSNode):
 
 
         if abs(normalize_angle(alfa + yaw)) < math.pi:
-            turning_point = compute_turning_point(yaw, X, Y, yaw_a, X_a, Y_a)
-            r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
+            r = None
+            if abs(yaw - alfa) < math.pi/12: # 15deg
+                r = create_request(move_velocity, move_duration, self._last_platform_status, None)
+            elif yaw > alfa:
+                turning_point = Point()
+                turning_point.y = 0.1
+                r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
+            else:
+                turning_point = Point()
+                turning_point.y = -0.1
+                r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
+            
             if r:
                 self._move_request_publisher.publish(r)
 
