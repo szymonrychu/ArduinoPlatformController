@@ -87,7 +87,7 @@ class PathPlatformController(ROSNode):
             self._pose_counter += 1
         except IndexError:
             return
-        move_velocity = 0.2 * PlatformStatics.MOVE_VELOCITY
+        move_velocity = 0.2
         
         X, Y = self._last_odometry.pose.pose.position.x, self._last_odometry.pose.pose.position.y
         X_a, Y_a = next_pose_to_reach.position.x, next_pose_to_reach.position.y
@@ -112,26 +112,26 @@ class PathPlatformController(ROSNode):
                 r = create_request(move_velocity, move_duration, self._last_platform_status, None)
             elif yaw > alfa:
                 turning_point = Point()
-                turning_point.y = 0.3 + min(1.0 - angle_delta, 1.0)
+                turning_point.y = 0.3 + round(min(1.0 - angle_delta, 1.0), 2)
                 r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
             else:
                 turning_point = Point()
-                turning_point.y = -0.3 - min(1.0 - angle_delta, 1.0)
+                turning_point.y = -0.3 - round(min(1.0 - angle_delta, 1.0), 2)
                 r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
             
 
         else:
             rospy.loginfo(f"Going backward")
             if angle_delta < math.pi/12: # 15deg
-                r = create_request(move_velocity, move_duration, self._last_platform_status, None)
+                r = create_request(-move_velocity, move_duration, self._last_platform_status, None)
             elif yaw > alfa:
                 turning_point = Point()
-                turning_point.y = -0.3 + min(1.0 - angle_delta, 1.0)
-                r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
+                turning_point.y = -0.3 + round(min(1.0 - angle_delta, 1.0), 2)
+                r = create_request(-move_velocity, move_duration, self._last_platform_status, turning_point)
             else:
                 turning_point = Point()
-                turning_point.y = 0.3 - min(1.0 - angle_delta, 1.0)
-                r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
+                turning_point.y = 0.3 - round(min(1.0 - angle_delta, 1.0), 2)
+                r = create_request(-move_velocity, move_duration, self._last_platform_status, turning_point)
 
 
 
