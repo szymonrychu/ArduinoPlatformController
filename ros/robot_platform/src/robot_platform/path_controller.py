@@ -44,7 +44,7 @@ Index	Axis
 5	TRIGGERRIGHT
 '''
 
-duration = 0.1
+duration = 1
 
 class PathPlatformController(ROSNode):
 
@@ -95,6 +95,9 @@ class PathPlatformController(ROSNode):
         
         alfa = math.atan2(dY, dX)
         move_distance = math.sqrt(dX**2 + dY**2)
+        if move_distance < PlatformStatics.MAX_DISTANCE_TOLERANCE:
+            return
+        
         move_duration = max(duration, move_distance/move_velocity)
         roll, pitch, yaw = get_rpy_from_quaternion(self._last_odometry.pose.pose.orientation)
         roll_a, pitch_a, yaw_a = get_rpy_from_quaternion(next_pose_to_reach.orientation)
@@ -102,9 +105,9 @@ class PathPlatformController(ROSNode):
         angle_delta = abs(yaw - alfa)
         rospy.loginfo(f"Angles: {yaw}, {alfa}, {angle_delta}, distance,duration: {move_distance},{move_duration}")
 
+        r = None
         if angle_delta < math.pi:
             rospy.loginfo(f"Going forward")
-            r = None
             if angle_delta < math.pi/12: # 15deg
                 r = create_request(move_velocity, move_duration, self._last_platform_status, None)
             elif yaw > alfa:
@@ -116,14 +119,24 @@ class PathPlatformController(ROSNode):
                 turning_point.y = -0.3 - min(1.0 - angle_delta, 1.0)
                 r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
             
-            if r:
-                self._move_request_publisher.publish(r)
 
         else:
             rospy.loginfo(f"Going backward")
+            if angle_delta < math.pi/12: # 15deg
+                r = create_request(-move_velocity, move_duration, self._last_platform_status, None)
+            elif yaw > alfa:
+                turning_point = Point()
+                turning_point.y = -0.3 + min(1.0 - angle_delta, 1.0)
+                r = create_request(-move_velocity, move_duration, self._last_platform_status, turning_point)
+            else:
+                turning_point = Point()
+                turning_point.y = 0.3 - min(1.0 - angle_delta, 1.0)
+                r = create_request(-move_velocity, move_duration, self._last_platform_status, turning_point)
 
 
 
+        if r:
+            self._move_request_publisher.publish(r)
 
 def main():
     platform = PathPlatformController()
