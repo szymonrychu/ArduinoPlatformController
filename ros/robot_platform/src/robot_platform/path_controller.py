@@ -65,7 +65,7 @@ class PathPlatformController(ROSNode):
         self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
         rospy.Subscriber(trajectory_poses_input_topic, PoseArray, self._handle_trajectory_update)
-        rospy.Subscriber(odometry_input_topic, Odometry, self._handle_trajectory_update)
+        rospy.Subscriber(odometry_input_topic, Odometry, self._handle_odometry_update)
 
         rospy.Timer(rospy.Duration(duration), self._send_request)
         self.spin()
