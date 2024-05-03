@@ -105,15 +105,15 @@ class PathPlatformController(ROSNode):
         if angle_delta < math.pi:
             rospy.loginfo(f"Going forward")
             r = None
-            if abs(yaw - alfa) < math.pi/12: # 15deg
+            if angle_delta < math.pi/12: # 15deg
                 r = create_request(move_velocity, move_duration, self._last_platform_status, None)
             elif yaw > alfa:
                 turning_point = Point()
-                turning_point.y = -0.3
+                turning_point.y = -0.3 * min(1.0 - angle_delta, 1.0)
                 r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
             else:
                 turning_point = Point()
-                turning_point.y = 0.3
+                turning_point.y = 0.3 * min(1.0 - angle_delta, 1.0)
                 r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
             
             if r:
