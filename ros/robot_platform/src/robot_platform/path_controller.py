@@ -2,13 +2,14 @@
 import math
 import signal
 
-from .odometry_helpers import PlatformStatics, create_request
+from .tf_helpers import *
+from .odometry_helpers import *
 import rospy
 from .ros_helpers import ROSNode
 
-from sensor_msgs.msg import Joy, JoyFeedback
 from robot_platform.msg import PlatformStatus, MoveRequest
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import PoseArray
+from nav_msgs.msg import Odometry
 
 '''
 
@@ -50,20 +51,62 @@ class PathPlatformController(ROSNode):
     def __init__(self):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
+
+        self._last_odometry = Odometry()
+
+        self._last_pose_array = PoseArray()
+        self._pose_counter = 0
+
         move_request_output_topic = rospy.get_param('~move_request_output_topic')
         platform_status_input_topic = rospy.get_param('~platform_status_input_topic')
+        trajectory_poses_input_topic = rospy.get_param('~trajectory_poses_input_topic')
+        odometry_input_topic = rospy.get_param('~odometry_input_topic')
         
         self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
+        rospy.Subscriber(trajectory_poses_input_topic, PoseArray, self._handle_trajectory_update)
+        rospy.Subscriber(odometry_input_topic, Odometry, self._handle_trajectory_update)
 
         rospy.Timer(rospy.Duration(duration), self._send_request)
         self.spin()
 
+    def _handle_odometry_update(self, odometry:Odometry):
+        self._last_odometry = odometry
+
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
 
+    def _handle_trajectory_update(self, poses:PoseArray):
+        self._last_pose_array = poses
+        self._pose_counter = 0
+
     def _send_request(self, event=None):
-        pass
+        next_pose_to_reach = None
+        try:
+            next_pose_to_reach = self._last_pose_array.poses[self._pose_counter]
+            self._pose_counter += 1
+        except IndexError:
+            return
+        move_velocity = 0.2 * PlatformStatics.MOVE_VELOCITY
+        
+        X, Y = self._last_odometry.pose.pose.position.x, self._last_odometry.pose.pose.position.y
+        X_a, Y_a = next_pose_to_reach.position.x, next_pose_to_reach.position.y
+        dX, dY = X_a - X, Y_a - Y
+        
+        alfa = math.atan2(dY, dX)
+        move_distance = math.sqrt(dX**2 + dY**2)
+        move_duration = max(duration, move_distance/move_velocity)
+        roll, pitch, yaw = get_rpy_from_quaternion(self._last_odometry.twist)
+        roll_a, pitch_a, yaw_a = get_rpy_from_quaternion(next_pose_to_reach.orientation)
+
+
+        if abs(normalize_angle(alfa + yaw)) < math.pi:
+            turning_point = compute_turning_point(yaw, X, Y, yaw_a, X_a, Y_a)
+            r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
+
+        else:
+            # going backward
+            pass
         # if self._last_joy.axes:
         #     rel_velocity = -0.25 * self._last_joy.axes[1]
         #     if rel_velocity < 0:

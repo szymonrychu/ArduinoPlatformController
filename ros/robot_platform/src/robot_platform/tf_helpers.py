@@ -3,6 +3,7 @@ from geometry_msgs.msg import Pose, PoseStamped, Quaternion, TransformStamped, P
 import tf_conversions
 import numpy as np
 import rospy
+import math
 
 def add_points(p1:Point, p2:Point=None) -> Point:
     if not p2:
@@ -42,6 +43,13 @@ def get_rpy_from_quaternion(q:Quaternion) -> Tuple[float, float, float]:
 def get_quaterion_from_rpy(roll:float, pitch:float, yaw:float) -> Quaternion:
     q = tf_conversions.transformations.quaternion_from_euler(roll, pitch, yaw)
     return Quaternion(*q)
+
+def normalize_angle(angle:float):
+    while angle > 2 * math.pi:
+        angle -= 2 * math.pi
+    while angle < 2* math.pi:
+        angle += 2 * math.pi
+    return angle
 
 def stabilise_quaternion(q:Quaternion) -> Quaternion:
     roll, pitch, yaw = get_rpy_from_quaternion(q)

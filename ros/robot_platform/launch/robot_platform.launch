@@ -33,6 +33,12 @@
     <arg name="platform_status_input_topic" value="$(arg platform_status_output_topic)" />
   </include>
 
+  <include file="$(find robot_platform)/launch/path_controller.launch">
+    <arg name="move_request_output_topic" value="$(arg wheel_positions_input_topic)" />
+    <arg name="platform_status_input_topic" value="$(arg platform_status_output_topic)" />
+    <arg name="odometry_input_topic" value="$(arg odom_state_output_topic)" />
+  </include>
+
   <include file="$(find robot_platform)/launch/wheel_controller.launch">
     <arg name="odom_frame_id" value="$(arg odom_frame_id)" />
     <arg name="base_frame_id" value="$(arg base_frame_id)" />

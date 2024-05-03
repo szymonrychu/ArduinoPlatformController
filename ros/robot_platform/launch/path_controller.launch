@@ -5,10 +5,14 @@
 
   <arg name="move_request_output_topic" default="/robot_platform/wheel_request" />
   <arg name="platform_status_input_topic" default="/robot_platform/status"/>
+  <arg name="trajectory_poses_input_topic" default="/move_base/TebLocalPlannerROS/teb_poses"/>
+  <arg name="odometry_input_topic" default="/robot_platform/odom"/>
 
   <node pkg="robot_platform" type="joy_controller" name="joy_controller" output="screen" respawn="true">
     <param name="move_request_output_topic" value="$(arg move_request_output_topic)" />
     <param name="platform_status_input_topic" value="$(arg platform_status_input_topic)" />
+    <param name="trajectory_poses_input_topic" value="$(arg trajectory_poses_input_topic)" />
+    <param name="odometry_input_topic" value="$(arg odometry_input_topic)" />
   </node>
 
 </launch>
