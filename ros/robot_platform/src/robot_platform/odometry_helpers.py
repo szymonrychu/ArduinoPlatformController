@@ -102,7 +102,7 @@ def limit_angle(angle:float) -> float:
         return angle + math.pi
     return angle
 
-def _print_radians_in_degrees(angle_rad_list:List[float], round_:int = 4):
+def rad2deg(angle_rad_list:List[float], round_:int = 4):
     r = []
     for a in angle_rad_list:
         a_deg = round(180.0 * a / math.pi, round_)
