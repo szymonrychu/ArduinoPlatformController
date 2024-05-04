@@ -83,12 +83,17 @@ class PathPlatformController(ROSNode):
 
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
         turning_point = None
+
+        turning_angle = (max(0.3 + round(min(1.0 - 2.0*angle_delta/math.pi, 1.0), 1), 0.3))
+        if angle_delta < 0:
+            turning_angle = -turning_angle
+        
         if angle_delta > math.pi/12:
             turning_point = Point()
-            turning_point.y = -(max(0.3 + round(min(1.0 - 2.0*angle_delta/math.pi, 1.0), 1), 0.3))
+            turning_point.y = -turning_angle
         if angle_delta < math.pi/12:
             turning_point = Point()
-            turning_point.y = (max(0.3 + round(min(1.0 - 2.0*angle_delta/math.pi, 1.0), 1), 0.3))
+            turning_point.y = turning_angle
         return turning_point
 
     def _send_request(self, event=None):
