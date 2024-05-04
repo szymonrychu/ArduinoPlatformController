@@ -44,7 +44,7 @@ Index	Axis
 5	TRIGGERRIGHT
 '''
 
-duration = 1
+duration = 0.1
 
 class PathPlatformController(ROSNode):
 
