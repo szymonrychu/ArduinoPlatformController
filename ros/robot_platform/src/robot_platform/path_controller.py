@@ -105,7 +105,7 @@ class PathPlatformController(ROSNode):
         
         alfa = math.atan2(dY, dX)
         move_distance = math.sqrt(dX**2 + dY**2)
-        if move_distance < 0.1:
+        if move_distance < 0.05:
             self._pose_counter += 1
             return
         
@@ -113,9 +113,9 @@ class PathPlatformController(ROSNode):
         roll, pitch, yaw = get_rpy_from_quaternion(self._last_odometry.pose.pose.orientation)
         roll_a, pitch_a, yaw_a = get_rpy_from_quaternion(next_pose_to_reach.orientation)
         
-        move_velocity = 0.025 * move_distance/move_duration
+        move_velocity = max(0.05 * move_distance/move_duration, 0.1)
         angle_delta = abs(yaw - alfa)
-        rospy.loginfo(f"Angles: {rad2deg([yaw])}, {rad2deg([alfa])}, {rad2deg([angle_delta])}, distance,duration: {move_distance},{move_duration}")
+        rospy.loginfo(f"Angles: {rad2deg([yaw])}, {rad2deg([alfa])}, {rad2deg([angle_delta])}, distance,duration,velocity: {move_distance},{move_duration},{move_velocity}")
 
         r = None
         if angle_delta < math.pi:
