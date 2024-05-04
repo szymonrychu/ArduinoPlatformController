@@ -56,6 +56,7 @@ class PathPlatformController(ROSNode):
 
         self._last_pose_array = PoseArray()
         self._pose_counter = 1
+        self._last_angle = 0.0
 
         move_request_output_topic = rospy.get_param('~move_request_output_topic')
         platform_status_input_topic = rospy.get_param('~platform_status_input_topic')
@@ -122,7 +123,7 @@ class PathPlatformController(ROSNode):
             if angle_delta < math.pi/12: # 15deg
                 r = create_request(move_velocity, move_duration, self._last_platform_status, None)
             else:
-                r = create_request(move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(angle_delta))
+                r = create_request(move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(yaw - alfa))
             
 
         else:
@@ -130,7 +131,7 @@ class PathPlatformController(ROSNode):
             if angle_delta < math.pi/12: # 15deg
                 r = create_request(-move_velocity, move_duration, self._last_platform_status, None)
             else:
-                r = create_request(-move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(angle_delta))
+                r = create_request(-move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(yaw - alfa))
 
 
 
