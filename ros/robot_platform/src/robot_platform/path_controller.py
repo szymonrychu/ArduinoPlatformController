@@ -80,7 +80,7 @@ class PathPlatformController(ROSNode):
         self._last_pose_array = poses
         self._pose_counter = 0
 
-    def __compute_turning_point(angle_delta:float) -> Optional[float]:
+    def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
         turning_point = None
         if angle_delta > math.pi/12:
             turning_point = Point()
