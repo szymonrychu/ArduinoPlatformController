@@ -55,7 +55,7 @@ class PathPlatformController(ROSNode):
         self._last_odometry = Odometry()
 
         self._last_pose_array = PoseArray()
-        self._pose_counter = 0
+        self._pose_counter = 1
 
         move_request_output_topic = rospy.get_param('~move_request_output_topic')
         platform_status_input_topic = rospy.get_param('~platform_status_input_topic')
@@ -78,7 +78,7 @@ class PathPlatformController(ROSNode):
 
     def _handle_trajectory_update(self, poses:PoseArray):
         self._last_pose_array = poses
-        self._pose_counter = 0
+        self._pose_counter = 1
 
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
         turning_point = None
