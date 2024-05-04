@@ -84,10 +84,10 @@ class PathPlatformController(ROSNode):
         turning_point = None
         if angle_delta > math.pi/12:
             turning_point = Point()
-            turning_point.y = (0.3 + round(min(1.0 - angle_delta, 1.0), 2))
+            turning_point.y = (0.3 + round(min(1.0 - angle_delta, 1.0), 1))
         if angle_delta < math.pi/12:
             turning_point = Point()
-            turning_point.y = -(0.3 + round(min(1.0 - angle_delta, 1.0), 2))
+            turning_point.y = -(0.3 + round(min(1.0 - angle_delta, 1.0), 1))
         return turning_point
 
     def _send_request(self, event=None):
@@ -120,28 +120,16 @@ class PathPlatformController(ROSNode):
             rospy.loginfo(f"Going forward")
             if angle_delta < math.pi/12: # 15deg
                 r = create_request(move_velocity, move_duration, self._last_platform_status, None)
-            elif yaw > alfa:
-                turning_point = Point()
-                turning_point.y = (0.3 + round(min(1.0 - angle_delta, 1.0), 2))
-                r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
             else:
-                turning_point = Point()
-                turning_point.y = -(0.3 + round(min(1.0 - angle_delta, 1.0), 2))
-                r = create_request(move_velocity, move_duration, self._last_platform_status, turning_point)
+                r = create_request(move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(angle_delta))
             
 
         else:
             rospy.loginfo(f"Going backward")
             if angle_delta < math.pi/12: # 15deg
                 r = create_request(-move_velocity, move_duration, self._last_platform_status, None)
-            elif yaw > alfa:
-                turning_point = Point()
-                turning_point.y = -(0.3 + round(min(1.0 - angle_delta, 1.0), 2))
-                r = create_request(-move_velocity, move_duration, self._last_platform_status, turning_point)
             else:
-                turning_point = Point()
-                turning_point.y = (0.3 + round(min(1.0 - angle_delta, 1.0), 2))
-                r = create_request(-move_velocity, move_duration, self._last_platform_status, turning_point)
+                r = create_request(-move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(angle_delta))
 
 
 
