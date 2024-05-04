@@ -80,6 +80,16 @@ class PathPlatformController(ROSNode):
         self._last_pose_array = poses
         self._pose_counter = 0
 
+    def __compute_turning_point(angle_delta:float) -> Optional[float]:
+        turning_point = None
+        if angle_delta > math.pi/12:
+            turning_point = Point()
+            turning_point.y = (0.3 + round(min(1.0 - angle_delta, 1.0), 2))
+        if angle_delta < math.pi/12:
+            turning_point = Point()
+            turning_point.y = -(0.3 + round(min(1.0 - angle_delta, 1.0), 2))
+        return turning_point
+
     def _send_request(self, event=None):
         next_pose_to_reach = None
         try:
