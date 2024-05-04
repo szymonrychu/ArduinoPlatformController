@@ -44,7 +44,7 @@ Index	Axis
 5	TRIGGERRIGHT
 '''
 
-duration = 0.1
+duration = 1
 
 class PathPlatformController(ROSNode):
 
@@ -119,7 +119,7 @@ class PathPlatformController(ROSNode):
         roll, pitch, yaw = get_rpy_from_quaternion(self._last_odometry.pose.pose.orientation)
         roll_a, pitch_a, yaw_a = get_rpy_from_quaternion(next_pose_to_reach.orientation)
         
-        move_velocity = max(0.05 * move_distance/move_duration, 0.1)
+        move_velocity = move_distance/move_duration
         angle_delta = abs(yaw - alfa)
         rospy.loginfo(f"Angles: {rad2deg([yaw])}, {rad2deg([alfa])}, {rad2deg([angle_delta])}, distance,duration,velocity: {move_distance},{move_duration},{move_velocity}")
 
