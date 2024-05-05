@@ -236,7 +236,7 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
                 is_within_robot_width = min(0, m_x) < turning_point.x and turning_point.x < max(0, m_x)
                 c = -1.0 if is_within_robot_width else 1.0
 
-                velocity_coefficients.append( c * motor_turn_radius / turn_radius)
+                velocity_coefficients.append( -c * motor_turn_radius / turn_radius)
                 if can_move_wheels_continously and is_within_robot_width:
                     can_move_wheels_continously = False
     
