@@ -231,12 +231,12 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
         if abs(turn_radius) > PlatformStatics.MAX_DISTANCE_TOLERANCE:
             velocity_coefficients = []
             for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
-                motor_turn_radius = math.sqrt((m_x - turning_point.x)**2 + (m_y + turning_point.y)**2)
+                motor_turn_radius = math.sqrt((m_y - turning_point.y)**2 + (m_yx + turning_point.x)**2)
 
                 is_within_robot_width = min(0, m_x) < turning_point.x and turning_point.x < max(0, m_x)
                 c = -1.0 if is_within_robot_width else 1.0
 
-                velocity_coefficients.append( -c * motor_turn_radius / turn_radius)
+                velocity_coefficients.append( c * motor_turn_radius / turn_radius)
                 if can_move_wheels_continously and is_within_robot_width:
                     can_move_wheels_continously = False
     
