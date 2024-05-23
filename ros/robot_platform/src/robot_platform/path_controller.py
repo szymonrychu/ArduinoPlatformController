@@ -89,10 +89,10 @@ class PathPlatformController(ROSNode):
         
         if angle_delta < 0:
             turning_point = Point()
-            turning_point.y = max(min_radius + round(max_radius - tightness_coeff*max_radius*angle_delta/math.pi, 1), min_radius)
+            turning_point.y = -max(min_radius + round(max_radius + tightness_coeff*max_radius*angle_delta/math.pi, 1), min_radius)
         elif angle_delta > 0:
             turning_point = Point()
-            turning_point.y = -max(min_radius + round(max_radius + tightness_coeff*max_radius*angle_delta/math.pi, 1), min_radius)
+            turning_point.y = max(min_radius + round(max_radius - tightness_coeff*max_radius*angle_delta/math.pi, 1), min_radius)
 
         return turning_point
 
@@ -121,11 +121,11 @@ class PathPlatformController(ROSNode):
         
         steering_steps = 36
         
-        rounded_angle_delta = round((yaw - alfa) / (2 * math.pi / steering_steps), 0) * (2 * math.pi / steering_steps) - math.pi
+        rounded_angle_delta = round((yaw - alfa) / (2 * math.pi / steering_steps), 0) * (2 * math.pi / steering_steps)
 
 
         move_velocity = 0.03 * move_distance/move_duration
-        if abs(rounded_angle_delta) < math.pi/2:
+        if abs(rounded_angle_delta) > math.pi/2:
             move_velocity = -move_velocity
 
         rospy.loginfo(f"Angles: {rad2deg([yaw])}, {rad2deg([alfa])}, {rad2deg([rounded_angle_delta])}, distance,duration,velocity: {move_distance},{move_duration},{move_velocity}")
