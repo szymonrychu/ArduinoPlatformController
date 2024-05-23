@@ -85,7 +85,7 @@ class PathPlatformController(ROSNode):
         turning_point = None
         min_radius = 0.3
         max_radius = 1.0
-        tightness_coeff = 2.0
+        tightness_coeff = 4.0
         
         if angle_delta < 0:
             turning_point = Point()
