@@ -98,20 +98,22 @@ class PathPlatformController(ROSNode):
 
     def _send_request(self, event=None):
         next_pose_to_reach = None
+        alfa = 0.0
+        move_distance = 0.0
         try:
-            next_pose_to_reach = self._last_pose_array.poses[self._pose_counter]
-            self._pose_counter += 1
+            while True:
+                next_pose_to_reach = self._last_pose_array.poses[self._pose_counter]
+                self._pose_counter += 1
+
+                X, Y = self._last_odometry.pose.pose.position.x, self._last_odometry.pose.pose.position.y
+                X_a, Y_a = next_pose_to_reach.position.x, next_pose_to_reach.position.y
+                dX, dY = X_a - X, Y_a - Y
+                alfa = math.atan2(dY, dX)
+                move_distance = math.sqrt(dX**2 + dY**2)
+
+                if move_distance > 0.05:
+                    break
         except IndexError:
-            return
-        
-        X, Y = self._last_odometry.pose.pose.position.x, self._last_odometry.pose.pose.position.y
-        X_a, Y_a = next_pose_to_reach.position.x, next_pose_to_reach.position.y
-        dX, dY = X_a - X, Y_a - Y
-        
-        alfa = math.atan2(dY, dX)
-        move_distance = math.sqrt(dX**2 + dY**2)
-        if move_distance < 0.05:
-            self._pose_counter += 1
             return
         
         move_duration = duration
@@ -124,7 +126,7 @@ class PathPlatformController(ROSNode):
         rounded_angle_delta = round((yaw - alfa) / (2 * math.pi / steering_steps), 0) * (2 * math.pi / steering_steps)
 
 
-        move_velocity = max(0.1, 0.03 * move_distance/move_duration)
+        move_velocity = 0.03 * move_distance/move_duration
         if abs(rounded_angle_delta) > math.pi/2:
             move_velocity = -move_velocity
 
