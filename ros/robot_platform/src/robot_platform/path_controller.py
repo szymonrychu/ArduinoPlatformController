@@ -81,20 +81,18 @@ class PathPlatformController(ROSNode):
         self._last_pose_array = poses
         self._pose_counter = 1
 
+
+
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
-        turning_point = None
+        turning_point = Point()
+        min_radius = 0.3
+        max_radius = 1.0
 
-        turning_angle = max(0.3 + round(min(1.0 - 1.0*abs(angle_delta)/math.pi, 0.0), 1), 0.3)
+        if angle_delta > 0:
+            turning_point.y = max(min_radius + round(max_radius - max_radius*angle_delta/math.pi, 1), min_radius)
+        else:
+            turning_point.y = -max(min_radius + round(max_radius + max_radius*angle_delta/math.pi, 1), min_radius)
 
-        if angle_delta < 0:
-            turning_angle = -turning_angle
-        
-        if angle_delta > math.pi/12:
-            turning_point = Point()
-            turning_point.y = turning_angle
-        if angle_delta < math.pi/12:
-            turning_point = Point()
-            turning_point.y = -turning_angle
         return turning_point
 
     def _send_request(self, event=None):
