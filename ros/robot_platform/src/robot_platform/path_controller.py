@@ -44,7 +44,7 @@ Index	Axis
 5	TRIGGERRIGHT
 '''
 
-duration = 1
+duration = 0.1
 
 class PathPlatformController(ROSNode):
 
@@ -117,7 +117,7 @@ class PathPlatformController(ROSNode):
         roll_a, pitch_a, yaw_a = get_rpy_from_quaternion(next_pose_to_reach.orientation)
         
         
-        steering_steps = 16
+        steering_steps = 36
         
         rounded_angle_delta = round((yaw - alfa) / (2 * math.pi / steering_steps), 0) * (2 * math.pi / steering_steps)
 
