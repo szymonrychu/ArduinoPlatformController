@@ -117,8 +117,10 @@ class PathPlatformController(ROSNode):
         roll, pitch, yaw = get_rpy_from_quaternion(self._last_odometry.pose.pose.orientation)
         roll_a, pitch_a, yaw_a = get_rpy_from_quaternion(next_pose_to_reach.orientation)
         
-
-        rounded_angle_delta = round((yaw - alfa) / (8*math.pi), 0) * 8*math.pi
+        
+        steering_steps = 16
+        
+        rounded_angle_delta = round((yaw - alfa) / (2 * math.pi / steering_steps), 0) * (2 * math.pi / steering_steps)
 
 
         move_velocity = move_distance/move_duration
