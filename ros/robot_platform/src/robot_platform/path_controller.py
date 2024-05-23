@@ -101,13 +101,23 @@ class PathPlatformController(ROSNode):
         alfa = 0.0
         move_distance = 0.0
         yaw = 0.0
+        t = None
+
+        try:
+            t = self._tf_buffer.lookup_transform('odom', 'base_link', rospy.Time(), rospy.Duration(1.0))
+        except tf2_ros.LookupException:
+            return
+        except tf2_ros.ConnectivityException:
+            return
+        except tf2_ros.ExtrapolationException:
+            return
+    
         try:
             while True:
                 next_pose_to_reach = self._last_pose_array.poses[self._pose_counter]
                 self._pose_counter += 1
 
 
-                t = self._tf_buffer.lookup_transform('base_link', 'odom', rospy.Time(0), rospy.Duration(0.1))
 
                 X, Y = t.transform.translation.x, t.transform.translation.y
                 roll, pitch, yaw = get_rpy_from_quaternion(t.transform.rotation )
@@ -120,12 +130,6 @@ class PathPlatformController(ROSNode):
                 if move_distance > 0.05:
                     break
         except IndexError:
-            return
-        except tf2_ros.LookupException:
-            return
-        except tf2_ros.ConnectivityException:
-            return
-        except tf2_ros.ExtrapolationException:
             return
         
         move_duration = duration
