@@ -123,7 +123,7 @@ class PathPlatformController(ROSNode):
         rounded_angle_delta = round((yaw - alfa) / (2 * math.pi / steering_steps), 0) * (2 * math.pi / steering_steps)
 
 
-        move_velocity = 0.3 * move_distance/move_duration
+        move_velocity = 0.03 * move_distance/move_duration
         if abs(rounded_angle_delta) > math.pi:
             move_velocity = -move_velocity
 
