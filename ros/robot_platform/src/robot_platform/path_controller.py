@@ -79,7 +79,7 @@ class PathPlatformController(ROSNode):
 
     def _handle_trajectory_update(self, poses:PoseArray):
         self._last_pose_array = poses
-        self._pose_counter = 1
+        self._pose_counter = 2
 
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
         turning_point = None
@@ -124,7 +124,7 @@ class PathPlatformController(ROSNode):
         rounded_angle_delta = round((yaw - alfa) / (2 * math.pi / steering_steps), 0) * (2 * math.pi / steering_steps)
 
 
-        move_velocity = 0.03 * move_distance/move_duration
+        move_velocity = max(0.1, 0.03 * move_distance/move_duration)
         if abs(rounded_angle_delta) > math.pi/2:
             move_velocity = -move_velocity
 
