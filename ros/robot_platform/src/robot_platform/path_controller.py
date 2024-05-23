@@ -107,7 +107,7 @@ class PathPlatformController(ROSNode):
                 self._pose_counter += 1
 
 
-                t = self._tf_buffer.lookup_transform('odom', 'base_link', rospy.Time())
+                t = self._tf_buffer.lookup_transform('base_link', 'odom', rospy.Time(0), rospy.Duration(0.1))
 
                 X, Y = t.transform.translation.x, t.transform.translation.y
                 roll, pitch, yaw = get_rpy_from_quaternion(t.transform.rotation )
@@ -140,7 +140,10 @@ class PathPlatformController(ROSNode):
         move_velocity = 0.03 * move_distance/move_duration
         if abs(rounded_angle_delta) > math.pi/2:
             move_velocity = -move_velocity
-            rounded_angle_delta = -rounded_angle_delta
+            if rounded_angle_delta > 0:
+                rounded_angle_delta = rounded_angle_delta - math.pi/2
+            elif rounded_angle_delta < 0:
+                rounded_angle_delta = rounded_angle_delta + math.pi/2
 
         rospy.loginfo(f"Angles: {rad2deg([yaw])}, {rad2deg([alfa])}, {rad2deg([rounded_angle_delta])}, distance,duration,velocity: {move_distance},{move_duration},{move_velocity}")
             
