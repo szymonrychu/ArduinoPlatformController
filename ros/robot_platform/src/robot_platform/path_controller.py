@@ -79,7 +79,7 @@ class PathPlatformController(ROSNode):
 
     def _handle_trajectory_update(self, poses:PoseArray):
         self._last_pose_array = poses
-        self._pose_counter = 0
+        self._pose_counter = 1
 
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
         turning_point = None
