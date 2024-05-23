@@ -145,9 +145,9 @@ class PathPlatformController(ROSNode):
         if abs(rounded_angle_delta) > math.pi/2:
             move_velocity = -move_velocity
             if rounded_angle_delta > 0:
-                rounded_angle_delta = rounded_angle_delta - math.pi/2
+                rounded_angle_delta = math.pi/2 - rounded_angle_delta
             elif rounded_angle_delta < 0:
-                rounded_angle_delta = rounded_angle_delta + math.pi/2
+                rounded_angle_delta = math.pi/2 - rounded_angle_delta
 
         rospy.loginfo(f"Angles: {rad2deg([yaw])}, {rad2deg([alfa])}, {rad2deg([rounded_angle_delta])}, distance,duration,velocity: {move_distance},{move_duration},{move_velocity}")
             
