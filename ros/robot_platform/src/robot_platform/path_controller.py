@@ -127,7 +127,7 @@ class PathPlatformController(ROSNode):
                 alfa = math.atan2(dY, dX)
                 move_distance = math.sqrt(dX**2 + dY**2)
 
-                if move_distance > 0.05:
+                if move_distance > 0.1:
                     break
         except IndexError:
             return
