@@ -185,7 +185,7 @@ imu0_remove_gravitational_acceleration: false
 # predicition. Note that if an acceleration measurement for the variable in question is available from one of the
 # inputs, the control term will be ignored.
 # Whether or not we use the control input during predicition. Defaults to false.
-use_control: true
+use_control: false
 # Whether the input (assumed to be cmd_vel) is a geometry_msgs/Twist or geometry_msgs/TwistStamped message. Defaults to
 # false.
 stamped_control: false
@@ -199,10 +199,10 @@ acceleration_limits: [1.3, 0.0, 0.0, 0.0, 0.0, 3.4]
 deceleration_limits: [1.3, 0.0, 0.0, 0.0, 0.0, 4.5]
 # If your robot cannot instantaneously reach its acceleration limit, the permitted change can be controlled with these
 # gains
-acceleration_gains: [100.8, 0.0, 0.0, 0.0, 0.0, 100.9]
+acceleration_gains: [0.8, 0.0, 0.0, 0.0, 0.0, 0.9]
 # If your robot cannot instantaneously reach its deceleration limit, the permitted change can be controlled with these
 # gains
-deceleration_gains: [100.0, 0.0, 0.0, 0.0, 0.0, 100.0]
+deceleration_gains: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
 
 # [ADVANCED] The process noise covariance matrix can be difficult to tune, and can vary for each application, so it is
 # exposed as a configuration parameter. This matrix represents the noise we add to the total error after each
