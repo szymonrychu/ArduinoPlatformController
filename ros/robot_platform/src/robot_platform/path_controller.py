@@ -119,7 +119,13 @@ class PathPlatformController(ROSNode):
 
                 if move_distance > 0.05:
                     break
-        except IndexError, tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException:
+        except IndexError:
+            return
+        except tf2_ros.LookupException:
+            return
+        except tf2_ros.ConnectivityException:
+            return
+        except tf2_ros.ExtrapolationException:
             return
         
         move_duration = duration
