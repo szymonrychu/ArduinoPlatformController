@@ -119,30 +119,18 @@ class PathPlatformController(ROSNode):
         roll, pitch, yaw = get_rpy_from_quaternion(self._last_odometry.pose.pose.orientation)
         roll_a, pitch_a, yaw_a = get_rpy_from_quaternion(next_pose_to_reach.orientation)
         
+
+        rounded_angle_delta = round((yaw - alfa) / (8*math.pi), 0) * 8*math.pi
+
+        rospy.loginfo(f"Angles: {rad2deg([yaw])}, {rad2deg([alfa])}, {rad2deg([rounded_angle_delta])}, distance,duration,velocity: {move_distance},{move_duration},{move_velocity}")
+
         move_velocity = move_distance/move_duration
-        angle_delta = abs(yaw - alfa)
-        rospy.loginfo(f"Angles: {rad2deg([yaw])}, {rad2deg([alfa])}, {rad2deg([angle_delta])}, distance,duration,velocity: {move_distance},{move_duration},{move_velocity}")
-
-        r = None
-        if angle_delta < math.pi:
-            rospy.loginfo(f"Going forward")
-            if angle_delta < math.pi/12: # 15deg
-                r = create_request(move_velocity, move_duration, self._last_platform_status, None)
-            else:
-                r = create_request(move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(yaw - alfa))
+        if abs(rounded_angle_delta) > math.pi:
+            move_velocity = -move_velocity
             
-
-        else:
-            rospy.loginfo(f"Going backward")
-            if angle_delta < math.pi/12: # 15deg
-                r = create_request(-move_velocity, move_duration, self._last_platform_status, None)
-            else:
-                r = create_request(-move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(yaw - alfa))
-
-
-
-        if r:
-            self._move_request_publisher.publish(r)
+            
+        r = create_request(move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(rounded_angle_delta))
+        self._move_request_publisher.publish(r)
 
 def main():
     platform = PathPlatformController()
