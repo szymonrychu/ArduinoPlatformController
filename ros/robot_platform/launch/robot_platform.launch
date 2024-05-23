@@ -60,9 +60,9 @@
   
   <!-- <include file="$(find freenect_launch)/launch/examples/freenect-registered-xyzrgb.launch" /> -->
 
-  <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
+  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
     <rosparam command="load" file="$(find robot_platform)/config/ekf_localization.yaml"/>
-  </node> -->
+  </node>
 
   <include file="$(find hector_mapping)/launch/mapping_default.launch">
     <arg name="base_frame" value="$(arg base_footprint_frame_id)" />
