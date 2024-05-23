@@ -107,7 +107,7 @@ class PathPlatformController(ROSNode):
                 self._pose_counter += 1
 
 
-                t = tfBuffer.lookup_transform('odom', 'base_link', rospy.Time())
+                t = self._tf_buffer.lookup_transform('odom', 'base_link', rospy.Time())
 
                 X, Y = t.transform.translation.x, t.transform.translation.y
                 roll, pitch, yaw = get_rpy_from_quaternion(t.transform.rotation )
