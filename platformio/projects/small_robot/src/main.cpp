@@ -198,8 +198,9 @@ void loop(void){
   command.parse();
 
   uint64_t currentTimeMicros = micros();
+  bool moveEnded = moveTimeout > 0 && moveTimeout < currentTimeMicros;
 
-  if(moveTimeout > 0 && moveTimeout < currentTimeMicros) {
+  if(moveEnded) {
     motor1.stop();
     motor2.stop();
     motor3.stop();
@@ -218,7 +219,6 @@ void loop(void){
   servoPan.loop(currentTimeMicros);
   servoTilt.loop(currentTimeMicros);
 
-
   sensors_event_t angVelocityData , accData;
   bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
   bno.getEvent(&accData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
@@ -232,7 +232,6 @@ void loop(void){
     doc["int_temp"] = temp;
     if(moveTimeout > 0){
       doc["move_duration"] = ((double)(moveTimeout - currentTimeMicros))/1000000.0;
-      redLed.toggle();
     } else {
       doc["move_duration"] = 0.0;
     }
@@ -280,25 +279,21 @@ void loop(void){
 
     JsonObject m1 = doc.createNestedObject("motor1");
     m1["velocity"] = motor1.currentVelocity();
-    m1["steering"] = motor1.currentSteering();
     m1["distance"] = motor1.currentDistanceDelta();
     m1["angle"] = motor1.readServo();
 
     JsonObject m2 = doc.createNestedObject("motor2");
     m2["velocity"] = motor2.currentVelocity();
-    m1["steering"] = motor2.currentSteering();
     m2["distance"] = motor2.currentDistanceDelta();
     m2["angle"] = motor2.readServo();
 
     JsonObject m3 = doc.createNestedObject("motor3");
     m3["velocity"] = motor3.currentVelocity();
-    m1["steering"] = motor3.currentSteering();
     m3["distance"] = motor3.currentDistanceDelta();
     m3["angle"] = motor3.readServo();
 
     JsonObject m4 = doc.createNestedObject("motor4");
     m4["velocity"] = motor4.currentVelocity();
-    m1["steering"] = motor4.currentSteering();
     m4["distance"] = motor4.currentDistanceDelta();
     m4["angle"] = motor4.readServo();
 
@@ -310,6 +305,8 @@ void loop(void){
 
     serializeJson(doc, Serial);
     Serial.println("");
+
+    if(!moveEnded) redLed.toggle();
   }
   delay(BNO055_SAMPLERATE_DELAY_MS);
 }

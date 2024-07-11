@@ -12,6 +12,9 @@ rm -rf "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}"
 mkdir -p "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}"
 chown -R 1000:1000 "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}"
 
+touch /var/run/shutdown_signal
+bash "${GIT_REPO_ROOT}/systemd/shutdown.sh" &
+
 docker run \
   --rm \
   --privileged \
@@ -22,4 +25,5 @@ docker run \
   -e "ROS_HOSTNAME=robot" \
   -v /dev:/dev \
   -v "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}:/home/ros/.ros" \
+  -v /var/run/shutdown_signal:/shutdown_signal \
   "arduino-platform-controller:latest" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"

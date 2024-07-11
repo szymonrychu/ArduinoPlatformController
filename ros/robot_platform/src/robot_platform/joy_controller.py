@@ -43,6 +43,9 @@ Index	Axis
 5	TRIGGERRIGHT
 '''
 
+# share:   buttons: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+# options: buttons: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+
 duration = 0.1
 
 class JoyPlatformController(ROSNode):
@@ -74,6 +77,9 @@ class JoyPlatformController(ROSNode):
         self._last_platform_status = status
 
     def _send_request(self, event=None):
+        if self._last_joy.buttons:
+            share_pressed = self._last_joy.buttons[8] == 1
+            options_pressed = self._last_joy.buttons[9] == 1
         if self._last_joy.axes:
             rel_velocity = -0.25 * self._last_joy.axes[1]
             if rel_velocity < 0:
