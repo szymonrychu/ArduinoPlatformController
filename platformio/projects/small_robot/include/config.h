@@ -17,7 +17,7 @@
 // +Y - to up
 
 #define M1_X -(ROBOT_WIDTH/2) 
-#define M1_Y -(ROBOT_LENGTH/2)
+#define M1_Y (ROBOT_LENGTH/2)
 #define M1_IN_PLACE_TURN -1.0
 #define M1_ENCA 30
 #define M1_ENCB 1
@@ -26,7 +26,7 @@
 #define M1_SERV 8
 
 #define M2_X (ROBOT_WIDTH/2) 
-#define M2_Y -(ROBOT_LENGTH/2)
+#define M2_Y (ROBOT_LENGTH/2)
 #define M2_IN_PLACE_TURN -1.0
 #define M2_ENCA 3
 #define M2_ENCB 2
@@ -35,7 +35,7 @@
 #define M2_SERV 9
 
 #define M3_X (ROBOT_WIDTH/2) 
-#define M3_Y (ROBOT_LENGTH/2)
+#define M3_Y -(ROBOT_LENGTH/2)
 #define M3_IN_PLACE_TURN -1.0
 #define M3_ENCA 5
 #define M3_ENCB 4
@@ -44,7 +44,7 @@
 #define M3_SERV 10
 
 #define M4_X -(ROBOT_WIDTH/2) 
-#define M4_Y (ROBOT_LENGTH/2)
+#define M4_Y -(ROBOT_LENGTH/2)
 #define M4_IN_PLACE_TURN -1.0
 #define M4_ENCA 31
 #define M4_ENCB 7

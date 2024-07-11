@@ -19,24 +19,24 @@ class PlatformStatics:
 
     # LEFT BACK
     M1_IN_PLACE_TURN = -1.0
-    M1_Y = (ROBOT_WIDTH/2) 
     M1_X = -(ROBOT_LENGTH/2)
+    M1_Y = (ROBOT_WIDTH/2)
 
     # RIGHT BACK
     M2_IN_PLACE_TURN = -1.0
-    M2_Y = -(ROBOT_WIDTH/2) 
-    M2_X = -(ROBOT_LENGTH/2)
+    M2_X = (ROBOT_LENGTH/2)
+    M2_Y = (ROBOT_WIDTH/2)
 
     # RIGHT FRONT
     M3_IN_PLACE_TURN = -1.0
     M3_ANGLE_COEFFICIENT = 1.0
-    M3_Y = -(ROBOT_WIDTH/2) 
     M3_X = (ROBOT_LENGTH/2)
+    M3_Y = -(ROBOT_WIDTH/2)
 
     # LEFT FRONT
     M4_IN_PLACE_TURN = -1.0
-    M4_Y = (ROBOT_WIDTH/2) 
-    M4_X = (ROBOT_LENGTH/2)
+    M4_X = -(ROBOT_LENGTH/2)
+    M4_Y = -(ROBOT_WIDTH/2) 
 
     ROBOT_MOTORS_DIMENSIONS = [
         (M1_X, M1_Y),
@@ -154,7 +154,7 @@ def compute_target_servo_angles(turning_point:Point=None) -> List[float]:
     
     relative_turning_points = []
     for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
-        relative_turning_points.append((m_x - turning_point.x, m_y - turning_point.y))
+        relative_turning_points.append((turning_point.x - m_x, turning_point.y - m_y))
     
     target_angles = []
     for (tp_x, tp_y) in relative_turning_points:

@@ -7,7 +7,7 @@
 #endif
 
 #ifndef PWM_FREQUENCY
-#define PWM_FREQUENCY 37500
+#define PWM_FREQUENCY 22000
 #endif
 
 class MDD3AHbridge{
