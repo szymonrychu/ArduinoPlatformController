@@ -14,7 +14,7 @@ if ! diff /tmp/ros.service /etc/systemd/system/ros.service; then
   service_updated="${service_updated}Y"
 fi
 
-sed -e "s/SCRIPT_FULL_PATH/${THIS_ROOT//\//\\/}/g" ./shutdown.service > /shutdown/ros.service
+sed -e "s/SCRIPT_FULL_PATH/${THIS_ROOT//\//\\/}/g" ./shutdown.service > /tmp/shutdown.service
 if ! diff /tmp/shutdown.service /etc/systemd/system/shutdown.service; then
   sudo mv /tmp/shutdown.service /etc/systemd/system/shutdown.service
   service_updated="${service_updated}Y"
