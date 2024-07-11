@@ -76,7 +76,7 @@ ServoController servoPan(SERV_PAN);
 ServoController servoTilt(SERV_TILT);
 
 Led redLed = Led(USER_LED_1);
-Led greenLed = Led(USER_LED_2, true);
+Led greenLed = Led(USER_LED_2);
 
 Battery battery;
 
@@ -186,6 +186,7 @@ void setup(void){
 
   pinMode(USER_BUTTON_1, INPUT);
   pinMode(USER_BUTTON_2, INPUT);
+  greenLed.setState(true);
 }
 
 void serialEvent4() {
@@ -231,6 +232,7 @@ void loop(void){
     doc["int_temp"] = temp;
     if(moveTimeout > 0){
       doc["move_duration"] = ((double)(moveTimeout - currentTimeMicros))/1000000.0;
+      redLed.toggle();
     } else {
       doc["move_duration"] = 0.0;
     }
