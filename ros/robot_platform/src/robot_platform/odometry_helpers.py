@@ -158,7 +158,7 @@ def compute_target_servo_angles(turning_point:Point=None) -> List[float]:
     
     target_angles = []
     for (tp_x, tp_y) in relative_turning_points:
-        target_angles.append(limit_angle(math.atan2(tp_x, tp_y)))
+        target_angles.append(limit_angle(math.atan2(tp_y, tp_x)))
     
     return target_angles
 
