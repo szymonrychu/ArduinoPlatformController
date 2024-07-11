@@ -1,6 +1,7 @@
 
 import math
 import signal
+import os
 
 from .odometry_helpers import PlatformStatics, create_request
 import rospy
@@ -80,6 +81,10 @@ class JoyPlatformController(ROSNode):
         if self._last_joy.buttons:
             share_pressed = self._last_joy.buttons[8] == 1
             options_pressed = self._last_joy.buttons[9] == 1
+            if share_pressed and options_pressed:
+                if os.path.isfile('/shutdown_signal'):
+                    with open('/shutdown_signal', 'w') as f:
+                        f.write('true')
         if self._last_joy.axes:
             rel_velocity = -0.25 * self._last_joy.axes[1]
             if rel_velocity < 0:
