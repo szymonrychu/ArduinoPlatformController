@@ -14,7 +14,12 @@ if ! diff /tmp/ros.service /etc/systemd/system/ros.service; then
   service_updated="${service_updated}Y"
 fi
 
+if ! diff /tmp/shutdown.service /etc/systemd/system/shutdown.service; then
+  sudo mv /tmp/shutdown.service /etc/systemd/system/shutdown.service
+  service_updated="${service_updated}Y"
+fi
+
 if [[ -n "${service_updated}" ]]; then
   sudo systemctl daemon-reload
-  sudo systemctl enable ros.service
+  sudo systemctl enable ros.service shutdown.service
 fi

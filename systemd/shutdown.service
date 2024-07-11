@@ -1,0 +1,12 @@
+[Unit]
+Description=shutdown robot
+After=network.target
+Wants=network.target
+
+[Service]
+ExecStart=SCRIPT_FULL_PATH/shutdown.sh
+
+[Install]
+WantedBy=multi-user.target
+
+

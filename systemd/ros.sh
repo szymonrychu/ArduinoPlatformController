@@ -12,8 +12,8 @@ rm -rf "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}"
 mkdir -p "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}"
 chown -R 1000:1000 "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}"
 
-touch /var/run/shutdown_signal
-bash "${GIT_REPO_ROOT}/systemd/shutdown.sh" &
+sudo touch /var/run/shutdown_signal
+sudo chmod 666 /var/run/shutdown_signal
 
 docker run \
   --rm \
