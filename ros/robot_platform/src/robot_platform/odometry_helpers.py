@@ -46,7 +46,7 @@ class PlatformStatics:
     ]
 
 
-    TURN_VELOCITY = 1.04719755 # 60degrees in 1s /
+    TURN_VELOCITY = 1.57079632 # 90degrees in 1s /
     MOVE_VELOCITY = 1.5
     MIN_ANGLE_DIFF = 0.01
     MAX_DISTANCE_TOLERANCE = 0.025
