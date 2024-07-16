@@ -23,7 +23,8 @@ docker run \
   --add-host overlord:192.168.1.50 \
   --network host \
   -e "ROS_HOSTNAME=robot" \
+  -e "ROS_LOG_DIR=/tmp/ros" \
   -v /dev:/dev \
-  -v "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}:/home/ros/.ros" \
+  -v "/tmp/${ROS_PACKAGE}-${ROS_LAUNCH_FILE}:/tmp/ros" \
   -v /var/run/shutdown_signal:/shutdown_signal \
   "arduino-platform-controller:latest" roslaunch "${ROS_PACKAGE}" "${ROS_LAUNCH_FILE}"
