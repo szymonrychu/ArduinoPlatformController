@@ -19,8 +19,8 @@ docker run \
   --rm \
   --privileged \
   --name "${ROS_PACKAGE}-${ROS_LAUNCH_FILE}" \
-  --add-host mobile-overlord:192.168.1.49 \
-  --add-host overlord:192.168.1.50 \
+  --add-host mobile-overlord:192.168.1.34 \
+  --add-host overlord:192.168.1.33 \
   --network host \
   -e "ROS_HOSTNAME=robot" \
   -e "ROS_LOG_DIR=/tmp/ros" \
