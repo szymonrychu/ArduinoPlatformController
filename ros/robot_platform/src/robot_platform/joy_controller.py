@@ -99,10 +99,10 @@ class JoyPlatformController(ROSNode):
             elif turn_radius > 0:
                 turn_radius = min(turn_radius, 1.99)
             if turn_radius > 0.01:
-                turn_radius = 2 - turn_radius + PlatformStatics.ROBOT_LENGTH/8
+                turn_radius = 2 - turn_radius + PlatformStatics.ROBOT_WIDTH/2
 
             elif turn_radius < -0.01:
-                turn_radius = -2 - turn_radius - PlatformStatics.ROBOT_LENGTH/8
+                turn_radius = -2 - turn_radius - PlatformStatics.ROBOT_WIDTH/2
 
 
             velocity = 0.0
