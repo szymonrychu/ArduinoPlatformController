@@ -72,7 +72,7 @@ class PathPlatformController(ROSNode):
             turn_radius = 0
 
         turning_point = Point()
-        turning_point.y = -turn_radius
+        turning_point.y = turn_radius
 
         return turning_point
 
