@@ -53,15 +53,22 @@ class PathPlatformController(ROSNode):
 
         r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
         if r:
-            angles_changing = abs(r.motor1.servo.angle - self._last_angles[0]) > 0.025
-            angles_changing = angles_changing or abs(r.motor2.servo.angle - self._last_angles[1]) > 0.025
-            angles_changing = angles_changing or abs(r.motor3.servo.angle - self._last_angles[2]) > 0.025
-            angles_changing = angles_changing or abs(r.motor4.servo.angle - self._last_angles[3]) > 0.025
+            angle_changes = [
+                abs(r.motor1.servo.angle - self._last_angles[0]),
+                abs(r.motor2.servo.angle - self._last_angles[1]),
+                abs(r.motor3.servo.angle - self._last_angles[2]),
+                abs(r.motor4.servo.angle - self._last_angles[3])
+            ]
+            angles_changing = angle_changes[0] > 0.025
+            angles_changing = angles_changing or angle_changes[1] > 0.025
+            angles_changing = angles_changing or angle_changes[2] > 0.025
+            angles_changing = angles_changing or angle_changes[3] > 0.025
             if angles_changing:
-                r.motor1.velocity = 0.25 * r.motor1.velocity
-                r.motor2.velocity = 0.25 * r.motor2.velocity
-                r.motor3.velocity = 0.25 * r.motor3.velocity
-                r.motor4.velocity = 0.25 * r.motor4.velocity
+                mean_angle_change = sum(angle_changes)/4.0
+                r.motor1.velocity = (1-mean_angle_change) * r.motor1.velocity
+                r.motor2.velocity = (1-mean_angle_change) * r.motor2.velocity
+                r.motor3.velocity = (1-mean_angle_change) * r.motor3.velocity
+                r.motor4.velocity = (1-mean_angle_change) * r.motor4.velocity
             self._move_request_publisher.publish(r)
             
             self._last_angles = [
