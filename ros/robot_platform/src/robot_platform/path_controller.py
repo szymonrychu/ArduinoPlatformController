@@ -12,7 +12,7 @@ from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import PoseArray, Twist
 from nav_msgs.msg import Odometry
 
-duration = 0.5
+duration = 1.0
 
 class PathPlatformController(ROSNode):
 
