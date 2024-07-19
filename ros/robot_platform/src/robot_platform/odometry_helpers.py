@@ -217,10 +217,10 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
     request.motor2.servo.angle = motor_servo_angle_deltas[1]
     request.motor3.servo.angle = motor_servo_angle_deltas[2]
     request.motor4.servo.angle = motor_servo_angle_deltas[3]
-    request.motor1.servo.angle_provided = abs(platform_status.motor1.servo.angle - motor_servo_angle_deltas[0]) > 0.001
-    request.motor2.servo.angle_provided = abs(platform_status.motor2.servo.angle - motor_servo_angle_deltas[1]) > 0.001
-    request.motor3.servo.angle_provided = abs(platform_status.motor3.servo.angle - motor_servo_angle_deltas[2]) > 0.001
-    request.motor4.servo.angle_provided = abs(platform_status.motor4.servo.angle - motor_servo_angle_deltas[3]) > 0.001
+    request.motor1.servo.angle_provided = abs(platform_status.motor1.servo.angle - motor_servo_angle_deltas[0]) > 0.01
+    request.motor2.servo.angle_provided = abs(platform_status.motor2.servo.angle - motor_servo_angle_deltas[1]) > 0.01
+    request.motor3.servo.angle_provided = abs(platform_status.motor3.servo.angle - motor_servo_angle_deltas[2]) > 0.01
+    request.motor4.servo.angle_provided = abs(platform_status.motor4.servo.angle - motor_servo_angle_deltas[3]) > 0.01
     
     can_move_wheels_continously = True
     velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM

@@ -65,10 +65,10 @@ class PathPlatformController(ROSNode):
         elif turn_radius > 0:
             turn_radius = min(turn_radius, 1.99)
         if turn_radius > 0.01:
-            turn_radius = 2 - turn_radius + PlatformStatics.ROBOT_LENGTH/8
+            turn_radius = 2 - turn_radius + PlatformStatics.ROBOT_LENGTH/6
 
         elif turn_radius < -0.01:
-            turn_radius = -2 - turn_radius - PlatformStatics.ROBOT_LENGTH/8
+            turn_radius = -2 - turn_radius - PlatformStatics.ROBOT_LENGTH/6
 
         turning_point = Point()
         turning_point.y = -turn_radius
