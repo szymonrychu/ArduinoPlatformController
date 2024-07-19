@@ -19,6 +19,9 @@ class PathPlatformController(ROSNode):
     def __init__(self):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
+        self._last_angles = [
+            0.0, 0.0, 0.0, 0.0
+        ]
 
         self._last_odometry = Odometry()
 
@@ -50,16 +53,23 @@ class PathPlatformController(ROSNode):
 
         r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
         if r:
-            angles_changing = r.motor1.servo.angle_provided
-            angles_changing = angles_changing or r.motor2.servo.angle_provided
-            angles_changing = angles_changing or r.motor3.servo.angle_provided
-            angles_changing = angles_changing or r.motor4.servo.angle_provided
+            angles_changing = abs(r.motor1.servo.angle - self._last_angles[0]) > 0.1
+            angles_changing = angles_changing or abs(r.motor2.servo.angle - self._last_angles[1]) > 0.1
+            angles_changing = angles_changing or abs(r.motor3.servo.angle - self._last_angles[2]) > 0.1
+            angles_changing = angles_changing or abs(r.motor4.servo.angle - self._last_angles[3]) > 0.1
             if angles_changing:
                 r.motor1.velocity = 0.0
                 r.motor2.velocity = 0.0
                 r.motor3.velocity = 0.0
                 r.motor4.velocity = 0.0
             self._move_request_publisher.publish(r)
+            
+            self._last_angles = [
+                r.motor1.servo.angle,
+                r.motor2.servo.angle,
+                r.motor3.servo.angle,
+                r.motor4.servo.angle
+            ]
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
