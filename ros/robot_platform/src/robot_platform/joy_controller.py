@@ -93,7 +93,7 @@ class JoyPlatformController(ROSNode):
                 rel_velocity = rel_velocity
             # rel_velocity = 0.3
             
-            turn_radius = round(-2.95 * self._last_joy.axes[0], 2)
+            turn_radius = round(-1.95 * self._last_joy.axes[0], 2)
             if turn_radius < 0:
                 turn_radius = max(turn_radius, -0.99)
             elif turn_radius > 0:
