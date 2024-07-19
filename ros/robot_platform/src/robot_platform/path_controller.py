@@ -37,7 +37,7 @@ class PathPlatformController(ROSNode):
 
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
-        move_velocity = cmd_vel.linear.x
+        move_velocity = max(cmd_vel.linear.x, 0.1)
         angle = cmd_vel.angular.z
 
         r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
