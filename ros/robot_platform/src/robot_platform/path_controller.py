@@ -42,6 +42,15 @@ class PathPlatformController(ROSNode):
 
         r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
         if r:
+            angles_changing = r.motor1.servo.angle_provided
+            angles_changing = angles_changing or r.motor2.servo.angle_provided
+            angles_changing = angles_changing or r.motor3.servo.angle_provided
+            angles_changing = angles_changing or r.motor4.servo.angle_provided
+            if angles_changing:
+                r.motor1.velocity = 0.0
+                r.motor2.velocity = 0.0
+                r.motor3.velocity = 0.0
+                r.motor4.velocity = 0.0
             self._move_request_publisher.publish(r)
 
     def _handle_platform_status(self, status:PlatformStatus):
