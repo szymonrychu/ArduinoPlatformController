@@ -37,7 +37,13 @@ class PathPlatformController(ROSNode):
 
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
-        move_velocity = max(cmd_vel.linear.x, 0.1)
+        if cmd_vel.linear.x > 0:
+            move_velocity = max(cmd_vel.linear.x, 0.1)
+        elif cmd_vel.linear.x < 0:
+            move_velocity = min(cmd_vel.linear.x, -0.1)
+        else:
+            move_velocity = 0
+
         angle = cmd_vel.angular.z
 
         r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
@@ -59,9 +65,9 @@ class PathPlatformController(ROSNode):
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
 
         if angle_delta > 0.01:
-            turn_radius = 0.3 * (1.0-max(2*angle_delta/0.3, 1))
+            turn_radius = -0.3 * (1.0-max(2*angle_delta/0.3, 1))
         elif angle_delta < 0.01:
-            turn_radius = -0.3 * (1.0+min(2*angle_delta/0.3, -1))
+            turn_radius = 0.3 * (1.0+min(2*angle_delta/0.3, -1))
         else:
             turn_radius = 0
 
