@@ -48,7 +48,8 @@ class PathPlatformController(ROSNode):
         move_duration = duration
 
         r = create_request(move_velocity, move_duration, self._last_platform_status, self.__compute_turning_point(angle))
-        self._move_request_publisher.publish(r)
+        if r:
+            self._move_request_publisher.publish(r)
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
