@@ -49,16 +49,20 @@ class PathPlatformController(ROSNode):
 
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
         turning_point = None
-        min_radius = 0.3
-        max_radius = 1.0
-        tightness_coeff = 2.0
-        
-        if angle_delta < 0:
-            turning_point = Point()
-            turning_point.y = max(min_radius + round(max_radius - tightness_coeff*max_radius*angle_delta, 1), min_radius)
-        elif angle_delta > 0:
-            turning_point = Point()
-            turning_point.y = -max(min_radius + round(max_radius + tightness_coeff*max_radius*angle_delta, 1), min_radius)
+
+        turn_radius = round(-1.95 * angle_delta, 2)
+        if turn_radius < 0:
+            turn_radius = max(turn_radius, -1.99)
+        elif turn_radius > 0:
+            turn_radius = min(turn_radius, 1.99)
+        if turn_radius > 0.01:
+            turn_radius = 2 - turn_radius + PlatformStatics.ROBOT_LENGTH/8
+
+        elif turn_radius < -0.01:
+            turn_radius = -2 - turn_radius - PlatformStatics.ROBOT_LENGTH/8
+
+        turning_point = Point()
+        turning_point.y = -turn_radius
 
         return turning_point
 
