@@ -33,10 +33,6 @@ class PathPlatformController(ROSNode):
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
         rospy.Subscriber('/cmd_vel', Twist, self._handle_trajectory_update)
 
-        self._tf_buffer = tf2_ros.Buffer()
-        self._tf_listener = tf2_ros.TransformListener(self._tf_buffer)
-
-        rospy.Timer(rospy.Duration(duration), self._send_request)
         self.spin()
 
 
