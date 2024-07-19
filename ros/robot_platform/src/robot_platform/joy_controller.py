@@ -86,6 +86,9 @@ class JoyPlatformController(ROSNode):
                     with open('/shutdown_signal', 'w') as f:
                         f.write('true')
         if self._last_joy.axes:
+            if abs(self._last_joy.axes[0]) < 0.005 and abs(self._last_joy.axes[0]) < 0.005:
+                return
+        
             rel_velocity = -0.25 * self._last_joy.axes[1]
             if rel_velocity < 0:
                 rel_velocity = rel_velocity
@@ -99,11 +102,10 @@ class JoyPlatformController(ROSNode):
             elif turn_radius > 0:
                 turn_radius = min(turn_radius, 1.99)
             if turn_radius > 0.01:
-                turn_radius = 2 - turn_radius + PlatformStatics.ROBOT_WIDTH/2
+                turn_radius = 2 - turn_radius + PlatformStatics.ROBOT_WIDTH/4
 
             elif turn_radius < -0.01:
-                turn_radius = -2 - turn_radius - PlatformStatics.ROBOT_WIDTH/2
-
+                turn_radius = -2 - turn_radius - PlatformStatics.ROBOT_WIDTH/4
 
             velocity = 0.0
             boost = 1.0 + 3*(-self._last_joy.axes[3]+1)/2
