@@ -12,7 +12,7 @@ from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import PoseArray, Twist
 from nav_msgs.msg import Odometry
 
-duration = 0.5
+duration = 0.1
 
 class PathPlatformController(ROSNode):
 
@@ -49,6 +49,22 @@ class PathPlatformController(ROSNode):
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
+
+    def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
+        turning_point = None
+        min_radius = 0.3
+        max_radius = 1.0
+        tightness_coeff = 4.0
+        
+        if angle_delta < 0:
+            turning_point = Point()
+            turning_point.y = max(min_radius + round(max_radius - tightness_coeff*max_radius*angle_delta/math.pi, 1), min_radius)
+        elif angle_delta > 0:
+            turning_point = Point()
+            turning_point.y = -max(min_radius + round(max_radius + tightness_coeff*max_radius*angle_delta/math.pi, 1), min_radius)
+
+        return turning_point
+
 
 def main():
     platform = PathPlatformController()
