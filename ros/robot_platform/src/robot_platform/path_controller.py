@@ -61,7 +61,7 @@ class PathPlatformController(ROSNode):
         if angle_delta > 0.01:
             turn_radius = 0.3 * (1.0-max(2*angle_delta/0.3, 1))
         elif angle_delta < 0.01:
-            turn_radius = 0.3 * (1.0+min(2*angle_delta/0.3, -1))
+            turn_radius = -0.3 * (1.0+min(2*angle_delta/0.3, -1))
         else:
             turn_radius = 0
 
