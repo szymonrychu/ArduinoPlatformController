@@ -28,10 +28,10 @@
 
   <!-- <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 /map /odom 100"/> -->
 
-  <include file="$(find robot_platform)/launch/joy_controller.launch">
+  <!-- <include file="$(find robot_platform)/launch/joy_controller.launch">
     <arg name="move_request_output_topic" value="$(arg wheel_positions_input_topic)" />
     <arg name="platform_status_input_topic" value="$(arg platform_status_output_topic)" />
-  </include>
+  </include> -->
 
   <include file="$(find robot_platform)/launch/path_controller.launch">
     <arg name="move_request_output_topic" value="$(arg wheel_positions_input_topic)" />
