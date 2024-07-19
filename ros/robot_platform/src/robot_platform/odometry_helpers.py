@@ -12,8 +12,8 @@ from geometry_msgs.msg import Point
 
 class PlatformStatics:
     MOTOR_NUM = 4
-    ROBOT_LENGTH = 0.350
-    ROBOT_WIDTH = 0.248
+    ROBOT_LENGTH = 0.360
+    ROBOT_WIDTH = 0.290
 
     MIN_TURN_COEF = 0.0
 
