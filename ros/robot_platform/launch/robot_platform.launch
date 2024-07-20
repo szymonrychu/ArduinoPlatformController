@@ -104,7 +104,7 @@
 		<param name="recovery_behaviors" value="[{name:reset,type:clear_costmap_recovery/ClearCostmapRecovery}]" />
     
 		<param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
-		<param name="controller_frequency" value="2.0" />
+		<param name="controller_frequency" value="1.0" />
 		<param name="controller_patience" value="5.0" />
 
 		<param name="max_planning_retries" value="5" />
