@@ -145,6 +145,7 @@ class PathPlatformController(ROSNode):
         return turning_point
 
 
+
 def main():
     platform = PathPlatformController()
     signal.signal(signal.SIGINT, platform.stop)
