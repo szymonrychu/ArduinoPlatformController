@@ -26,10 +26,7 @@ class PathPlatformController(ROSNode):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
         self._last_angle = 0
-        self._last_direction_forward = False
-        self._last_direction_backward = False
         self._can_move_continously = True
-        self._zero_velocity_commands_num = 0
 
         self._last_odometry = Odometry()
 
@@ -58,25 +55,9 @@ class PathPlatformController(ROSNode):
         if cmd_vel.linear.x > 0:
             move_velocity = max(cmd_vel.linear.x, 0.2)
             angle = cmd_vel.angular.z
-            self._last_direction_forward = True
-            self._last_direction_backward = False
-            self._zero_velocity_commands_num = 0
         elif cmd_vel.linear.x < 0:
             move_velocity = min(cmd_vel.linear.x, -0.2)
             angle = -cmd_vel.angular.z
-            self._last_direction_forward = False
-            self._last_direction_backward = True
-            self._zero_velocity_commands_num = 0
-        elif self._last_direction_forward and self._zero_velocity_commands_num < 5:
-            move_velocity = 0.2
-            angle = cmd_vel.angular.z
-            self._zero_velocity_commands_num += 1
-        elif self._last_direction_backward and self._zero_velocity_commands_num < 5:
-            move_velocity = -0.2
-            angle = -cmd_vel.angular.z
-            self._zero_velocity_commands_num += 1
-        else:
-            return
             
 
         abs_angle_delta = abs(angle - self._last_angle)
