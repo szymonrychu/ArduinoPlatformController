@@ -63,14 +63,14 @@ class PathPlatformController(ROSNode):
             angle = -cmd_vel.angular.z
             self._last_direction_forward = False
             self._last_direction_backward = True
-        
-        if move_velocity == 0:
-            if self._last_direction_forward:
-                move_velocity = 0.2
-                angle = cmd_vel.angular.z
-            elif self._last_direction_backward:
-                move_velocity = -0.2
-                angle = -cmd_vel.angular.z
+        elif self._last_direction_forward:
+            move_velocity = 0.2
+            angle = cmd_vel.angular.z
+        elif self._last_direction_backward:
+            move_velocity = -0.2
+            angle = -cmd_vel.angular.z
+        else:
+            return
             
 
         abs_angle_delta = abs(angle - self._last_angle)
