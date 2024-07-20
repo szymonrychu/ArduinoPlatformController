@@ -127,7 +127,7 @@ class PathPlatformController(ROSNode):
     def _handle_platform_status(self, status:PlatformStatus):
         self._can_move_continously = compute_relative_turning_point([
             status.motor1, status.motor2, status.motor3, status.motor4
-        ])
+        ]) is not None
         self._last_platform_status = status
 
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
