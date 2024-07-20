@@ -65,7 +65,7 @@ class PathPlatformController(ROSNode):
         self._last_angle = angle
 
 
-        if abs_angle_delta > TINY_ANGLE_DELTA or crossing_0_angle or abs(move_velocity) < 0.25 or not self._can_move_continously: # it's a big turn, we need to stop entirely
+        if abs_angle_delta > TINY_ANGLE_DELTA or crossing_0_angle or abs(move_velocity) < 0.25 or (not self._can_move_continously and abs(angle) > 0.8): # it's a big turn, we need to stop entirely
             if abs(angle) < TINY_ANGLE_DELTA: # after turning we will go relatively straight, we can go with full speed
                 rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
                 r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
