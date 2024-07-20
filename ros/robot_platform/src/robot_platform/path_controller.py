@@ -26,9 +26,8 @@ class PathPlatformController(ROSNode):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
         self._last_angle = 0
-        self._last_angles = [
-            0.0, 0.0, 0.0, 0.0
-        ]
+        self._last_direction_forward = False
+        self._last_direction_backward = False
 
         self._last_odometry = Odometry()
 
@@ -54,12 +53,25 @@ class PathPlatformController(ROSNode):
         angle = 0
         move_velocity = 0
     
-        if cmd_vel.linear.x >= 0:
+        if cmd_vel.linear.x > 0:
             move_velocity = max(cmd_vel.linear.x, 0.2)
             angle = cmd_vel.angular.z
+            self._last_direction_forward = True
+            self._last_direction_backward = False
         elif cmd_vel.linear.x < 0:
             move_velocity = min(cmd_vel.linear.x, -0.2)
             angle = -cmd_vel.angular.z
+            self._last_direction_forward = False
+            self._last_direction_backward = True
+        
+        if move_velocity == 0:
+            if self._last_direction_forward:
+                move_velocity = 0.2
+                angle = cmd_vel.angular.z
+            elif self._last_direction_backward:
+                move_velocity = -0.2
+                angle = -cmd_vel.angular.z
+            
 
         abs_angle_delta = abs(angle - self._last_angle)
         crossing_0_angle = (angle > 0 and self._last_angle < 0) or (angle < 0 and self._last_angle > 0) and abs_angle_delta > SMALL_ANGLE_DELTA
@@ -67,7 +79,7 @@ class PathPlatformController(ROSNode):
 
 
         if abs_angle_delta > TINY_ANGLE_DELTA or crossing_0_angle or abs(move_velocity) < 0.25: # it's a big turn, we need to stop entirely
-            if abs(angle) < SMALL_ANGLE_DELTA: # after turning we will go relatively straight, we can go with full speed
+            if abs(angle) < TINY_ANGLE_DELTA: # after turning we will go relatively straight, we can go with full speed
                 rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
                 r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
                 r_in_place = deepcopy(r)
