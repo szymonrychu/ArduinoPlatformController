@@ -62,7 +62,7 @@ class PathPlatformController(ROSNode):
             angle = -cmd_vel.angular.z
 
         abs_angle_delta = abs(angle - self._last_angle)
-        crossing_0_angle = (angle > 0 and self._last_angle < 0) or (angle < 0 and self._last_angle > 0)
+        crossing_0_angle = (angle > 0 and self._last_angle < 0) or (angle < 0 and self._last_angle > 0) and abs_angle_delta > TINY_ANGLE_DELTA
         self._last_angle = angle
 
 
