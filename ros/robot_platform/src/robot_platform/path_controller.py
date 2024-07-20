@@ -77,7 +77,7 @@ class PathPlatformController(ROSNode):
                 r_in_place.motor4.velocity = 0
                 self.__send_request(r_in_place)
                 r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
-                time.sleep(r_in_place.duration) # wait until servos are fully turned
+                time.sleep(r_in_place.duration*1.5 + 1.0) # wait until servos are fully turned
                 self.__send_request(r) # send move forward request
             else: # after turning servos, we will turn, so we have to be slower
                 rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
