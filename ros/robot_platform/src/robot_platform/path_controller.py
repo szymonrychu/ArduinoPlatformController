@@ -62,11 +62,12 @@ class PathPlatformController(ROSNode):
             angle = -cmd_vel.angular.z
 
         abs_angle_delta = abs(angle - self._last_angle)
+        crossing_0_angle = (angle > 0 and self._last_angle < 0) or (angle < 0 and self._last_angle > 0)
         self._last_angle = angle
 
 
-        if abs_angle_delta > SMALL_ANGLE_DELTA: # it's a big turn, we need to stop entirely
-            if abs(angle) < TINY_ANGLE_DELTA:
+        if abs_angle_delta > SMALL_ANGLE_DELTA or crossing_0_angle: # it's a big turn, we need to stop entirely
+            if abs(angle) < TINY_ANGLE_DELTA: # after turning we will go relatively straight, we can go with full speed
                 rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
                 r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
                 r_in_place = deepcopy(r)
@@ -78,7 +79,7 @@ class PathPlatformController(ROSNode):
                 r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
                 time.sleep(r_in_place.duration) # wait until servos are fully turned
                 self.__send_request(r) # send move forward request
-            else:
+            else: # after turning servos, we will turn, so we have to be slower
                 rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
                 r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
                 r_in_place = deepcopy(r)
@@ -90,12 +91,12 @@ class PathPlatformController(ROSNode):
                 r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
                 time.sleep(r_in_place.duration) # wait until servos are fully turned
                 self.__send_request(r) # send move forward request
-        else:
-            if abs_angle_delta < TINY_ANGLE_DELTA and abs(angle) < TINY_ANGLE_DELTA: # it's just a small adjustment, we can go on with full speed
+        else: # it's a small turn, we can do turning and moving at the same time
+            if abs(angle) < TINY_ANGLE_DELTA: # it's just readjustment in going forward, we can avoid slowing down
                 rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
                 r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
                 self.__send_request(r)
-            else: # it's ok to turn continously, just slow down
+            else: # we are not going straight, we should slow down
                 rospy.loginfo(f"Handling small turn with slowdown delta={abs_angle_delta}")
                 r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
                 self.__send_request(r)
