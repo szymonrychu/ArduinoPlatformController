@@ -12,7 +12,7 @@ TebLocalPlannerROS:
   allow_init_with_backwards_motion: True
   max_global_plan_lookahead_dist: 5.0
   global_plan_viapoint_sep: 0.1
-  global_plan_prune_distance: 1
+  global_plan_prune_distance: 3
   exact_arc_length: False
   feasibility_check_no_poses: 5
   publish_feedback: False
@@ -28,7 +28,8 @@ TebLocalPlannerROS:
   min_turning_radius: 0.3
 
   footprint_model:
-    type: "point"
+    type: "polygon"
+    vertices:  [ [0.25,-0.18], [0.25,0.18], [-0.25,0.18], [-0.25,-0.18]]
 
  # GoalTolerance
     
@@ -39,8 +40,8 @@ TebLocalPlannerROS:
       
   # Obstacles
       
-  min_obstacle_dist: 0.3 # This value must also include our robot radius, since footprint_model is set to "point".
-  inflation_dist: 0.6
+  min_obstacle_dist: 0.05
+  inflation_dist: 0.2
   include_costmap_obstacles: True
   costmap_obstacles_behind_robot_dist: 1.5
   obstacle_poses_affected: 15
@@ -101,8 +102,10 @@ TebLocalPlannerROS:
 
   # Recovery
   
+  max_planning_retries: 5
   shrink_horizon_backup: True
   shrink_horizon_min_duration: 10
+  clearing_rotation_allowed: False
   oscillation_recovery: True
   oscillation_v_eps: 0.1
   oscillation_omega_eps: 0.1
