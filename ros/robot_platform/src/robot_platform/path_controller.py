@@ -64,27 +64,42 @@ class PathPlatformController(ROSNode):
         abs_angle_delta = abs(angle - self._last_angle)
         self._last_angle = angle
 
-        if abs_angle_delta < TINY_ANGLE_DELTA and abs(move_velocity) > 0.2: # it's just a small adjustment, we can go on with full speed
-            rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
-            r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
-            self.__send_request(r)
-        elif abs_angle_delta < SMALL_ANGLE_DELTA and abs(move_velocity) > 0.2: # it's ok to turn continously, just slow down
-            rospy.loginfo(f"Handling small turn with slowdown delta={abs_angle_delta}")
-            r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
-            self.__send_request(r)
-        else: # it's a big turn, we need to stop entirely
-            rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
-            r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
-            r_in_place = deepcopy(r)
-            r_in_place.motor1.velocity = 0
-            r_in_place.motor2.velocity = 0
-            r_in_place.motor3.velocity = 0
-            r_in_place.motor4.velocity = 0
-            self.__send_request(r_in_place)
-            r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
-            time.sleep(r_in_place.duration) # wait until servos are fully turned
 
-            self.__send_request(r) # send move forward request
+        if abs_angle_delta > SMALL_ANGLE_DELTA: # it's a big turn, we need to stop entirely
+            if abs(angle) < TINY_ANGLE_DELTA:
+                rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
+                r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
+                r_in_place = deepcopy(r)
+                r_in_place.motor1.velocity = 0
+                r_in_place.motor2.velocity = 0
+                r_in_place.motor3.velocity = 0
+                r_in_place.motor4.velocity = 0
+                self.__send_request(r_in_place)
+                r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
+                time.sleep(r_in_place.duration) # wait until servos are fully turned
+                self.__send_request(r) # send move forward request
+            else:
+                rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
+                r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
+                r_in_place = deepcopy(r)
+                r_in_place.motor1.velocity = 0
+                r_in_place.motor2.velocity = 0
+                r_in_place.motor3.velocity = 0
+                r_in_place.motor4.velocity = 0
+                self.__send_request(r_in_place)
+                r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
+                time.sleep(r_in_place.duration) # wait until servos are fully turned
+                self.__send_request(r) # send move forward request
+        else:
+            if abs_angle_delta < TINY_ANGLE_DELTA and abs(angle) < TINY_ANGLE_DELTA: # it's just a small adjustment, we can go on with full speed
+                rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
+                r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
+                self.__send_request(r)
+            else: # it's ok to turn continously, just slow down
+                rospy.loginfo(f"Handling small turn with slowdown delta={abs_angle_delta}")
+                r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
+                self.__send_request(r)
+
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
