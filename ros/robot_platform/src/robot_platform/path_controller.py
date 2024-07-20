@@ -133,9 +133,9 @@ class PathPlatformController(ROSNode):
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
 
         if angle_delta > 0.1:
-            turn_radius = 1.5 * (1.0-abs(angle_delta/0.3)) + 0.3
+            turn_radius = 1.8 * (1.0-abs(angle_delta/0.3)) + 0.3
         elif angle_delta < 0.1:
-            turn_radius = -1.5 * (1.0-abs(angle_delta/0.3)) - 0.3
+            turn_radius = -1.8 * (1.0-abs(angle_delta/0.3)) - 0.3
         else:
             turn_radius = 0
 
