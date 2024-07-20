@@ -68,7 +68,7 @@ class PathPlatformController(ROSNode):
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
             self.__send_request(r)
-        if abs_angle_delta < SMALL_ANGLE_DELTA and abs(move_velocity) > 0.2: # it's ok to turn continously, just slow down
+        elif abs_angle_delta < SMALL_ANGLE_DELTA and abs(move_velocity) > 0.2: # it's ok to turn continously, just slow down
             rospy.loginfo(f"Handling small turn with slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
             self.__send_request(r)
