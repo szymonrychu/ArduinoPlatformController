@@ -15,8 +15,8 @@ from geometry_msgs.msg import PoseArray, Twist
 from nav_msgs.msg import Odometry
 
 duration = 1.0
-SMALL_ANGLE_DELTA = 0.2
-TINY_ANGLE_DELTA = 0.1
+SMALL_ANGLE_DELTA = 0.15
+TINY_ANGLE_DELTA = 0.075
 SLOW_MOVE = 0.1
 SLOW_DOWN_FACTOR = 2.0
 
