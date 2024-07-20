@@ -1,24 +1,29 @@
 
 import math
 import signal
+import time
 
 import tf2_ros
 from .tf_helpers import *
 from .odometry_helpers import *
 import rospy
 from .ros_helpers import ROSNode
+from copy import deepcopy
 
 from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import PoseArray, Twist
 from nav_msgs.msg import Odometry
 
 duration = 1.0
+SMALL_ANGLE_DELTA = 0.5
+SLOW_MOVE = 0.1
 
 class PathPlatformController(ROSNode):
 
     def __init__(self):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
+        self._last_angle = 0
         self._last_angles = [
             0.0, 0.0, 0.0, 0.0
         ]
@@ -38,6 +43,11 @@ class PathPlatformController(ROSNode):
 
         self.spin()
 
+    def __send_request(self, r:MoveRequest|None):
+        if r:
+            self._move_request_publisher.publish(r)
+
+
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
         angle = 0
@@ -50,33 +60,24 @@ class PathPlatformController(ROSNode):
             move_velocity = min(cmd_vel.linear.x, -0.1)
             angle = -cmd_vel.angular.z
 
+        abs_angle_delta = abs(angle - self._last_angle)
+        self._last_angle = angle
 
-        r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
-        if r:
-            angle_changes = [
-                abs(r.motor1.servo.angle - self._last_angles[0]),
-                abs(r.motor2.servo.angle - self._last_angles[1]),
-                abs(r.motor3.servo.angle - self._last_angles[2]),
-                abs(r.motor4.servo.angle - self._last_angles[3])
-            ]
-            angles_changing = angle_changes[0] > 0.025
-            angles_changing = angles_changing or angle_changes[1] > 0.025
-            angles_changing = angles_changing or angle_changes[2] > 0.025
-            angles_changing = angles_changing or angle_changes[3] > 0.025
-            if angles_changing:
-                mean_angle_change = sum(angle_changes)/4.0
-                r.motor1.velocity = 0.5 * (1-mean_angle_change) * r.motor1.velocity
-                r.motor2.velocity = 0.5 * (1-mean_angle_change) * r.motor2.velocity
-                r.motor3.velocity = 0.5 * (1-mean_angle_change) * r.motor3.velocity
-                r.motor4.velocity = 0.5 * (1-mean_angle_change) * r.motor4.velocity
-            self._move_request_publisher.publish(r)
-            
-            self._last_angles = [
-                r.motor1.servo.angle,
-                r.motor2.servo.angle,
-                r.motor3.servo.angle,
-                r.motor4.servo.angle
-            ]
+        if abs_angle_delta < SMALL_ANGLE_DELTA: # it's ok to turn continously, just slow down
+            r = create_request(move_velocity/2.0, duration, self._last_platform_status, self.__compute_turning_point(angle))
+            self.__send_request(r)
+        else: # it's a big turn, we need to stop entirely
+            r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
+            r_in_place = deepcopy(r)
+            r_in_place.motor1.velocity = 0
+            r_in_place.motor2.velocity = 0
+            r_in_place.motor3.velocity = 0
+            r_in_place.motor4.velocity = 0
+            self.__send_request(r_in_place)
+            r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
+            time.sleep(r_in_place.duration) # wait until servos are fully turned
+
+            self.__send_request(r) # send move forward request
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
