@@ -85,14 +85,20 @@ def check_if_points_are_close(points:List[Point]) -> bool:
         return False
 
     point_cordinate_deltas = []
+    points_distance = [0.001]
     for c_a, pa in enumerate(points):
+        points_distance.append(math.sqrt(pa.x**2 + pa.y**2))
         for c_b, pb in enumerate(points):
             if c_a >= c_b:
                 continue
             point_cordinate_deltas.append(pa.x - pb.x)
             point_cordinate_deltas.append(pa.y - pb.y)
+    max_points_distance = max(points_distance)
+
+    relative_distance_tolerance = max(max_points_distance/5.0, 1.0) * PlatformStatics.MAX_DISTANCE_TOLERANCE
+
     max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas]) if point_cordinate_deltas else PlatformStatics.MAX_DISTANCE_TOLERANCE
-    return max_coordinate_delta < PlatformStatics.MAX_DISTANCE_TOLERANCE
+    return max_coordinate_delta < relative_distance_tolerance
 
 
 def limit_angle(angle:float) -> float:
