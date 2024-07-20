@@ -77,7 +77,9 @@ class PathPlatformController(ROSNode):
                 self.__send_request(r_in_place)
                 r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
                 time.sleep(r_in_place.duration*1.2) # wait until servos are fully turned
-                while not self._can_move_continously:
+                timeout = 0
+                while not self._can_move_continously or timeout > 100:
+                    timeout += 1
                     time.sleep(0.01)
                 self.__send_request(r) # send move forward request
             else: # after turning servos, we will turn, so we have to be slower
@@ -91,7 +93,9 @@ class PathPlatformController(ROSNode):
                 self.__send_request(r_in_place)
                 r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
                 time.sleep(r_in_place.duration*1.2) # wait until servos are fully turned
-                while not self._can_move_continously:
+                timeout = 0
+                while not self._can_move_continously or timeout > 100:
+                    timeout += 1
                     time.sleep(0.01)
                 self.__send_request(r) # send move forward request
         else: # it's a small turn, we can do turning and moving at the same time
