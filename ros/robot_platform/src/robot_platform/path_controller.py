@@ -65,6 +65,9 @@ class PathPlatformController(ROSNode):
         crossing_0_angle = (angle > 0 and self._last_angle < 0) or (angle < 0 and self._last_angle > 0) and abs_angle_delta > SMALL_ANGLE_DELTA
         self._last_angle = angle
 
+        if abs_angle_delta < 0.01 or abs(cmd_vel.linear.x) < 0.1:
+            return
+
 
         if abs_angle_delta > SMALL_ANGLE_DELTA or crossing_0_angle or abs(move_velocity) < 0.25: # it's a big turn, we need to stop entirely
             if abs(angle) < TINY_ANGLE_DELTA: # after turning we will go relatively straight, we can go with full speed
