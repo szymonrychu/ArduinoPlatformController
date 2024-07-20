@@ -16,7 +16,9 @@ from nav_msgs.msg import Odometry
 
 duration = 1.0
 SMALL_ANGLE_DELTA = 0.5
+TINY_ANGLE_DELTA = 0.2
 SLOW_MOVE = 0.1
+SLOW_DOWN_FACTOR = 2.0
 
 class PathPlatformController(ROSNode):
 
@@ -43,10 +45,9 @@ class PathPlatformController(ROSNode):
 
         self.spin()
 
-    def __send_request(self, r:MoveRequest|None):
+    def __send_request(self, r):
         if r:
             self._move_request_publisher.publish(r)
-
 
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
@@ -63,10 +64,16 @@ class PathPlatformController(ROSNode):
         abs_angle_delta = abs(angle - self._last_angle)
         self._last_angle = angle
 
+        if abs_angle_delta < TINY_ANGLE_DELTA: # it's just a small adjustment, we can go on with full speed
+            rospy.loginfo("Handling tiny turn without slowdown delta={abs_angle_delta}")
+            r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
+            self.__send_request(r)
         if abs_angle_delta < SMALL_ANGLE_DELTA: # it's ok to turn continously, just slow down
-            r = create_request(move_velocity/2.0, duration, self._last_platform_status, self.__compute_turning_point(angle))
+            rospy.loginfo("Handling small turn with slowdown delta={abs_angle_delta}")
+            r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
             self.__send_request(r)
         else: # it's a big turn, we need to stop entirely
+            rospy.loginfo("Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
             r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
             r_in_place = deepcopy(r)
             r_in_place.motor1.velocity = 0
