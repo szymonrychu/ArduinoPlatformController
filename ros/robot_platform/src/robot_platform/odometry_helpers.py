@@ -95,7 +95,7 @@ def check_if_points_are_close(points:List[Point]) -> bool:
             point_cordinate_deltas.append(pa.y - pb.y)
     max_points_distance = max(points_distance)
 
-    relative_distance_tolerance = max(max_points_distance/3.0, 1.0) * PlatformStatics.MAX_DISTANCE_TOLERANCE
+    relative_distance_tolerance = max(max_points_distance/1.0, 1.0) * PlatformStatics.MAX_DISTANCE_TOLERANCE
 
     max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas]) if point_cordinate_deltas else PlatformStatics.MAX_DISTANCE_TOLERANCE
     return max_coordinate_delta < relative_distance_tolerance
