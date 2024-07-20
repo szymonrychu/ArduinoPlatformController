@@ -55,23 +55,23 @@ class PathPlatformController(ROSNode):
         move_velocity = 0
     
         if cmd_vel.linear.x > 0:
-            move_velocity = max(cmd_vel.linear.x, 0.1)
+            move_velocity = max(cmd_vel.linear.x, 0.2)
             angle = cmd_vel.angular.z
         elif cmd_vel.linear.x < 0:
-            move_velocity = min(cmd_vel.linear.x, -0.1)
+            move_velocity = min(cmd_vel.linear.x, -0.2)
             angle = -cmd_vel.angular.z
 
         abs_angle_delta = abs(angle - self._last_angle)
         self._last_angle = angle
 
-        if abs_angle_delta < TINY_ANGLE_DELTA and abs(move_velocity) > 0.15: # it's just a small adjustment, we can go on with full speed
+        if abs_angle_delta < TINY_ANGLE_DELTA and abs(move_velocity) > 0.2: # it's just a small adjustment, we can go on with full speed
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
             self.__send_request(r)
-        if abs_angle_delta < SMALL_ANGLE_DELTA and abs(move_velocity) > 0.15: # it's ok to turn continously, just slow down
-            rospy.loginfo(f"Handling small turn with slowdown delta={abs_angle_delta}")
-            r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
-            self.__send_request(r)
+        # if abs_angle_delta < SMALL_ANGLE_DELTA and abs(move_velocity) > 0.2: # it's ok to turn continously, just slow down
+        #     rospy.loginfo(f"Handling small turn with slowdown delta={abs_angle_delta}")
+        #     r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
+        #     self.__send_request(r)
         else: # it's a big turn, we need to stop entirely
             rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
             r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
