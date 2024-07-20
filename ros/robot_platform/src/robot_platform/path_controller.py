@@ -97,7 +97,7 @@ class PathPlatformController(ROSNode):
                 r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
                 time.sleep(r_in_place.duration*1.2) # wait until servos are fully turned
                 while not self._can_move_continously:
-                    time.sleep(0.1)
+                    time.sleep(0.01)
                 self.__send_request(r) # send move forward request
             else: # after turning servos, we will turn, so we have to be slower
                 rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
@@ -111,7 +111,7 @@ class PathPlatformController(ROSNode):
                 r_in_place.duration = abs_angle_delta/PlatformStatics.TURN_VELOCITY # min servo turn duration
                 time.sleep(r_in_place.duration*1.2) # wait until servos are fully turned
                 while not self._can_move_continously:
-                    time.sleep(0.1)
+                    time.sleep(0.01)
                 self.__send_request(r) # send move forward request
         else: # it's a small turn, we can do turning and moving at the same time
             if abs(angle) < TINY_ANGLE_DELTA or abs(move_velocity) < 0.25: # it's just readjustment in going forward, we can avoid slowing down
