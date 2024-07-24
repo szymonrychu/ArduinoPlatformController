@@ -19,6 +19,7 @@ TINY_ANGLE_DELTA = 0.05
 SMALL_ANGLE_DELTA = 0.3
 SLOW_SPEED = 0.3
 ROTATION_SPEED = math.pi/0.8
+TINY_WAIT_S = 0.1
 
 class PathPlatformController(ROSNode):
 
@@ -89,9 +90,11 @@ class PathPlatformController(ROSNode):
             wait_counter = 0
             while not self.__can_move_continously(angle):
                 wait_counter += 1
-                time.sleep(0.01)
-            for _ in range(wait_counter * 0.2):
-                time.sleep(0.01)
+                time.sleep(TINY_WAIT_S)
+                if wait_counter > 15.0/TINY_WAIT_S:
+                    wait_counter = 0 
+                    break
+            time.sleep((r_in_place.duration + (wait_counter*TINY_WAIT_S))*0.2 )
             self.__send_request(r) # send move forward request
 
     def _handle_platform_status(self, status:PlatformStatus):
