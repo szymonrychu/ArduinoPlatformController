@@ -14,7 +14,7 @@ from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import PoseArray, Twist
 from nav_msgs.msg import Odometry
 
-TINY_ANGLE_DELTA = 0.05
+TINY_ANGLE_DELTA = 0.1
 SMALL_ANGLE_DELTA = 0.3
 SLOW_SPEED = 0.3
 ROTATION_SPEED = math.pi/0.8
@@ -108,7 +108,8 @@ class PathPlatformController(ROSNode):
         if compute_relative_turning_point([
                 status.motor1.servo, status.motor2.servo, status.motor3.servo, status.motor4.servo
             ]) is not None:
-            self._can_move_continously += 1
+            if self._can_move_continously < 100:
+                self._can_move_continously += 1
         else:
             self._can_move_continously = 0
         self._last_platform_status = status
