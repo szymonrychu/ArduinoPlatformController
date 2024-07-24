@@ -79,7 +79,7 @@ class PathPlatformController(ROSNode):
         turning_point = Point()
         turning_point.y = move_velocity / (angle * self._controller_frequency)
 
-
+        wait_counter = 0
         while not self.__can_move_continously(angle):
             wait_counter += 1
             time.sleep(TINY_WAIT_S)
