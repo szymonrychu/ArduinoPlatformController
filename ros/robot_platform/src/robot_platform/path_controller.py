@@ -17,7 +17,7 @@ from nav_msgs.msg import Odometry
 duration = 1.0
 TINY_ANGLE_DELTA = 0.05
 SMALL_ANGLE_DELTA = 0.3
-SLOW_SPEED = 0.39
+SLOW_SPEED = 0.3
 ROTATION_SPEED = math.pi/0.8
 TINY_WAIT_S = 0.1
 
@@ -76,13 +76,17 @@ class PathPlatformController(ROSNode):
         self._last_velocity = move_velocity
 
 
+        turning_point = Point()
+        turning_point.y = move_velocity * duration / angle
+
+
         if angle_tiny and (not moves_slowly) and self.__can_move_continously(angle) and not changes_direction:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
-            r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
+            r = create_request(move_velocity, duration, self._last_platform_status, turning_point)
             self.__send_request(r)
         else:
             rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
-            r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
+            r = create_request(move_velocity, duration, self._last_platform_status, turning_point)
             r_in_place = deepcopy(r)
             r_in_place.motor1.velocity = 0
             r_in_place.motor2.velocity = 0
@@ -106,20 +110,6 @@ class PathPlatformController(ROSNode):
             status.motor1.servo, status.motor2.servo, status.motor3.servo, status.motor4.servo
         ]) is not None
         self._last_platform_status = status
-
-    def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
-
-        if angle_delta > 0.1:
-            turn_radius = 5.0 * (1.0-abs(angle_delta/0.3)) + 0.3
-        elif angle_delta < 0.1:
-            turn_radius = -5.0 * (1.0-abs(angle_delta/0.3)) - 0.3
-        else:
-            turn_radius = 0
-
-        turning_point = Point()
-        turning_point.y = turn_radius
-
-        return turning_point
 
 
 
