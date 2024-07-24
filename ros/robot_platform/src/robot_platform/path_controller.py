@@ -32,8 +32,8 @@ class PathPlatformController(ROSNode):
         self._last_odometry = Odometry()
 
         self._last_pose_array = PoseArray()
-        self._pose_counter = 1
         self._last_angle = 0.0
+        self._last_velocity = 0.0
 
         move_request_output_topic = rospy.get_param('~move_request_output_topic')
         platform_status_input_topic = rospy.get_param('~platform_status_input_topic')
@@ -65,14 +65,18 @@ class PathPlatformController(ROSNode):
 
         abs_angle_delta = abs(angle - self._last_angle)
         crossing_0_angle = (angle > 0 and self._last_angle < 0) or (angle < 0 and self._last_angle > 0) and abs_angle_delta > SMALL_ANGLE_DELTA
-        self._last_angle = angle
         
 
         angle_delta_tiny = abs_angle_delta < TINY_ANGLE_DELTA
         moves_slowly = abs(move_velocity) < SLOW_SPEED
         angle_tiny = abs(angle) < TINY_ANGLE_DELTA
+        changes_direction = (move_velocity < 0 and self._last_velocity > 0) or (move_velocity > 0 and self._last_velocity < 0)
 
-        if angle_tiny and (not moves_slowly) and self.__can_move_continously(angle):
+        self._last_angle = angle
+        self._last_velocity = move_velocity
+
+
+        if angle_tiny and (not moves_slowly) and self.__can_move_continously(angle) and not changes_direction:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
             self.__send_request(r)
