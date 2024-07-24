@@ -66,7 +66,7 @@ class PathPlatformController(ROSNode):
 
         angle_delta_tiny = abs_angle_delta < TINY_ANGLE_DELTA
         angle_tiny = abs(angle) < TINY_ANGLE_DELTA
-        can_move_continously = self._can_move_continously or abs(abs_angle_delta) < SMALL_ANGLE_DELTA
+        can_move_continously = self._can_move_continously and abs(abs_angle_delta) < SMALL_ANGLE_DELTA
 
         if (angle_delta_tiny or angle_tiny) and can_move_continously:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
@@ -97,9 +97,9 @@ class PathPlatformController(ROSNode):
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
 
         if angle_delta > 0.1:
-            turn_radius = 8.0 * (1.0-abs(angle_delta/0.3)) + 0.3
+            turn_radius = 5.0 * (1.0-abs(angle_delta/0.3)) + 0.3
         elif angle_delta < 0.1:
-            turn_radius = -8.0 * (1.0-abs(angle_delta/0.3)) - 0.3
+            turn_radius = -5.0 * (1.0-abs(angle_delta/0.3)) - 0.3
         else:
             turn_radius = 0
 
