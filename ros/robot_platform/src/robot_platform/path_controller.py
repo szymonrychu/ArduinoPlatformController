@@ -15,10 +15,8 @@ from geometry_msgs.msg import PoseArray, Twist
 from nav_msgs.msg import Odometry
 
 duration = 1.0
-SMALL_ANGLE_DELTA = 0.15
 TINY_ANGLE_DELTA = 0.075
-SLOW_MOVE = 0.1
-SLOW_DOWN_FACTOR = 2.0
+SMALL_ANGLE_DELTA = 0.3
 ROTATION_SPEED = math.pi
 
 class PathPlatformController(ROSNode):
@@ -68,14 +66,15 @@ class PathPlatformController(ROSNode):
 
         angle_delta_tiny = abs_angle_delta < TINY_ANGLE_DELTA
         angle_tiny = abs(angle) < TINY_ANGLE_DELTA
-        can_move_continously = self._can_move_continously or abs(angle) > 0.6
+        can_move_continously = self._can_move_continously or abs(angle) < SMALL_ANGLE_DELTA
+
         if (angle_delta_tiny or angle_tiny) and can_move_continously:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
             self.__send_request(r)
         else:
             rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
-            r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
+            r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
             r_in_place = deepcopy(r)
             r_in_place.motor1.velocity = 0
             r_in_place.motor2.velocity = 0
