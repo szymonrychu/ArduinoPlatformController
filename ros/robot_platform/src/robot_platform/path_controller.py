@@ -15,7 +15,7 @@ from geometry_msgs.msg import PoseArray, Twist
 from nav_msgs.msg import Odometry
 
 duration = 1.0
-TINY_ANGLE_DELTA = 0.075
+TINY_ANGLE_DELTA = 0.05
 SMALL_ANGLE_DELTA = 0.2
 ROTATION_SPEED = math.pi
 
@@ -97,9 +97,9 @@ class PathPlatformController(ROSNode):
     def __compute_turning_point(self, angle_delta:float) -> Optional[float]:
 
         if angle_delta > 0.1:
-            turn_radius = 3.0 * (1.0-abs(angle_delta/0.3)) + 0.3
+            turn_radius = 5.0 * (1.0-abs(angle_delta/0.3)) + 0.3
         elif angle_delta < 0.1:
-            turn_radius = -3.0 * (1.0-abs(angle_delta/0.3)) - 0.3
+            turn_radius = -5.0 * (1.0-abs(angle_delta/0.3)) - 0.3
         else:
             turn_radius = 0
 
