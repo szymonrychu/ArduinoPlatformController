@@ -77,12 +77,12 @@ public:
     if(angleDelta < 0.0001) angleDelta = 0.0001; 
     double minTimeS = SERVO_FULL_ROTATION_UPDATE_SPEED*(angleDelta/PI);
     if(timeS == 0) timeS = minTimeS;
-    if(angle < -PI/2 || angle > PI/2 || timeS < minTimeS){
+    if(angle < -PI/2 || angle > PI/2){
       return false;
     }
     unsigned long timeMs = (unsigned long)(timeS * 1000.0);
     this->ramp.go(angle/PI, timeMs, LINEAR);
-    return true;
+    return timeS < minTimeS;
   }
 
   double readServo(){
