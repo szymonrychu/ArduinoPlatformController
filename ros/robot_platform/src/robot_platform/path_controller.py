@@ -115,7 +115,7 @@ class PathPlatformController(ROSNode):
             r_in_place.duration = ROTATION_SPEED * self._controller_frequency * (abs_angle_delta/math.pi) # min servo turn duration
             time.sleep(r_in_place.duration) # wait until servos are fully turned
             wait_counter = 0
-            while not self._still_turning():
+            while self._still_turning(r_in_place):
                 wait_counter += 1
                 time.sleep(TINY_WAIT_S)
                 if wait_counter > 5.0/TINY_WAIT_S:
