@@ -17,6 +17,7 @@ from nav_msgs.msg import Odometry
 duration = 1.0
 TINY_ANGLE_DELTA = 0.05
 SMALL_ANGLE_DELTA = 0.2
+SLOW_SPEED = 0.2
 ROTATION_SPEED = math.pi
 
 class PathPlatformController(ROSNode):
@@ -65,10 +66,11 @@ class PathPlatformController(ROSNode):
         
 
         angle_delta_tiny = abs_angle_delta < TINY_ANGLE_DELTA
+        moves_slowly = abs(move_velocity) < SLOW_SPEED
         angle_tiny = abs(angle) < TINY_ANGLE_DELTA
         can_move_continously = self._can_move_continously or abs(abs_angle_delta) < SMALL_ANGLE_DELTA
 
-        if angle_tiny and can_move_continously:
+        if (angle_tiny and not moves_slowly) and can_move_continously:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
             self.__send_request(r)
