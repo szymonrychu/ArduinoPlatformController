@@ -18,7 +18,7 @@ duration = 1.0
 TINY_ANGLE_DELTA = 0.05
 SMALL_ANGLE_DELTA = 0.2
 SLOW_SPEED = 0.2
-ROTATION_SPEED = math.pi/(0.18*3)
+ROTATION_SPEED = math.pi/0.6
 
 class PathPlatformController(ROSNode):
 
@@ -84,7 +84,7 @@ class PathPlatformController(ROSNode):
             r_in_place.motor3.velocity = 0
             r_in_place.motor4.velocity = 0
             self.__send_request(r_in_place)
-            r_in_place.duration = ROTATION_SPEED * (abs_angle_delta/math.pi) # min servo turn duration
+            r_in_place.duration = ROTATION_SPEED/duration * (abs_angle_delta/math.pi) # min servo turn duration
             time.sleep(r_in_place.duration) # wait until servos are fully turned
             while not self.__can_move_continously(angle):
                 time.sleep(0.01)
