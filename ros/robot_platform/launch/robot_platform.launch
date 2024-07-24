@@ -26,7 +26,7 @@
   <arg name="wheel_positions_input_topic" default="/robot_platform/wheel_request"/>
   <arg name="platform_status_output_topic" default="/robot_platform/status"/>
 
-  <arg name="planner_frequency" default="2.0"/>
+  <arg name="controller_frequency" default="2.0"/>
 
   <!-- <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 /map /odom 100"/> -->
 
@@ -39,17 +39,9 @@
     <arg name="move_request_output_topic" value="$(arg wheel_positions_input_topic)" />
     <arg name="platform_status_input_topic" value="$(arg platform_status_output_topic)" />
     <arg name="odometry_input_topic" value="$(arg odom_state_output_topic)" />
-		<arg name="planner_frequency" value="$(arg planner_frequency)" />
+		<arg name="controller_frequency" value="$(arg controller_frequency)" />
   </include>
-
-  <include file="$(find robot_platform)/launch/wheel_controller.launch">
-    <arg name="odom_frame_id" value="$(arg odom_frame_id)" />
-    <arg name="base_frame_id" value="$(arg base_frame_id)" />
-    <arg name="laser_frame_id" value="$(arg laser_frame_id)" />
-    <arg name="base_footprint_frame_id" value="$(arg base_footprint_frame_id)" />
-    
-    <arg name="battery_state_output_topic" value="$(arg battery_state_output_topic)" />
-    <arg name="gps_state_output_topic" value="$(arg gps_state_output_topic)" />
+_pla
     <arg name="imu_state_output_topic" value="$(arg imu_state_output_topic)" />
     <arg name="wheel_positions_input_topic" value="$(arg wheel_positions_input_topic)" />
     <arg name="platform_status_output_topic" value="$(arg platform_status_output_topic)" />
@@ -101,16 +93,16 @@
 		<rosparam file="$(find robot_platform)/config/costmap_converter_params.yaml" command="load" /> 
 
 		<param name="base_global_planner" value="global_planner/GlobalPlanner" />
-		<param name="planner_frequency" value="$(arg planner_frequency)" />
-		<param name="planner_patience" value="5.0" />
+		<param name="planner_frequency" value="5.0" />
+		<param name="planner_patience" value="2.0" />
 
 		<param name="recovery_behaviors" value="[{name:reset,type:clear_costmap_recovery/ClearCostmapRecovery}]" />
     
 		<param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
-		<param name="controller_frequency" value="2.0" />
+		<param name="controller_frequency" value="$(arg controller_frequency)" />
 		<param name="controller_patience" value="5.0" />
 
-		<param name="max_planning_retries" value="5" />
+		<param name="max_planning_retries" value="2" />
 	</node>
 
 </launch>
