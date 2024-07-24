@@ -41,7 +41,15 @@
     <arg name="odometry_input_topic" value="$(arg odom_state_output_topic)" />
 		<arg name="controller_frequency" value="$(arg controller_frequency)" />
   </include>
-_pla
+
+  <include file="$(find robot_platform)/launch/wheel_controller.launch">
+    <arg name="odom_frame_id" value="$(arg odom_frame_id)" />
+    <arg name="base_frame_id" value="$(arg base_frame_id)" />
+    <arg name="laser_frame_id" value="$(arg laser_frame_id)" />
+    <arg name="base_footprint_frame_id" value="$(arg base_footprint_frame_id)" />
+    
+    <arg name="battery_state_output_topic" value="$(arg battery_state_output_topic)" />
+    <arg name="gps_state_output_topic" value="$(arg gps_state_output_topic)" />
     <arg name="imu_state_output_topic" value="$(arg imu_state_output_topic)" />
     <arg name="wheel_positions_input_topic" value="$(arg wheel_positions_input_topic)" />
     <arg name="platform_status_output_topic" value="$(arg platform_status_output_topic)" />
@@ -94,7 +102,7 @@ _pla
 
 		<param name="base_global_planner" value="global_planner/GlobalPlanner" />
 		<param name="planner_frequency" value="5.0" />
-		<param name="planner_patience" value="2.0" />
+		<param name="planner_patience" value="5.0" />
 
 		<param name="recovery_behaviors" value="[{name:reset,type:clear_costmap_recovery/ClearCostmapRecovery}]" />
     
