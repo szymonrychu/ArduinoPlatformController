@@ -47,6 +47,25 @@ class PathPlatformController(ROSNode):
     def __send_request(self, r):
         if r:
             self._move_request_publisher.publish(r)
+    
+    def _still_turning(self, r:MoveRequest) -> bool:
+        status_angles = [
+            self._last_platform_status.motor1.servo.angle,
+            self._last_platform_status.motor2.servo.angle,
+            self._last_platform_status.motor3.servo.angle,
+            self._last_platform_status.motor4.servo.angle
+        ]
+        requested_angles = [
+            r.motor1.servo.angle,
+            r.motor2.servo.angle,
+            r.motor3.servo.angle,
+            r.motor4.servo.angle
+        ]
+        deltas_too_big = [
+            abs(s - r) > TINY_ANGLE_DELTA for s, r in zip(status_angles, requested_angles)
+        ]
+        return any(deltas_too_big)
+        
 
     def __can_move_continously(self, angle:float) -> bool:
         return self._can_move_continously > 5 or abs(angle) < SMALL_ANGLE_DELTA
@@ -94,14 +113,14 @@ class PathPlatformController(ROSNode):
             r_in_place.motor4.velocity = 0
             self.__send_request(r_in_place)
             r_in_place.duration = ROTATION_SPEED * self._controller_frequency * (abs_angle_delta/math.pi) # min servo turn duration
-            time.sleep(1.2*r_in_place.duration) # wait until servos are fully turned
-            # wait_counter = 0
-            # while not self.__can_move_continously(angle):
-            #     wait_counter += 1
-            #     time.sleep(TINY_WAIT_S)
-            #     if wait_counter > 5.0/TINY_WAIT_S:
-            #         wait_counter = 0 
-            #         break
+            time.sleep(r_in_place.duration) # wait until servos are fully turned
+            wait_counter = 0
+            while not self._still_turning():
+                wait_counter += 1
+                time.sleep(TINY_WAIT_S)
+                if wait_counter > 5.0/TINY_WAIT_S:
+                    wait_counter = 0 
+                    break
             self.__send_request(r) # send move forward request
 
     def _handle_platform_status(self, status:PlatformStatus):
