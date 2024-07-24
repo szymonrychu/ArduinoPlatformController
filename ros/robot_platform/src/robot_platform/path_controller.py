@@ -66,7 +66,14 @@ class PathPlatformController(ROSNode):
         self._last_angle = angle
         
 
-        if abs_angle_delta > TINY_ANGLE_DELTA or abs(angle) > TINY_ANGLE_DELTA or abs(move_velocity) < 0.25 or (not self._can_move_continously and abs(angle) > 0.6): # it's a big turn, we need to stop entirely
+        angle_delta_tiny = abs_angle_delta < TINY_ANGLE_DELTA
+        angle_tiny = abs(angle) < TINY_ANGLE_DELTA
+        can_move_continously = self._can_move_continously or abs(angle) > 0.6
+        if (angle_delta_tiny or angle_tiny) and can_move_continously:
+            rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
+            r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
+            self.__send_request(r)
+        else:
             rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
             r = create_request(move_velocity/SLOW_DOWN_FACTOR, duration, self._last_platform_status, self.__compute_turning_point(angle))
             r_in_place = deepcopy(r)
@@ -80,10 +87,6 @@ class PathPlatformController(ROSNode):
             while (not self._can_move_continously and abs(angle) > 0.6):
                 time.sleep(0.01)
             self.__send_request(r) # send move forward request
-        else: # it's a small turn, we can do turning and moving at the same time
-            rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
-            r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
-            self.__send_request(r)
 
 
     def _handle_platform_status(self, status:PlatformStatus):
