@@ -66,7 +66,7 @@ class PathPlatformController(ROSNode):
 
         angle_delta_tiny = abs_angle_delta < TINY_ANGLE_DELTA
         angle_tiny = abs(angle) < TINY_ANGLE_DELTA
-        can_move_continously = self._can_move_continously ^ abs(abs_angle_delta) < SMALL_ANGLE_DELTA
+        can_move_continously = self._can_move_continously or abs(abs_angle_delta) < SMALL_ANGLE_DELTA
 
         if (angle_delta_tiny or angle_tiny) and can_move_continously:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
