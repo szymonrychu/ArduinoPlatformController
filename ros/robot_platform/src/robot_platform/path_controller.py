@@ -17,7 +17,7 @@ from nav_msgs.msg import Odometry
 duration = 1.0
 TINY_ANGLE_DELTA = 0.05
 SMALL_ANGLE_DELTA = 0.3
-SLOW_SPEED = 0.2
+SLOW_SPEED = 0.3
 ROTATION_SPEED = math.pi/0.8
 
 class PathPlatformController(ROSNode):
