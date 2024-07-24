@@ -8,6 +8,7 @@ import rospy
 from .ros_helpers import ROSNode
 
 from sensor_msgs.msg import Joy, JoyFeedback
+from actionlib_msgs.msg import GoalID
 from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import Point
 
@@ -68,6 +69,8 @@ class JoyPlatformController(ROSNode):
         self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
 
+        self._cancel_move_publisher = rospy.Publisher('/move_base/cancel', GoalID)
+
         rospy.Timer(rospy.Duration(duration), self._send_request)
         self.spin()
 
@@ -85,6 +88,9 @@ class JoyPlatformController(ROSNode):
                 if os.path.isfile('/shutdown_signal'):
                     with open('/shutdown_signal', 'w') as f:
                         f.write('true')
+            if share_pressed or options_pressed:
+                self._cancel_move_publisher.publish(GoalID())
+                
         if self._last_joy.axes:
             if abs(self._last_joy.axes[0]) < 0.005 and abs(self._last_joy.axes[0]) < 0.005:
                 return
