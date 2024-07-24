@@ -26,7 +26,7 @@ class PathPlatformController(ROSNode):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
         self._last_angle = 0
-        self._can_move_continously = True
+        self._can_move_continously = 0.0
 
         self._last_odometry = Odometry()
 
@@ -49,7 +49,7 @@ class PathPlatformController(ROSNode):
             self._move_request_publisher.publish(r)
 
     def __can_move_continously(self, angle:float) -> bool:
-        return self._can_move_continously or abs(angle) < SMALL_ANGLE_DELTA
+        return self._can_move_continously > 5 or abs(angle) < SMALL_ANGLE_DELTA
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
         angle = 0
@@ -79,13 +79,6 @@ class PathPlatformController(ROSNode):
         turning_point = Point()
         turning_point.y = move_velocity / (angle * self._controller_frequency)
 
-        wait_counter = 0
-        while not self.__can_move_continously(angle):
-            wait_counter += 1
-            time.sleep(TINY_WAIT_S)
-            if wait_counter > 15.0/TINY_WAIT_S:
-                wait_counter = 0 
-                break
 
         if angle_tiny and (not moves_slowly) and not changes_direction:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
@@ -102,19 +95,22 @@ class PathPlatformController(ROSNode):
             self.__send_request(r_in_place)
             r_in_place.duration = ROTATION_SPEED * self._controller_frequency * (abs_angle_delta/math.pi) # min servo turn duration
             time.sleep(1.2*r_in_place.duration) # wait until servos are fully turned
-            # wait_counter = 0
-            # while not self.__can_move_continously(angle):
-            #     wait_counter += 1
-            #     time.sleep(TINY_WAIT_S)
-            #     if wait_counter > 15.0/TINY_WAIT_S:
-            #         wait_counter = 0 
-            #         break
+            wait_counter = 0
+            while not self.__can_move_continously(angle):
+                wait_counter += 1
+                time.sleep(TINY_WAIT_S)
+                if wait_counter > 15.0/TINY_WAIT_S:
+                    wait_counter = 0 
+                    break
             self.__send_request(r) # send move forward request
 
     def _handle_platform_status(self, status:PlatformStatus):
-        self._can_move_continously = compute_relative_turning_point([
-            status.motor1.servo, status.motor2.servo, status.motor3.servo, status.motor4.servo
-        ]) is not None
+        if compute_relative_turning_point([
+                status.motor1.servo, status.motor2.servo, status.motor3.servo, status.motor4.servo
+            ]) is not None:
+            self._can_move_continously += 1
+        else:
+            self._can_move_continously = 0
         self._last_platform_status = status
 
 
