@@ -47,6 +47,8 @@ class PathPlatformController(ROSNode):
         if r:
             self._move_request_publisher.publish(r)
 
+    def __can_move_continously(self, angle:float) -> bool:
+        return self._can_move_continously or abs(angle) < SMALL_ANGLE_DELTA
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
         angle = 0
@@ -68,9 +70,8 @@ class PathPlatformController(ROSNode):
         angle_delta_tiny = abs_angle_delta < TINY_ANGLE_DELTA
         moves_slowly = abs(move_velocity) < SLOW_SPEED
         angle_tiny = abs(angle) < TINY_ANGLE_DELTA
-        can_move_continously = self._can_move_continously or abs(abs_angle_delta) < SMALL_ANGLE_DELTA
 
-        if angle_tiny and (not moves_slowly) and can_move_continously:
+        if angle_tiny and (not moves_slowly) and self.__can_move_continously(angle):
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity, duration, self._last_platform_status, self.__compute_turning_point(angle))
             self.__send_request(r)
@@ -84,11 +85,10 @@ class PathPlatformController(ROSNode):
             r_in_place.motor4.velocity = 0
             self.__send_request(r_in_place)
             r_in_place.duration = ROTATION_SPEED * (abs_angle_delta/math.pi) # min servo turn duration
-            time.sleep(r_in_place.duration*1.2) # wait until servos are fully turned
-            while (not self._can_move_continously and abs(angle) > 0.6):
+            time.sleep(r_in_place.duration) # wait until servos are fully turned
+            while not self.__can_move_continously(angle):
                 time.sleep(0.01)
             self.__send_request(r) # send move forward request
-
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._can_move_continously = compute_relative_turning_point([
