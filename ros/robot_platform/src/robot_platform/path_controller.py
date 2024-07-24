@@ -14,7 +14,6 @@ from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import PoseArray, Twist
 from nav_msgs.msg import Odometry
 
-PLANNER_FREQUENCY = 2
 TINY_ANGLE_DELTA = 0.05
 SMALL_ANGLE_DELTA = 0.3
 SLOW_SPEED = 0.3
@@ -37,6 +36,7 @@ class PathPlatformController(ROSNode):
 
         move_request_output_topic = rospy.get_param('~move_request_output_topic')
         platform_status_input_topic = rospy.get_param('~platform_status_input_topic')
+        self._planner_frequency = rospy.get_param('~planner_frequency')
         
         self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
@@ -77,23 +77,23 @@ class PathPlatformController(ROSNode):
 
 
         turning_point = Point()
-        turning_point.y = move_velocity / (angle * PLANNER_FREQUENCY)
+        turning_point.y = move_velocity / (angle * self._planner_frequency)
 
 
         if angle_tiny and (not moves_slowly) and self.__can_move_continously(angle) and not changes_direction:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
-            r = create_request(move_velocity, 1.0/PLANNER_FREQUENCY, self._last_platform_status, turning_point)
+            r = create_request(move_velocity, 1.0/self._planner_frequency, self._last_platform_status, turning_point)
             self.__send_request(r)
         else:
             rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
-            r = create_request(move_velocity, 1.0/PLANNER_FREQUENCY, self._last_platform_status, turning_point)
+            r = create_request(move_velocity, 1.0/self._planner_frequency, self._last_platform_status, turning_point)
             r_in_place = deepcopy(r)
             r_in_place.motor1.velocity = 0
             r_in_place.motor2.velocity = 0
             r_in_place.motor3.velocity = 0
             r_in_place.motor4.velocity = 0
             self.__send_request(r_in_place)
-            r_in_place.duration = ROTATION_SPEED * PLANNER_FREQUENCY * (abs_angle_delta/math.pi) # min servo turn duration
+            r_in_place.duration = ROTATION_SPEED * self._planner_frequency * (abs_angle_delta/math.pi) # min servo turn duration
             time.sleep(r_in_place.duration) # wait until servos are fully turned
             wait_counter = 0
             while not self.__can_move_continously(angle):
