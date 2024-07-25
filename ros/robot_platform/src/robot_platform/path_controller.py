@@ -62,7 +62,7 @@ class PathPlatformController(ROSNode):
             r.motor4.servo.angle
         ]
         deltas_too_big = [
-            abs(s - r) > TINY_ANGLE_DELTA for s, r in zip(status_angles, requested_angles)
+            abs(s - r) > math.pi/36 for s, r in zip(status_angles, requested_angles)
         ]
         return any(deltas_too_big)
         
