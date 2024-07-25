@@ -92,7 +92,7 @@ class JoyPlatformController(ROSNode):
                 self._cancel_move_publisher.publish(GoalID())
                 
         if self._last_joy.axes:
-            if abs(self._last_joy.axes[0]) < 0.005 and abs(self._last_joy.axes[0]) < 0.005:
+            if abs(self._last_joy.axes[0]) < 0.005 or abs(self._last_joy.axes[0]) < 0.005:
                 return
         
             rel_velocity = -0.25 * self._last_joy.axes[1]
