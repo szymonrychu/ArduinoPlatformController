@@ -99,7 +99,7 @@ class PathPlatformController(ROSNode):
         turning_point.y = move_velocity / (angle * self._controller_frequency)
 
 
-        if angle_tiny and (not moves_slowly) and not changes_direction:
+        if angle_delta_tiny and (not moves_slowly) and not changes_direction:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity, 1.0/self._controller_frequency, self._last_platform_status, turning_point)
             self.__send_request(r)
@@ -114,13 +114,6 @@ class PathPlatformController(ROSNode):
             r_in_place.duration = ROTATION_SPEED * self._controller_frequency * (abs_angle_delta/math.pi) # min servo turn duration
             self.__send_request(r_in_place)
             time.sleep(r_in_place.duration) # wait until servos are fully turned
-            # wait_counter = 0
-            # while self._still_turning(r_in_place):
-            #     wait_counter += 1
-            #     time.sleep(TINY_WAIT_S)
-            #     if wait_counter > 5.0/TINY_WAIT_S:
-            #         wait_counter = 0 
-            #         break
             self.__send_request(r) # send move forward request
 
     def _handle_platform_status(self, status:PlatformStatus):
