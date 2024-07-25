@@ -22,6 +22,7 @@ TINY_WAIT_S = 0.1
 
 class PathPlatformController(ROSNode):
 
+
     def __init__(self):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
