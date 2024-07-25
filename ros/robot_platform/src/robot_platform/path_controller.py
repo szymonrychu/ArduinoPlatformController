@@ -111,7 +111,7 @@ class PathPlatformController(ROSNode):
             r_in_place.motor2.velocity = 0
             r_in_place.motor3.velocity = 0
             r_in_place.motor4.velocity = 0
-            r_in_place.duration = ROTATION_SPEED * (abs_angle_delta/math.pi) # min servo turn duration
+            r_in_place.duration = ROTATION_SPEED * self._controller_frequency * (abs_angle_delta/math.pi) # min servo turn duration
             self.__send_request(r_in_place)
             time.sleep(r_in_place.duration) # wait until servos are fully turned
             self.__send_request(r) # send move forward request
