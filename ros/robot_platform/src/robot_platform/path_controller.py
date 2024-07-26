@@ -119,6 +119,7 @@ class PathPlatformController(ROSNode):
             while self._still_turning(r_in_place) or self._cant_move_continously(angle):
                 if counter > 50:
                     break
+                counter+=1
                 time.sleep(0.01)
             self.__send_request(r) # send move forward request
 
