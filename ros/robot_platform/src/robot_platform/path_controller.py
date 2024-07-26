@@ -69,7 +69,7 @@ class PathPlatformController(ROSNode):
         
 
     def _cant_move_continously(self, angle:float) -> bool:
-        return self._can_move_continously > 5 or abs(angle) < SMALL_ANGLE_DELTA
+        return self._can_move_continously > 5 or abs(angle) < math.pi/36
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
         angle = 0
@@ -117,7 +117,7 @@ class PathPlatformController(ROSNode):
             time.sleep(r_in_place.duration) # wait until servos are fully turned
             counter = 0
             while self._still_turning(r_in_place) or self._cant_move_continously(angle):
-                if counter > 1000:
+                if counter > 50:
                     break
                 time.sleep(0.01)
             self.__send_request(r) # send move forward request
