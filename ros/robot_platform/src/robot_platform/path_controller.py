@@ -76,10 +76,10 @@ class PathPlatformController(ROSNode):
         move_velocity = 0
     
         if cmd_vel.linear.x > 0:
-            move_velocity = max(cmd_vel.linear.x, 0.1)
+            move_velocity = max(cmd_vel.linear.x, 0.2)
             angle = cmd_vel.angular.z
         elif cmd_vel.linear.x < 0:
-            move_velocity = min(cmd_vel.linear.x, -0.1)
+            move_velocity = min(cmd_vel.linear.x, -0.2)
             angle = cmd_vel.angular.z
             
 
@@ -88,7 +88,7 @@ class PathPlatformController(ROSNode):
         
 
         angle_delta_tiny = abs_angle_delta < TINY_ANGLE_DELTA
-        moves_slowly = abs(move_velocity) == 0.1
+        moves_slowly = abs(move_velocity) == 0.2
         angle_tiny = abs(angle) < TINY_ANGLE_DELTA
         changes_direction = (move_velocity < 0 and self._last_velocity > 0) or (move_velocity > 0 and self._last_velocity < 0)
 
