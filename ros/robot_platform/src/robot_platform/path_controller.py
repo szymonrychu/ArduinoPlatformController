@@ -117,7 +117,7 @@ class PathPlatformController(ROSNode):
             time.sleep(r_in_place.duration) # wait until servos are fully turned
             counter = 0
             while self._still_turning(r_in_place) or self._cant_move_continously(angle):
-                if counter > 50:
+                if counter > 75:
                     break
                 counter+=1
                 time.sleep(0.01)
