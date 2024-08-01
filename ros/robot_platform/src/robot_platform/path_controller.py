@@ -19,6 +19,7 @@ SMALL_ANGLE_DELTA = math.pi/12
 SLOW_SPEED = 0.1
 ROTATION_SPEED = math.pi/0.8
 TINY_WAIT_S = 0.1
+CAN_MOVE_CONTINOUSLY_CTR_MAX = 5
 
 class PathPlatformController(ROSNode):
 
@@ -27,7 +28,7 @@ class PathPlatformController(ROSNode):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
         self._last_angle = 0
-        self._can_move_continously = 0.0
+        self.__can_move_continously = 0
 
         self._last_odometry = Odometry()
 
@@ -68,8 +69,8 @@ class PathPlatformController(ROSNode):
         return any(deltas_too_big)
         
 
-    def _cant_move_continously(self, angle:float) -> bool:
-        return self._can_move_continously > 5 or abs(angle) < math.pi/36
+    def _can_move_continously(self, angle:float) -> bool:
+        return self.__can_move_continously == CAN_MOVE_CONTINOUSLY_CTR_MAX or abs(angle) < math.pi/36
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
         angle = 0
@@ -99,8 +100,7 @@ class PathPlatformController(ROSNode):
         turning_point = Point()
         turning_point.y = move_velocity / (angle * self._controller_frequency)
 
-
-        if (angle_delta_tiny or angle_tiny) and not changes_direction:
+        if (angle_delta_tiny or angle_tiny or self._can_move_continously(angle)) and not changes_direction:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity, 1.0, self._last_platform_status, turning_point)
             self.__send_request(r)
@@ -127,10 +127,10 @@ class PathPlatformController(ROSNode):
         if compute_relative_turning_point([
                 status.motor1.servo, status.motor2.servo, status.motor3.servo, status.motor4.servo
             ]) is not None:
-            if self._can_move_continously < 100:
-                self._can_move_continously += 1
+            if self.__can_move_continously < CAN_MOVE_CONTINOUSLY_CTR_MAX:
+                self.__can_move_continously += 1
         else:
-            self._can_move_continously = 0
+            self.__can_move_continously = 0
         self._last_platform_status = status
 
 
