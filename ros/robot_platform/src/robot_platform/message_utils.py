@@ -106,6 +106,7 @@ class MotorStatus(ServoStatus):
     angle: Optional[float] = None
 
 class GPSStatus(BaseModel):
+    fix: bool
     fix_quality: Optional[int] = -1
     satellites: Optional[int] = 0
     speed: Optional[float] = 0
@@ -119,7 +120,7 @@ class GPSStatus(BaseModel):
         nav_sat_fix = NavSatFix()
         nav_sat_fix.header.stamp = timestamp or rospy.Time.now()
         nav_sat_fix.header.frame_id = header_frame_id
-        if self.satellites > 0:
+        if self.fix:
             nav_sat_status.status = NavSatStatus.STATUS_FIX
             nav_sat_status.service = NavSatStatus.SERVICE_GPS
             nav_sat_fix.altitude = self.altitude
@@ -144,7 +145,7 @@ class StatusResponse(Message):
     move_duration: float
     battery: BatteryStatus
     imu: IMUStatus
-    gps: Optional[GPSStatus] = None
+    gps: GPSStatus
     motor1: MotorStatus
     motor2: MotorStatus
     motor3: MotorStatus
@@ -178,8 +179,7 @@ class StatusResponse(Message):
         platform_status.pan.angle = self.pan.angle
         platform_status.tilt.angle = self.tilt.angle
         platform_status.imu = self.imu.parse_ROS_IMU(header_frame_id, timestamp)
-        if self.gps:
-            platform_status.gps = self.gps.parse_ROS_GPS(header_frame_id, timestamp)
+        platform_status.gps = self.gps.parse_ROS_GPS(header_frame_id, timestamp)
         platform_status.battery = self.battery.parse_ROS_Battery(header_frame_id, timestamp)
         return platform_status
 

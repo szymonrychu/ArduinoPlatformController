@@ -254,28 +254,24 @@ void loop(void){
     accelerometer["y"] = angVelocityData.acceleration.y;
     accelerometer["z"] = angVelocityData.acceleration.z;
 
-    if(gps.fix){
-        JsonObject gps_ = doc.createNestedObject("gps");
-        gps_["fix_quality"] = gps.fixquality;
-        gps_["satellites"] = gps.satellites;
-        gps_["speed"] = gps.speed;
-        gps_["angle"] = gps.angle;
-        gps_["altitude"] = gps.altitude;
+    JsonObject gps_ = doc.createNestedObject("gps");
+    gps_["fix"] = gps.fix;
+    gps_["fix_quality"] = gps.fixquality;
+    gps_["satellites"] = gps.satellites;
+    gps_["speed"] = gps.speed;
+    gps_["angle"] = gps.angle;
+    gps_["altitude"] = gps.altitude;
 
-        float gpsDecimalLatitude = 0.0;
-        float gpsDecimalLongitude = 0.0;
-
-        int gps_DD_latitude = int(gps.latitude/100.0);
-        float gps_MMMM_latitude = gps.latitude - 100.0*gps_DD_latitude;
-        gpsDecimalLatitude = gps_DD_latitude + float(gps_MMMM_latitude)/60.0;
-
-        int gps_DDD_longitude = int(gps.longitude/100.0);
-        float gps_MMMM_longitude = gps.longitude - 100.0*gps_DDD_longitude;
-        gpsDecimalLongitude = gps_DDD_longitude + float(gps_MMMM_longitude)/60.0;
-
-        gps_["dec_latitude"] = gpsDecimalLatitude;
-        gps_["dec_longitude"] = gpsDecimalLongitude;
-    }
+    float gpsDecimalLatitude = 0.0;
+    float gpsDecimalLongitude = 0.0;
+    int gps_DD_latitude = int(gps.latitude/100.0);
+    float gps_MMMM_latitude = gps.latitude - 100.0*gps_DD_latitude;
+    gpsDecimalLatitude = gps_DD_latitude + float(gps_MMMM_latitude)/60.0;
+    int gps_DDD_longitude = int(gps.longitude/100.0);
+    float gps_MMMM_longitude = gps.longitude - 100.0*gps_DDD_longitude;
+    gpsDecimalLongitude = gps_DDD_longitude + float(gps_MMMM_longitude)/60.0;
+    gps_["dec_latitude"] = gpsDecimalLatitude;
+    gps_["dec_longitude"] = gpsDecimalLongitude;
 
     JsonObject m1 = doc.createNestedObject("motor1");
     m1["velocity"] = motor1.currentVelocity();
