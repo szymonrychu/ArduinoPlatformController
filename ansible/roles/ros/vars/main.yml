@@ -1,7 +1,0 @@
-ros_version: noetic
-ros_extra_packages: []
-create_workspace: yes
-manage_platform_sources: yes
-manage_etc_hosts: yes
-arduino_platform_url: git@github.com:szymonrychu/ArduinoPlatformController.git
-launch_name: all

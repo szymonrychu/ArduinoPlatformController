@@ -1,59 +1,21 @@
 ---
-- name: update SSH keys
+- name: OpenVPN Server
   hosts: all
-  become: yes
-  tasks:
-    - name: ensure /home/szymonri/.ssh/ directory exists
-      ansible.builtin.file:
-        path: /home/szymonri/.ssh/
-        state: directory
-        mode: '0755'
-    - name: upload ssh keys
-      run_once: yes
-      copy:
-        src: ~/.ssh/{{ item | basename }}
-        dest: "/home/{{ ansible_user }}/.ssh/{{ item | basename }}"
-      loop:
-        - id_rsa
-        - id_rsa.pub
-    - name: ensure proper permissions for ssh keys
-      ansible.builtin.file:
-        state: file
-        mode: '0700'
-        path: "/home/{{ ansible_user }}/.ssh/{{ item | basename }}"
-        owner: szymonri
-        group: szymonri
-      loop:
-        - id_rsa
-        - id_rsa.pub
-
-- name: ROS master
-  hosts: rosmaster
-  become: yes
-  gather_facts: yes
+  become: true
+  become_method: sudo
+  gather_facts: true
 
   tasks:
-        
-    - name: ROS master install
+    # - name: inventory_hostname
+    #   debug:
+    #     var: inventory_hostname
+    #   tags: debug_info
+    
+    - name: Include global variables
+      ansible.builtin.include_vars:
+        file: site.yml
+      
+    - name: Install OpenVPN Server
       ansible.builtin.include_role:
-        name: ros
-      vars:
-        manage_platform_sources: no
-        ros_packages:
-          - desktop-full
-          - hector-mapping
-          - hector-geotiff
+        name: openvpn
 
-- name: ROS robot
-  hosts: platform
-  become: yes
-  gather_facts: yes
-
-  tasks:
-    - name: ROS master install
-      ansible.builtin.include_role:
-        name: ros
-      vars:
-        ros_extra_packages:
-          - hector-mapping
-          - hector-geotiff
