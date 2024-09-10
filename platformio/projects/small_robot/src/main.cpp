@@ -71,6 +71,8 @@ VelocityController motor4(4, M4_ENCA, M4_ENCB, M4_HA, M4_HB, M4_SERV);
 Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x28);
 #define GPSSerial Serial4
 Adafruit_GPS gps(&GPSSerial);
+bool gpsReceiving = false;
+bool gpsParsing = false;
 
 ServoController servoPan(SERV_PAN);
 ServoController servoTilt(SERV_TILT);
@@ -174,6 +176,7 @@ void setup(void){
   gps.begin(9600);
   gps.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   gps.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  gps.sendCommand(PGCMD_ANTENNA);
 
   while(!bno.begin()) {
     OutputMessage(OUTPUT_ERROR, "BNO055 init error").printJson();
@@ -191,7 +194,10 @@ void setup(void){
 
 void serialEvent4() {
   gps.read();
-  if (gps.newNMEAreceived()) gps.parse(gps.lastNMEA());
+  if (gps.newNMEAreceived()) {
+    gpsReceiving = true;
+    gpsParsing = gps.parse(gps.lastNMEA()) || gpsParsing;
+  }
 }
 
 void loop(void){
@@ -255,6 +261,8 @@ void loop(void){
     accelerometer["z"] = angVelocityData.acceleration.z;
 
     JsonObject gps_ = doc.createNestedObject("gps");
+    gps_["receiving"] = gpsReceiving;
+    gps_["parsing"] = gpsParsing;
     gps_["fix"] = gps.fix;
     gps_["fix_quality"] = gps.fixquality;
     gps_["satellites"] = gps.satellites;
