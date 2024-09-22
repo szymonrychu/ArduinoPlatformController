@@ -19,6 +19,7 @@ docker run \
   --rm \
   --privileged \
   --name "${ROS_PACKAGE}-${ROS_LAUNCH_FILE}" \
+  --add-host steamdeck:192.168.1.35 \
   --add-host mobile-overlord:192.168.1.34 \
   --add-host overlord:192.168.1.33 \
   --network host \
