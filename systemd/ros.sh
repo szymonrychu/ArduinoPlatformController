@@ -22,6 +22,7 @@ docker run \
   --add-host steamdeck:192.168.1.35 \
   --add-host mobile-overlord:192.168.1.34 \
   --add-host overlord:192.168.1.33 \
+  --add-host robot:192.168.1.32 \
   --network host \
   -e "ROS_HOSTNAME=robot" \
   -e "ROS_LOG_DIR=/tmp/ros" \
