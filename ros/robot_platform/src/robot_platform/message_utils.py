@@ -126,7 +126,7 @@ class GPSStatus(BaseModel):
             nav_sat_fix.altitude = self.altitude
             nav_sat_fix.latitude = self.dec_latitude
             nav_sat_fix.longitude = self.dec_longitude
-            nav_sat_fix.position_covariance = NavSatFix.COVARIANCE_TYPE_UNKNOWN
+            nav_sat_fix.position_covariance_type = NavSatFix.COVARIANCE_TYPE_UNKNOWN
         else:
             nav_sat_status.status = NavSatStatus.STATUS_NO_FIX
         nav_sat_fix.status = nav_sat_status
