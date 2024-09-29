@@ -98,6 +98,9 @@ class PathPlatformController(ROSNode):
 
 
         turning_point = Point()
+        if angle == 0 or self._controller_frequency == 0:
+            return
+
         turning_point.y = move_velocity / (angle * self._controller_frequency)
 
         if (angle_delta_tiny or angle_tiny or self._can_move_continously(angle)) and not changes_direction:

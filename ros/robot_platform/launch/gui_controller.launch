@@ -1,0 +1,29 @@
+
+<launch>
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
+  <env name="ROS_LOG_DIR" value="/tmp/"/>
+
+  <arg name="joy_topic" default="joy" />
+  <arg name="joy_feedback_topic" default="/joy/feedback" />
+  <arg name="joy_dev" default="/dev/input/js0" />
+  <arg name="move_request_output_topic" default="/robot_platform/wheel_request" />
+  <arg name="autorepeat_rate" default="1" />
+  <arg name="platform_status_input_topic" default="/robot_platform/status"/>
+
+
+  <node pkg="joy" type="joy_node" name="joy_steamdeck" output="screen" respawn="false">
+    <param name="dev" value="$(arg joy_dev)" />
+    <param name="deadzone" value="0.1" />
+    <param name="autorepeat_rate" value="$(arg autorepeat_rate)" />
+    <remap from="joy" to="$(arg joy_topic)" />
+  </node>
+
+  <node pkg="robot_platform" type="gui_controller" name="gui_controller" output="screen" respawn="false">
+    <param name="joy_topic" value="$(arg joy_topic)" />
+    <param name="joy_feedback_topic" value="$(arg joy_feedback_topic)" />
+    <param name="move_request_output_topic" value="$(arg move_request_output_topic)" />
+    <param name="autorepeat_rate" value="$(arg autorepeat_rate)" />
+    <param name="platform_status_input_topic" value="$(arg platform_status_input_topic)" />
+  </node>
+
+</launch>

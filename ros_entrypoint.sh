@@ -7,6 +7,6 @@ set -e
 set -o nounset
 set -o pipefail
 
-sudo chmod 666 /dev/serial/by-id/*
+sudo chmod 666 /dev/serial/by-id/* || true
 
 exec "$@"

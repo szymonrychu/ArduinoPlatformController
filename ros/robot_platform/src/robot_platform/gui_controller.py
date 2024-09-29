@@ -1,0 +1,257 @@
+
+## Then load sys to get sys.argv.
+import sys
+import os
+
+## Next import all the Qt bindings into the current namespace, for
+## convenience.  This uses the "python_qt_binding" package which hides
+## differences between PyQt and PySide, and works if at least one of
+## the two is installed.  The RViz Python bindings use
+## python_qt_binding internally, so you should use it here as well.
+from python_qt_binding.QtGui import *
+from python_qt_binding.QtCore import *
+try:
+    from python_qt_binding.QtWidgets import *
+except ImportError:
+    pass
+from .log_utils import env2log
+
+## Finally import the RViz bindings themselves.
+from rviz import bindings as rviz
+
+from .odometry_helpers import PlatformStatics, create_request
+import rospy
+
+from sensor_msgs.msg import Joy, JoyFeedback
+from actionlib_msgs.msg import GoalID
+from robot_platform.msg import PlatformStatus, MoveRequest
+from geometry_msgs.msg import Point
+
+
+duration = 0.1
+
+## The MyViz class is the main container widget.
+class MyViz(QWidget):
+
+    ## MyViz Constructor
+    ## ^^^^^^^^^^^^^^^^^
+    ##
+    ## Its constructor creates and configures all the component widgets:
+    ## frame, thickness_slider, top_button, and side_button, and adds them
+    ## to layouts.
+    def __init__(self, name='robot_platform'):
+        QWidget.__init__(self)
+        rospy.init_node(name, log_level=env2log(), anonymous=True)
+
+        ## rviz.VisualizationFrame is the main container widget of the
+        ## regular RViz application, with menus, a toolbar, a status
+        ## bar, and many docked subpanels.  In this example, we
+        ## disable everything so that the only thing visible is the 3D
+        ## render window.
+        self.frame = rviz.VisualizationFrame()
+
+        ## The "splash path" is the full path of an image file which
+        ## gets shown during loading.  Setting it to the empty string
+        ## suppresses that behavior.
+        self.frame.setSplashPath( "" )
+
+        ## VisualizationFrame.initialize() must be called before
+        ## VisualizationFrame.load().  In fact it must be called
+        ## before most interactions with RViz classes because it
+        ## instantiates and initializes the VisualizationManager,
+        ## which is the central class of RViz.
+        self.frame.initialize()
+
+        ## The reader reads config file data into the config object.
+        ## VisualizationFrame reads its data from the config object.
+        reader = rviz.YamlConfigReader()
+        config = rviz.Config()
+        
+
+        mapping_rviz = ''
+        with open('/home/deck/Documents/ArduinoPlatformController/ros/robot_platform/config/mapping.rviz') as f:
+            mapping_rviz = f.read()
+            
+        reader.readString( config, mapping_rviz )
+        self.frame.load( config )
+
+        ## You can also store any other application data you like in
+        ## the config object.  Here we read the window title from the
+        ## map key called "Title", which has been added by hand to the
+        ## config file.
+        self.setWindowTitle( config.mapGetChild( "Title" ).getValue() )
+
+        ## Here we disable the menu bar (from the top), status bar
+        ## (from the bottom), and the "hide-docks" buttons, which are
+        ## the tall skinny buttons on the left and right sides of the
+        ## main render window.
+        self.frame.setMenuBar( None )
+        self.frame.setStatusBar( None )
+        self.frame.setHideButtonVisibility( False )
+
+        ## frame.getManager() returns the VisualizationManager
+        ## instance, which is a very central class.  It has pointers
+        ## to other manager objects and is generally required to make
+        ## any changes in an rviz instance.
+        self.manager = self.frame.getManager()
+
+        ## Since the config file is part of the source code for this
+        ## example, we know that the first display in the list is the
+        ## grid we want to control.  Here we just save a reference to
+        ## it for later.
+        self.grid_display = self.manager.getRootDisplayGroup().getDisplayAt( 0 )
+        
+        ## Here we create the layout and other widgets in the usual Qt way.
+        layout = QVBoxLayout()
+        layout.addWidget( self.frame )
+        
+        thickness_slider = QSlider( Qt.Horizontal )
+        thickness_slider.setTracking( True )
+        thickness_slider.setMinimum( 1 )
+        thickness_slider.setMaximum( 1000 )
+        thickness_slider.valueChanged.connect( self.onThicknessSliderChanged )
+        layout.addWidget( thickness_slider )
+        
+        h_layout = QHBoxLayout()
+        
+        top_button = QPushButton( "map" )
+        top_button.clicked.connect( self.onTopButtonClick )
+        h_layout.addWidget( top_button )
+        
+        side_button = QPushButton( "base_link" )
+        side_button.clicked.connect( self.onSideButtonClick )
+        h_layout.addWidget( side_button )
+        
+        layout.addLayout( h_layout )
+        
+        self.setLayout( layout )
+
+        self._last_platform_status = PlatformStatus()
+        self._last_joy = Joy()
+        self._last_limited_deltas = [0.0] * PlatformStatics.MOTOR_NUM
+        self._last_request = None
+        print(rospy.get_name())
+        self._autorepeat_rate = rospy.get_param('~autorepeat_rate')
+        joy_input_topic = rospy.get_param('~joy_topic')
+        joy_output_topic = rospy.get_param('~joy_feedback_topic')
+        move_request_output_topic = rospy.get_param('~move_request_output_topic')
+        platform_status_input_topic = rospy.get_param('~platform_status_input_topic')
+
+        rospy.Subscriber(joy_input_topic, Joy, self._handle_joystick_updates)
+        self._joy_feedback_publisher = rospy.Publisher(joy_output_topic, JoyFeedback)
+        self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
+        rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
+
+        self._cancel_move_publisher = rospy.Publisher('/move_base/cancel', GoalID)
+
+        rospy.Timer(rospy.Duration(duration), self._send_request)
+        self._rospy_timer = rospy.Timer(rospy.Duration(1), self._rospy_spin) # start the ros spin after 1 s
+
+    def _rospy_spin(self, *args, **kwargs):
+        rospy.spin()
+        self._rospy_timer.shutdown()
+
+    def _handle_joystick_updates(self, data:Joy):
+        print(data)
+        self._last_joy = data
+
+    def _handle_platform_status(self, status:PlatformStatus):
+        print(status)
+        self._last_platform_status = status
+
+    def _send_request(self, event=None):
+        if self._last_joy.buttons:
+            share_pressed = self._last_joy.buttons[8] == 1
+            options_pressed = self._last_joy.buttons[9] == 1
+            if share_pressed and options_pressed:
+                if os.path.isfile('/shutdown_signal'):
+                    with open('/shutdown_signal', 'w') as f:
+                        f.write('true')
+            if share_pressed or options_pressed:
+                self._cancel_move_publisher.publish(GoalID())
+                
+        if self._last_joy.axes:        
+            rel_velocity = -0.25 * self._last_joy.axes[1]
+            if rel_velocity < 0:
+                rel_velocity = rel_velocity
+            elif rel_velocity > 0:
+                rel_velocity = rel_velocity
+            # rel_velocity = 0.3
+            
+            turn_radius = round(-1.95 * self._last_joy.axes[0], 2)
+            if turn_radius < 0:
+                turn_radius = max(turn_radius, -1.99)
+            elif turn_radius > 0:
+                turn_radius = min(turn_radius, 1.99)
+            if turn_radius > 0.01:
+                turn_radius = 2 - turn_radius + (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
+
+            elif turn_radius < -0.01:
+                turn_radius = -2 - turn_radius - (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
+
+            velocity = 0.0
+            boost = 1.0 + 3*(-self._last_joy.axes[3]+1)/2
+            if abs(rel_velocity) > PlatformStatics.MOVE_VELOCITY/100.0:
+                velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
+            
+            turning_point = None
+            if abs(turn_radius) > PlatformStatics.MIN_ANGLE_DIFF:
+                turning_point = Point()
+                turning_point.y = -turn_radius
+
+            r = create_request(velocity, duration, self._last_platform_status, turning_point)
+            if r:
+                self._move_request_publisher.publish(r)
+
+
+    ## Handle GUI events
+    ## ^^^^^^^^^^^^^^^^^
+    ##
+    ## After the constructor, for this example the class just needs to
+    ## respond to GUI events.  Here is the slider callback.
+    ## rviz.Display is a subclass of rviz.Property.  Each Property can
+    ## have sub-properties, forming a tree.  To change a Property of a
+    ## Display, use the subProp() function to walk down the tree to
+    ## find the child you need.
+    def onThicknessSliderChanged( self, new_value ):
+        if self.grid_display != None:
+            self.grid_display.subProp( "Line Style" ).subProp( "Line Width" ).setValue( new_value / 1000.0 )
+
+    ## The view buttons just call switchToView() with the name of a saved view.
+    def onTopButtonClick( self ):
+        self.switchToView( "map" );
+        
+    def onSideButtonClick( self ):
+        self.switchToView( "base_link" );
+        
+    ## switchToView() works by looping over the views saved in the
+    ## ViewManager and looking for one with a matching name.
+    ##
+    ## view_man.setCurrentFrom() takes the saved view
+    ## instance and copies it to set the current view
+    ## controller.
+    def switchToView( self, view_name ):
+        view_man = self.manager.getViewManager()
+        for i in range( view_man.getNumViews() ):
+            if view_man.getViewAt( i ).getName() == view_name:
+                view_man.setCurrentFrom( view_man.getViewAt( i ))
+                return
+        print( "Did not find view named %s." % view_name )
+
+## Start the Application
+## ^^^^^^^^^^^^^^^^^^^^^
+##
+## That is just about it.  All that's left is the standard Qt
+## top-level application code: create a QApplication, instantiate our
+## class, and start Qt's main event loop (app.exec_()).
+def main():
+    app = QApplication( sys.argv )
+
+    myviz = MyViz()
+    myviz.resize( 1280, 800 )
+    myviz.show()
+
+    sys.exit(app.exec())
+
+if __name__ == '__main__':
+    main()
