@@ -86,10 +86,9 @@ class WheelController(ROSNode, SafeSerialWrapper):
             self.stop()
     
     def _handle_shutdown_command(self, ros_data:String):
-        if ros_data.data == 'shutdown':
-            if os.path.isfile('/shutdown_signal'):
-                with open('/shutdown_signal', 'w') as f:
-                    f.write('true')
+        if os.path.isfile('/shutdown_signal'):
+            with open('/shutdown_signal', 'w') as f:
+                f.write('true')
 
     def _handle_serial(self, *_args, **_kwargs):
         raw_data = self.read_data()

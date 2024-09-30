@@ -104,11 +104,11 @@ class PathPlatformController(ROSNode):
 
         if (angle_delta_tiny or angle_tiny or self._can_move_continously(angle)) and not changes_direction:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
-            r = create_request(move_velocity, 1.0, self._last_platform_status, turning_point)
+            r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
             self.__send_request(r)
         else:
             rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
-            r = create_request(move_velocity, 1.0, self._last_platform_status, turning_point)
+            r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
             r_in_place = deepcopy(r)
             r_in_place.motor1.velocity = 0
             r_in_place.motor2.velocity = 0

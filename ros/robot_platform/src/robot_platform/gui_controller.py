@@ -30,6 +30,8 @@ from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import Point
 from std_msgs.msg import String
 
+from threading import Lock
+
 
 duration = 0.1
 
@@ -144,7 +146,6 @@ class MyViz(QWidget):
         self._last_joy = Joy()
         self._last_limited_deltas = [0.0] * PlatformStatics.MOTOR_NUM
         self._last_request = None
-        self._autorepeat_rate = rospy.get_param('~autorepeat_rate')
         joy_input_topic = rospy.get_param('~joy_topic')
         joy_output_topic = rospy.get_param('~joy_feedback_topic')
         move_request_output_topic = rospy.get_param('~move_request_output_topic')
@@ -161,6 +162,8 @@ class MyViz(QWidget):
 
         rospy.Timer(rospy.Duration(duration), self._send_request)
         self._rospy_timer = rospy.Timer(rospy.Duration(1), self._rospy_spin) # start the ros spin after 1 s
+        self._request_lock = Lock()
+        self._last_request = None
 
     def _rospy_spin(self, *args, **kwargs):
         rospy.spin()
@@ -175,33 +178,33 @@ class MyViz(QWidget):
         self._shutdown_command_publisher.publish(data)
 
     def _handle_joystick_updates(self, data:Joy):
-        self._last_joy = data
-
-    def _handle_platform_status(self, status:PlatformStatus):
-        self._last_platform_status = status
-
-    def _send_request(self, event=None):                
-        if self._last_joy.axes:        
-            rel_velocity = -0.25 * self._last_joy.axes[1]
-            if rel_velocity < 0:
-                rel_velocity = rel_velocity
-            elif rel_velocity > 0:
-                rel_velocity = rel_velocity
-            # rel_velocity = 0.3
+        if data.axes:        
+            rel_velocity = -0.25 * data.axes[1]
             
-            turn_radius = round(-1.95 * self._last_joy.axes[0], 2)
+            if rel_velocity < -0.025:
+                rel_velocity = rel_velocity
+            elif rel_velocity > 0.025:
+                rel_velocity = rel_velocity
+            else:
+                rel_velocity = 0
+
+            
+            turn_radius = round(-1.95 * data.axes[0], 2)
+            
             if turn_radius < 0:
                 turn_radius = max(turn_radius, -1.99)
             elif turn_radius > 0:
                 turn_radius = min(turn_radius, 1.99)
-            if turn_radius > 0.01:
+            
+            if turn_radius > 0.05:
                 turn_radius = 2 - turn_radius + (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
-
-            elif turn_radius < -0.01:
+            elif turn_radius < -0.05:
                 turn_radius = -2 - turn_radius - (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
+            else:
+                turn_radius = 0
 
             velocity = 0.0
-            boost = 1.0 + 3*(-self._last_joy.axes[3]+1)/2
+            boost = 1.0 + 3*(-data.axes[3]+1)/2
             if abs(rel_velocity) > PlatformStatics.MOVE_VELOCITY/100.0:
                 velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
             
@@ -209,10 +212,20 @@ class MyViz(QWidget):
             if abs(turn_radius) > PlatformStatics.MIN_ANGLE_DIFF:
                 turning_point = Point()
                 turning_point.y = -turn_radius
+            
+            if turn_radius or abs(velocity) > 0.01:
+                r = create_request(velocity, 1.5*duration, self._last_platform_status, turning_point)
+                with self._request_lock:
+                    self._last_request = r
 
-            r = create_request(velocity, duration, self._last_platform_status, turning_point)
-            if r:
-                self._move_request_publisher.publish(r)
+    def _handle_platform_status(self, status:PlatformStatus):
+        self._last_platform_status = status
+
+    def _send_request(self, event=None):
+        with self._request_lock:
+            if self._last_request:
+                self._move_request_publisher.publish(self._last_request)
+                self._last_request = None
 
 
     ## Handle GUI events
