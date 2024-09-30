@@ -11,6 +11,7 @@ from sensor_msgs.msg import Joy, JoyFeedback
 from actionlib_msgs.msg import GoalID
 from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import Point
+from std_msgs.msg import String
 
 '''
 
