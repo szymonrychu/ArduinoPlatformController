@@ -28,6 +28,7 @@ from actionlib_msgs.msg import GoalID
 from std_msgs.msg import String
 from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import Point
+from std_msgs.msg import String
 
 
 duration = 0.1
