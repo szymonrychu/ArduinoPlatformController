@@ -63,16 +63,23 @@ class JoyPlatformController(ROSNode):
         joy_output_topic = rospy.get_param('~joy_feedback_topic')
         move_request_output_topic = rospy.get_param('~move_request_output_topic')
         platform_status_input_topic = rospy.get_param('~platform_status_input_topic')
+        shutdown_command_output_topic = rospy.get_param('~shutdown_command_output_topic')
 
         rospy.Subscriber(joy_input_topic, Joy, self._handle_joystick_updates)
         self._joy_feedback_publisher = rospy.Publisher(joy_output_topic, JoyFeedback)
         self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
+        self._shutdown_command_publisher = rospy.Publisher(shutdown_command_output_topic, String, queue_size=10)
 
         self._cancel_move_publisher = rospy.Publisher('/move_base/cancel', GoalID)
 
         rospy.Timer(rospy.Duration(duration), self._send_request)
         self.spin()
+
+    def _send_shutdown_command(self):
+        data = String()
+        data.data = 'shutdown'
+        self._shutdown_command_publisher.publish(data)
 
     def _handle_joystick_updates(self, data:Joy):
         self._last_joy = data
@@ -86,8 +93,7 @@ class JoyPlatformController(ROSNode):
             options_pressed = self._last_joy.buttons[9] == 1
             if share_pressed and options_pressed:
                 if os.path.isfile('/shutdown_signal'):
-                    with open('/shutdown_signal', 'w') as f:
-                        f.write('true')
+                    self._send_shutdown_command()
             if share_pressed or options_pressed:
                 self._cancel_move_publisher.publish(GoalID())
                 

@@ -53,8 +53,10 @@ class WheelController(ROSNode, SafeSerialWrapper):
 
         raw_input_topic = rospy.get_param('~raw_input_topic')
         raw_output_topic = rospy.get_param('~raw_output_topic')
+        shutdown_command_input_topic = rospy.get_param('~shutdown_command_input_topic')
         rospy.Subscriber(raw_input_topic, String, self._write_raw_data)
         self._raw_log_publisher = rospy.Publisher(raw_output_topic, String)
+        rospy.Subscriber(shutdown_command_input_topic, String, self._handle_shutdown_command)
 
         wheel_positions_input_topic = rospy.get_param('~wheel_positions_input_topic')
         platform_status_output_topic = rospy.get_param('~platform_status_output_topic')
@@ -71,6 +73,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu, queue_size=10)
         self._odometry_publisher = rospy.Publisher(odometry_output_topic, Odometry, queue_size=10)
         self._pose_publisher = rospy.Publisher(pose_output_topic, PoseStamped, queue_size=10)
+        
 
         rospy.Timer(rospy.Duration(0.001), self._handle_serial)
 
@@ -82,6 +85,11 @@ class WheelController(ROSNode, SafeSerialWrapper):
         if not result:
             self.stop()
     
+    def _handle_shutdown_command(self, ros_data:String):
+        if ros_data.data == 'shutdown':
+            if os.path.isfile('/shutdown_signal'):
+                with open('/shutdown_signal', 'w') as f:
+                    f.write('true')
 
     def _handle_serial(self, *_args, **_kwargs):
         raw_data = self.read_data()

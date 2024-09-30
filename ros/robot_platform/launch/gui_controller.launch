@@ -9,6 +9,7 @@
   <arg name="move_request_output_topic" default="/robot_platform/wheel_request" />
   <arg name="autorepeat_rate" default="1" />
   <arg name="platform_status_input_topic" default="/robot_platform/status"/>
+  <arg name="shutdown_command_output_topic" default="/robot_platform/shutdown"/>
 
 
   <node pkg="joy" type="joy_node" name="joy_steamdeck" output="screen" respawn="false">
@@ -24,6 +25,7 @@
     <param name="move_request_output_topic" value="$(arg move_request_output_topic)" />
     <param name="autorepeat_rate" value="$(arg autorepeat_rate)" />
     <param name="platform_status_input_topic" value="$(arg platform_status_input_topic)" />
+    <param name="shutdown_command_output_topic" type="string" value="$(arg shutdown_command_output_topic)" />
   </node>
 
 </launch>

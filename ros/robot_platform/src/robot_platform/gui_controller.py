@@ -2,6 +2,7 @@
 ## Then load sys to get sys.argv.
 import sys
 import os
+import time
 
 ## Next import all the Qt bindings into the current namespace, for
 ## convenience.  This uses the "python_qt_binding" package which hides
@@ -24,6 +25,7 @@ import rospy
 
 from sensor_msgs.msg import Joy, JoyFeedback
 from actionlib_msgs.msg import GoalID
+from std_msgs.msg import String
 from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import Point
 
@@ -103,26 +105,37 @@ class MyViz(QWidget):
         
         ## Here we create the layout and other widgets in the usual Qt way.
         layout = QVBoxLayout()
+
+        upper_buttons_layout = QHBoxLayout()
+        main_view_button = QPushButton( "main" )
+        # main_view_button.clicked.connect( self.onTopButtonClick )
+        details_view_button = QPushButton( "details" )
+        # main_view_button.clicked.connect( self.onTopButtonClick )
+        upper_buttons_layout.addWidget( main_view_button )
+        upper_buttons_layout.addWidget( details_view_button )
+        layout.addLayout( upper_buttons_layout )
+
         layout.addWidget( self.frame )
         
-        thickness_slider = QSlider( Qt.Horizontal )
-        thickness_slider.setTracking( True )
-        thickness_slider.setMinimum( 1 )
-        thickness_slider.setMaximum( 1000 )
-        thickness_slider.valueChanged.connect( self.onThicknessSliderChanged )
-        layout.addWidget( thickness_slider )
+        # thickness_slider = QSlider( Qt.Horizontal )
+        # thickness_slider.setTracking( True )
+        # thickness_slider.setMinimum( 1 )
+        # thickness_slider.setMaximum( 1000 )
+        # thickness_slider.valueChanged.connect( self.onThicknessSliderChanged )
+        # layout.addWidget( thickness_slider )
         
-        h_layout = QHBoxLayout()
-        
-        top_button = QPushButton( "map" )
-        top_button.clicked.connect( self.onTopButtonClick )
-        h_layout.addWidget( top_button )
-        
-        side_button = QPushButton( "base_link" )
-        side_button.clicked.connect( self.onSideButtonClick )
-        h_layout.addWidget( side_button )
-        
-        layout.addLayout( h_layout )
+        commands_layout = QHBoxLayout()
+        stop_command_button = QPushButton( "stop" )
+        stop_command_button.clicked.connect( self._send_stop_command )
+        rebuild_map_button = QPushButton( "rebuild map" )
+        rebuild_map_button.clicked.connect( self._send_stop_command )
+        shutdown_command_button = QPushButton( "shutdown" )
+        shutdown_command_button.clicked.connect( self._send_shutdown_command )
+        commands_layout.addWidget( stop_command_button )
+        commands_layout.addWidget( rebuild_map_button )
+        commands_layout.addWidget( shutdown_command_button )
+                
+        layout.addLayout( commands_layout )
         
         self.setLayout( layout )
 
@@ -130,17 +143,18 @@ class MyViz(QWidget):
         self._last_joy = Joy()
         self._last_limited_deltas = [0.0] * PlatformStatics.MOTOR_NUM
         self._last_request = None
-        print(rospy.get_name())
         self._autorepeat_rate = rospy.get_param('~autorepeat_rate')
         joy_input_topic = rospy.get_param('~joy_topic')
         joy_output_topic = rospy.get_param('~joy_feedback_topic')
         move_request_output_topic = rospy.get_param('~move_request_output_topic')
         platform_status_input_topic = rospy.get_param('~platform_status_input_topic')
+        shutdown_command_output_topic = rospy.get_param('~shutdown_command_output_topic')
 
         rospy.Subscriber(joy_input_topic, Joy, self._handle_joystick_updates)
         self._joy_feedback_publisher = rospy.Publisher(joy_output_topic, JoyFeedback)
         self._move_request_publisher = rospy.Publisher(move_request_output_topic, MoveRequest)
         rospy.Subscriber(platform_status_input_topic, PlatformStatus, self._handle_platform_status)
+        self._shutdown_command_publisher = rospy.Publisher(shutdown_command_output_topic, String, queue_size=10)
 
         self._cancel_move_publisher = rospy.Publisher('/move_base/cancel', GoalID)
 
@@ -151,25 +165,21 @@ class MyViz(QWidget):
         rospy.spin()
         self._rospy_timer.shutdown()
 
+    def _send_stop_command(self):
+        self._cancel_move_publisher.publish(GoalID())
+
+    def _send_shutdown_command(self):
+        data = String()
+        data.data = 'shutdown'
+        self._shutdown_command_publisher.publish(data)
+
     def _handle_joystick_updates(self, data:Joy):
-        print(data)
         self._last_joy = data
 
     def _handle_platform_status(self, status:PlatformStatus):
-        print(status)
         self._last_platform_status = status
 
-    def _send_request(self, event=None):
-        if self._last_joy.buttons:
-            share_pressed = self._last_joy.buttons[8] == 1
-            options_pressed = self._last_joy.buttons[9] == 1
-            if share_pressed and options_pressed:
-                if os.path.isfile('/shutdown_signal'):
-                    with open('/shutdown_signal', 'w') as f:
-                        f.write('true')
-            if share_pressed or options_pressed:
-                self._cancel_move_publisher.publish(GoalID())
-                
+    def _send_request(self, event=None):                
         if self._last_joy.axes:        
             rel_velocity = -0.25 * self._last_joy.axes[1]
             if rel_velocity < 0:

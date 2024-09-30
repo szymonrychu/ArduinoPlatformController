@@ -24,6 +24,7 @@
   <arg name="odom_state_output_topic" default="/robot_platform/odom"/>
   <arg name="pose_output_topic" default="/robot_platform/pose"/>
   <arg name="wheel_positions_input_topic" default="/robot_platform/wheel_request"/>
+  <arg name="shutdown_command_input_topic" default="/robot_platform/shutdown"/>
   <arg name="platform_status_output_topic" default="/robot_platform/status"/>
 
   <arg name="controller_frequency" default="2.0"/>
@@ -32,6 +33,7 @@
 
   <include file="$(find robot_platform)/launch/joy_controller.launch">
     <arg name="move_request_output_topic" value="$(arg wheel_positions_input_topic)" />
+    <arg name="shutdown_command_output_topic" value="$(arg shutdown_command_input_topic)" />
     <arg name="platform_status_input_topic" value="$(arg platform_status_output_topic)" />
   </include>
 
@@ -52,6 +54,7 @@
     <arg name="gps_state_output_topic" value="$(arg gps_state_output_topic)" />
     <arg name="imu_state_output_topic" value="$(arg imu_state_output_topic)" />
     <arg name="wheel_positions_input_topic" value="$(arg wheel_positions_input_topic)" />
+    <arg name="shutdown_command_input_topic" value="$(arg shutdown_command_input_topic)" />
     <arg name="platform_status_output_topic" value="$(arg platform_status_output_topic)" />
     <arg name="odom_state_output_topic" value="$(arg odom_state_output_topic)" />
     <arg name="pose_output_topic" value="$(arg pose_output_topic)" />
@@ -104,7 +107,7 @@
 		<param name="planner_frequency" value="$(arg controller_frequency)" />
 		<param name="planner_patience" value="5.0" />
 
-		<param name="recovery_behaviors" value="[{name:reset,type:clear_costmap_recovery/ClearCostmapRecovery}]" />
+		<param name="recovery_behaviors" value="[{name:move_slow_and_clear,type:move_slow_and_clear/MoveSlowAndClear}]" />
     
 		<param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
 		<param name="controller_frequency" value="$(arg controller_frequency)" />
