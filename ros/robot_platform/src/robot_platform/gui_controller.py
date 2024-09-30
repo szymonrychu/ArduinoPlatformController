@@ -129,7 +129,7 @@ class MyViz(QWidget):
         stop_command_button = QPushButton( "stop" )
         stop_command_button.clicked.connect( self._send_stop_command )
         rebuild_map_button = QPushButton( "rebuild map" )
-        rebuild_map_button.clicked.connect( self._send_stop_command )
+        # rebuild_map_button.clicked.connect( self._send_stop_command )
         shutdown_command_button = QPushButton( "shutdown" )
         shutdown_command_button.clicked.connect( self._send_shutdown_command )
         commands_layout.addWidget( stop_command_button )
