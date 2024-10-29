@@ -228,10 +228,10 @@ class MyViz(QWidget):
     def _get_pan_update(self, x_axis:float) -> float:
         if abs(x_axis) < 0.01:
             return None
-        yaw_update = self._last_pan_angle + x_axis*0.005
-        if yaw_update > math.pi/2:
+        yaw_update = self._last_pan_angle + x_axis*0.001
+        if yaw_update >= math.pi/2:
             yaw_update = math.pi
-        if yaw_update < -math.pi/2:
+        if yaw_update <= -math.pi/2:
             yaw_update = -math.pi
         self._last_pan_angle = yaw_update
         return yaw_update
@@ -239,10 +239,10 @@ class MyViz(QWidget):
     def _get_tilt_update(self, y_axis:float) -> float:
         if abs(y_axis) < 0.01:
             return None
-        tilt_update = self._last_tilt_angle + y_axis*0.005
-        if tilt_update > math.pi/2:
+        tilt_update = self._last_tilt_angle + y_axis*0.002
+        if tilt_update >= math.pi/2:
             tilt_update = math.pi
-        if tilt_update < -math.pi/2:
+        if tilt_update <= -math.pi/2:
             tilt_update = -math.pi
         self._last_tilt_angle = tilt_update
         return tilt_update
@@ -254,7 +254,7 @@ class MyViz(QWidget):
             velocity = self._get_velocity(data.axes[1], data.axes[2])
             turn_radius = self._get_turn_radius(data.axes[0])
 
-            pan = self._get_pan_update(-data.axes[4])
+            pan = self._get_pan_update(data.axes[4])
             tilt = self._get_tilt_update(data.axes[3])
             
             turning_point = None
