@@ -226,9 +226,9 @@ class MyViz(QWidget):
         return turn_radius
 
     def _get_pan_update(self, x_axis:float) -> float:
-        if abs(x_axis) < 0.1:
+        if abs(x_axis) < 0.01:
             return None
-        yaw_update = self._last_pan_angle + x_axis*0.01
+        yaw_update = self._last_pan_angle + x_axis*0.005
         if yaw_update > math.pi/2:
             yaw_update = math.pi
         if yaw_update < -math.pi/2:
@@ -237,9 +237,9 @@ class MyViz(QWidget):
         return yaw_update
 
     def _get_tilt_update(self, y_axis:float) -> float:
-        if abs(y_axis) < 0.1:
+        if abs(y_axis) < 0.01:
             return None
-        tilt_update =  self._last_tilt_angle + y_axis*0.01
+        tilt_update = self._last_tilt_angle + y_axis*0.005
         if tilt_update > math.pi/2:
             tilt_update = math.pi
         if tilt_update < -math.pi/2:
@@ -251,12 +251,11 @@ class MyViz(QWidget):
 
         if data.axes:
 
-            velocity = self._get_velocity(data.axes[1], data.axes[3])
+            velocity = self._get_velocity(data.axes[1], data.axes[2])
             turn_radius = self._get_turn_radius(data.axes[0])
 
-            pan = self._get_pan_update(data.axes[2])
-            tilt = self._get_tilt_update(data.axes[3])
-
+            pan = self._get_pan_update(data.axes[4])
+            tilt = self._get_tilt_update(-data.axes[3])
             
             turning_point = None
             if abs(turn_radius) > PlatformStatics.MIN_ANGLE_DIFF:
