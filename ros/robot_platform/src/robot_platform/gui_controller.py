@@ -48,6 +48,10 @@ class MyViz(QWidget):
         QWidget.__init__(self)
         rospy.init_node(name, log_level=env2log(), anonymous=True)
 
+        self._left_trigger_was_max = False
+        self._last_pan_angle = 0.0
+        self._last_tilt_angle = 0.0
+
         ## rviz.VisualizationFrame is the main container widget of the
         ## regular RViz application, with menus, a toolbar, a status
         ## bar, and many docked subpanels.  In this example, we
@@ -164,9 +168,6 @@ class MyViz(QWidget):
         self._rospy_timer = rospy.Timer(rospy.Duration(1), self._rospy_spin) # start the ros spin after 1 s
         self._request_lock = Lock()
         self._last_request = None
-        self._left_trigger_was_max = False
-        self._last_yaw_angle = 0.0
-        self._last_tilt_angle = 0.0
 
     def _rospy_spin(self, *args, **kwargs):
         rospy.spin()
@@ -180,7 +181,7 @@ class MyViz(QWidget):
         data.data = 'shutdown'
         self._shutdown_command_publisher.publish(data)
     
-    def _get_forward_velocity(self, y_axis:float, left_trigger:float) -> float:
+    def _get_velocity(self, y_axis:float, left_trigger:float) -> float:
         rel_velocity = -0.25 * y_axis
         
         if rel_velocity < -0.025:
@@ -193,13 +194,13 @@ class MyViz(QWidget):
 
         velocity = 0.0
 
-        if not self._left_trigger_was_max and left_trigger > 0.9:
+        if not self._left_trigger_was_max and abs(left_trigger) > 0.5:
             self._left_trigger_was_max = True
 
         if self._left_trigger_was_max:
             boost = 1.0 + 3*(1-left_trigger)/2
         else:
-            boost = 0.0
+            boost = 1.0
     
         if abs(rel_velocity) > PlatformStatics.MOVE_VELOCITY/100.0:
             velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
@@ -223,25 +224,32 @@ class MyViz(QWidget):
         
         return turn_radius
 
-    def _get_yaw_update(self, x_axis:float) -> float:
-        yaw_update = self._last_yaw_angle += x_axis
-        self._last_yaw_angle = yaw_update
+    def _get_pan_update(self, x_axis:float) -> float:
+        if abs(x_axis) < 0.1:
+            return None
+        yaw_update = self._last_pan_angle = self._last_pan_angle + x_axis
+        self._last_pan_angle = yaw_update
         return yaw_update
 
     def _get_tilt_update(self, y_axis:float) -> float:
-        tilt_update = self._last_tilt_angle += y_axis
+        if abs(y_axis) < 0.1:
+            return None
+        tilt_update = self._last_tilt_angle = self._last_tilt_angle + y_axis
         self._last_tilt_angle = tilt_update
         return tilt_update
 
-    def _handle_joystick_updates(self, x_axis:float, y_axis:float, left_trigger:float) ->:
+    def _handle_joystick_updates(self, data:Joy):
 
         if data.axes:
 
 
             velocity = self._get_velocity(data.axes[1], data.axes[3])
             turn_radius = self._get_turn_radius(data.axes[0])
-            yaw = self._get_yaw_update(data.axes[2])
-            yaw = self._get_tilt_update(data.axes[3])
+
+            pan = self._get_pan_update(data.axes[2])
+            tilt = self._get_tilt_update(data.axes[3])
+
+            rospy.loginfo(f"V/R/P/T: {velocity}/{turn_radius}/{pan}/{tilt}")
             
             turning_point = None
             if abs(turn_radius) > PlatformStatics.MIN_ANGLE_DIFF:
@@ -249,7 +257,7 @@ class MyViz(QWidget):
                 turning_point.y = -turn_radius
             
             if turn_radius or abs(velocity) > 0.01:
-                r = create_request(velocity, 1.5*duration, self._last_platform_status, turning_point)
+                r = create_request(velocity, 1.5*duration, self._last_platform_status, turning_point, pan, tilt)
                 with self._request_lock:
                     self._last_request = r
 

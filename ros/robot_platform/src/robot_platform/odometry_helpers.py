@@ -49,7 +49,7 @@ class PlatformStatics:
     TURN_VELOCITY = 1.57079632 # 90degrees in 1s /
     MOVE_VELOCITY = 1.5
     MIN_ANGLE_DIFF = 0.01
-    MAX_DISTANCE_TOLERANCE = 0.025
+    MAX_DISTANCE_TOLERANCE = 0.05
     REQUEST_DURATION_COEFFICIENT = 1.5 # how much additional time to count into a move, so we get overlapped requests
 
     WHEEL_RADIUS = 0.13
@@ -95,10 +95,10 @@ def check_if_points_are_close(points:List[Point]) -> bool:
             point_cordinate_deltas.append(pa.y - pb.y)
     max_points_distance = max(points_distance)
 
-    relative_distance_tolerance = max(max_points_distance/1.0, 1.0) * PlatformStatics.MAX_DISTANCE_TOLERANCE
+    # relative_distance_tolerance = max(max_points_distance/1.0, 1.0) * PlatformStatics.MAX_DISTANCE_TOLERANCE
 
-    max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas]) if point_cordinate_deltas else PlatformStatics.MAX_DISTANCE_TOLERANCE
-    return max_coordinate_delta < relative_distance_tolerance
+    # max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas]) if point_cordinate_deltas else PlatformStatics.MAX_DISTANCE_TOLERANCE
+    return max_points_distance < PlatformStatics.MAX_DISTANCE_TOLERANCE
 
 
 def limit_angle(angle:float) -> float:
@@ -204,7 +204,7 @@ def non_empty_request(request:MoveRequest):
     r = r or request.motor2.servo.angle_provided
     r = r or request.motor3.servo.angle_provided
     r = r or request.motor4.servo.angle_provided
-    r = r or request.yaw.angle_provided
+    r = r or request.pan.angle_provided
     r = r or request.tilt.angle_provided
     r = r or abs(request.motor1.velocity) > 0
     r = r or abs(request.motor2.velocity) > 0
@@ -213,7 +213,7 @@ def non_empty_request(request:MoveRequest):
     return r
 
 
-def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None, tilt:float=None, yaw:float=None) -> Optional[MoveRequest]:
+def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None, tilt:float=None, pan:float=None) -> Optional[MoveRequest]:
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, platform_status)
     limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, duration)
@@ -234,7 +234,7 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
     velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
     
     if turning_point:
-        can_move_wheels_continously = True #compute_relative_turning_point(motor_request_to_status(request)) != None
+        can_move_wheels_continously = compute_relative_turning_point(motor_request_to_status(request)) != None
         turn_radius = math.sqrt(turning_point.x**2 + turning_point.y**2)
         if abs(turn_radius) > PlatformStatics.MAX_DISTANCE_TOLERANCE:
             velocity_coefficients = []
@@ -258,9 +258,9 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
         request.tilt.angle = tilt
         request.tilt.angle_provided = True
 
-    if yaw:
-        request.yaw.angle = tilt
-        request.yaw.angle_provided = True
+    if pan:
+        request.pan.angle = tilt
+        request.pan.angle_provided = True
 
     if non_empty_request(request):
         return request
