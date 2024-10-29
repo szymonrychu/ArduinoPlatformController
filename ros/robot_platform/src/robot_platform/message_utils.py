@@ -88,7 +88,7 @@ class IMUStatus(BaseModel):
         return t
 
 class ServoStatus(Message):
-    angle: Optional[float] = None
+    angle: Optional[float] = 0.0
     angle_provided: Optional[bool] = False
 
     def __eq__(self, other):
@@ -223,7 +223,7 @@ class Request(Message):
         if m.motor1.servo.angle_provided:
             r.motor1.angle = round(m.motor1.servo.angle, 5)
             
-        r.motor2 = Motor()
+        r.motor2 = MotorStatus()
         r.motor2.velocity = round(m.motor2.velocity, 3)
         if m.motor2.servo.angle_provided:
             r.motor2.angle = round(m.motor2.servo.angle, 5)
