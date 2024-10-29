@@ -238,12 +238,12 @@ class Request(Message):
         if m.motor4.servo.angle_provided:
             r.motor4.angle = round(m.motor4.servo.angle, 5)
         
-        r.pan = ServoStatus()
         if m.pan.angle and m.pan.angle_provided:
+            r.pan = ServoStatus()
             r.pan.angle = round(m.pan.angle, 5)
 
-        r.tilt = ServoStatus()
         if m.tilt.angle and m.tilt.angle_provided:
+            r.tilt = ServoStatus()
             r.tilt.angle = round(m.tilt.angle, 5)
         
         return r
