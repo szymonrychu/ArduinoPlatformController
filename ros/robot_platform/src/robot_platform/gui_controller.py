@@ -164,6 +164,9 @@ class MyViz(QWidget):
         self._rospy_timer = rospy.Timer(rospy.Duration(1), self._rospy_spin) # start the ros spin after 1 s
         self._request_lock = Lock()
         self._last_request = None
+        self._left_trigger_was_max = False
+        self._last_yaw_angle = 0.0
+        self._last_tilt_angle = 0.0
 
     def _rospy_spin(self, *args, **kwargs):
         rospy.spin()
@@ -176,37 +179,69 @@ class MyViz(QWidget):
         data = String()
         data.data = 'shutdown'
         self._shutdown_command_publisher.publish(data)
+    
+    def _get_forward_velocity(self, y_axis:float, left_trigger:float) -> float:
+        rel_velocity = -0.25 * y_axis
+        
+        if rel_velocity < -0.025:
+            rel_velocity = rel_velocity
+        elif rel_velocity > 0.025:
+            rel_velocity = rel_velocity
+        else:
+            rel_velocity = 0
 
-    def _handle_joystick_updates(self, data:Joy):
-        if data.axes:        
-            rel_velocity = -0.25 * data.axes[1]
-            
-            if rel_velocity < -0.025:
-                rel_velocity = rel_velocity
-            elif rel_velocity > 0.025:
-                rel_velocity = rel_velocity
-            else:
-                rel_velocity = 0
 
-            
-            turn_radius = round(-1.95 * data.axes[0], 2)
-            
-            if turn_radius < 0:
-                turn_radius = max(turn_radius, -1.99)
-            elif turn_radius > 0:
-                turn_radius = min(turn_radius, 1.99)
-            
-            if turn_radius > 0.05:
-                turn_radius = 2 - turn_radius + (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
-            elif turn_radius < -0.05:
-                turn_radius = -2 - turn_radius - (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
-            else:
-                turn_radius = 0
+        velocity = 0.0
 
-            velocity = 0.0
-            boost = 1.0 + 3*(-data.axes[3]+1)/2
-            if abs(rel_velocity) > PlatformStatics.MOVE_VELOCITY/100.0:
-                velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
+        if not self._left_trigger_was_max and left_trigger > 0.9:
+            self._left_trigger_was_max = True
+
+        if self._left_trigger_was_max:
+            boost = 1.0 + 3*(1-left_trigger)/2
+        else:
+            boost = 0.0
+    
+        if abs(rel_velocity) > PlatformStatics.MOVE_VELOCITY/100.0:
+            velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
+
+        return velocity
+
+    def _get_turn_radius(self, x_axis:float) -> float:
+        turn_radius = round(-1.95 * x_axis, 2)
+        
+        if turn_radius < 0:
+            turn_radius = max(turn_radius, -1.99)
+        elif turn_radius > 0:
+            turn_radius = min(turn_radius, 1.99)
+        
+        if turn_radius > 0.05:
+            turn_radius = 2 - turn_radius + (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
+        elif turn_radius < -0.05:
+            turn_radius = -2 - turn_radius - (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
+        else:
+            turn_radius = 0
+        
+        return turn_radius
+
+    def _get_yaw_update(self, x_axis:float) -> float:
+        yaw_update = self._last_yaw_angle += x_axis
+        self._last_yaw_angle = yaw_update
+        return yaw_update
+
+    def _get_tilt_update(self, y_axis:float) -> float:
+        tilt_update = self._last_tilt_angle += y_axis
+        self._last_tilt_angle = tilt_update
+        return tilt_update
+
+    def _handle_joystick_updates(self, x_axis:float, y_axis:float, left_trigger:float) ->:
+
+        if data.axes:
+
+
+            velocity = self._get_velocity(data.axes[1], data.axes[3])
+            turn_radius = self._get_turn_radius(data.axes[0])
+            yaw = self._get_yaw_update(data.axes[2])
+            yaw = self._get_tilt_update(data.axes[3])
             
             turning_point = None
             if abs(turn_radius) > PlatformStatics.MIN_ANGLE_DIFF:

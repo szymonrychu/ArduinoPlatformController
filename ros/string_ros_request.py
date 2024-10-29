@@ -39,6 +39,15 @@ if __name__ == '__main__':
 
 '''
 source /opt/ros/noetic/setup.bash 
+
+
+
+./ros/string_ros_request.py -d '{"move_duration":2,"pan":{"angle":-0.7853}}'
+./ros/string_ros_request.py -d '{"move_duration":2,"pan":{"angle":0.7853}}'
+./ros/string_ros_request.py -d '{"move_duration":2,"pan":{"angle":0.0}}'
+
+./ros/string_ros_request.py -d '{"move_duration":2,"tilt":{"angle":-0.15}}'
+
 ./ros/string_ros_request.py -d '{"move_duration":2,"motor1":{"angle":-0.0},"motor2":{"angle":-0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0}}'
 
 

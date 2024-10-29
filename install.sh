@@ -8,3 +8,4 @@ cd "${CATKIN_WS_DIR}"
 source "${CONDA_PREFIX}/setup.bash"
 
 catkin_make "-DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}" install
+catkin_make "-DCMAKE_INSTALL_PREFIX=/opt/ros/noetic" install

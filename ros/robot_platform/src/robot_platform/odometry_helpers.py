@@ -204,6 +204,8 @@ def non_empty_request(request:MoveRequest):
     r = r or request.motor2.servo.angle_provided
     r = r or request.motor3.servo.angle_provided
     r = r or request.motor4.servo.angle_provided
+    r = r or request.yaw.angle_provided
+    r = r or request.tilt.angle_provided
     r = r or abs(request.motor1.velocity) > 0
     r = r or abs(request.motor2.velocity) > 0
     r = r or abs(request.motor3.velocity) > 0
@@ -211,7 +213,7 @@ def non_empty_request(request:MoveRequest):
     return r
 
 
-def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None) -> Optional[MoveRequest]:
+def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None, tilt:float=None, yaw:float=None) -> Optional[MoveRequest]:
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, platform_status)
     limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, duration)
@@ -251,6 +253,14 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
         request.motor2.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[1] * velocity
         request.motor3.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[2] * velocity
         request.motor4.velocity = PlatformStatics.MOVE_VELOCITY * velocity_coefficients[3] * velocity
+    
+    if tilt:
+        request.tilt.angle = tilt
+        request.tilt.angle_provided = True
+
+    if yaw:
+        request.yaw.angle = tilt
+        request.yaw.angle_provided = True
 
     if non_empty_request(request):
         return request

@@ -81,7 +81,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
 
         self.spin()
 
-        result = self.write_data('{"move_duration":3,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0},"tilt":{"angle":-0.15}}')
+        result = self.write_data('{"move_duration":3,"motor1":{"angle":0.0},"motor2":{"angle":0.0},"motor3":{"angle":0.0},"motor4":{"angle":0.0},"pan":{"angle":0},"tilt":{"angle":0}}')
         if not result:
             self.stop()
     
@@ -130,7 +130,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         transforms = [
             # create_static_transform(self._base_footprint_frame_id, self._base_frame_id, 0.0, 0.0, 0.07, 0, 0, 0, rospy_time_now),
             create_static_transform(self._base_frame_id, self._laser_frame_id, 0.13, 0.0, 0.30, 0, 0, math.pi, rospy_time_now),
-            create_static_transform(self._base_frame_id, self._camera_frame_id, 0.13, 0.0, 0.65, 0, 0, 0, rospy_time_now)
+            create_static_transform(self._base_frame_id, self._camera_frame_id, 0.13, 0.0, 0.5, 0, response.tilt.angle, response.pan.angle, rospy_time_now)
         ]
         mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
         computed_turning_point = compute_relative_turning_point(response.motor_list)
