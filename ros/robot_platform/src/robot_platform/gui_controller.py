@@ -199,9 +199,9 @@ class MyViz(QWidget):
             self._left_trigger_was_max = True
 
         if self._left_trigger_was_max:
-            boost = 0.5 + 3*(1-left_trigger)/2
+            boost = 1.0 + 3*(1-left_trigger)/2
         else:
-            boost = 0.5
+            boost = 1.0
     
         if abs(rel_velocity) > PlatformStatics.MOVE_VELOCITY/100.0:
             velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
@@ -254,8 +254,8 @@ class MyViz(QWidget):
             velocity = self._get_velocity(data.axes[1], data.axes[2])
             turn_radius = self._get_turn_radius(data.axes[0])
 
-            pan = self._get_pan_update(data.axes[4])
-            tilt = self._get_tilt_update(-data.axes[3])
+            pan = self._get_pan_update(-data.axes[4])
+            tilt = self._get_tilt_update(data.axes[3])
             
             turning_point = None
             if abs(turn_radius) > PlatformStatics.MIN_ANGLE_DIFF:
