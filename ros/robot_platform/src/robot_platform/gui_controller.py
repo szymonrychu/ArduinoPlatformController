@@ -3,6 +3,7 @@
 import sys
 import os
 import time
+import math
 
 ## Next import all the Qt bindings into the current namespace, for
 ## convenience.  This uses the "python_qt_binding" package which hides
@@ -47,12 +48,6 @@ class MyViz(QWidget):
     def __init__(self, name='robot_platform'):
         QWidget.__init__(self)
         rospy.init_node(name, log_level=env2log(), anonymous=True)
-
-        self._left_trigger_was_max = False
-        self._last_pan_angle = 0.0
-        self._last_tilt_angle = 0.0
-        self._request_lock = Lock()
-        self._last_request = None
 
         ## rviz.VisualizationFrame is the main container widget of the
         ## regular RViz application, with menus, a toolbar, a status
@@ -152,6 +147,12 @@ class MyViz(QWidget):
         self._last_joy = Joy()
         self._last_limited_deltas = [0.0] * PlatformStatics.MOTOR_NUM
         self._last_request = None
+        self._request = None
+        self._left_trigger_was_max = False
+        self._last_pan_angle = 0.0
+        self._last_tilt_angle = 0.0
+        self._request_lock = Lock()
+        self._last_request = None
         joy_input_topic = rospy.get_param('~joy_topic')
         joy_output_topic = rospy.get_param('~joy_feedback_topic')
         move_request_output_topic = rospy.get_param('~move_request_output_topic')
@@ -227,14 +228,22 @@ class MyViz(QWidget):
     def _get_pan_update(self, x_axis:float) -> float:
         if abs(x_axis) < 0.1:
             return None
-        yaw_update = self._last_pan_angle = self._last_pan_angle + x_axis
+        yaw_update = self._last_pan_angle + x_axis*0.01
+        if yaw_update > math.pi/2:
+            yaw_update = math.pi
+        if yaw_update < -math.pi/2:
+            yaw_update = -math.pi
         self._last_pan_angle = yaw_update
         return yaw_update
 
     def _get_tilt_update(self, y_axis:float) -> float:
         if abs(y_axis) < 0.1:
             return None
-        tilt_update = self._last_tilt_angle = self._last_tilt_angle + y_axis
+        tilt_update =  self._last_tilt_angle + y_axis*0.01
+        if tilt_update > math.pi/2:
+            tilt_update = math.pi
+        if tilt_update < -math.pi/2:
+            tilt_update = -math.pi
         self._last_tilt_angle = tilt_update
         return tilt_update
 
@@ -242,33 +251,45 @@ class MyViz(QWidget):
 
         if data.axes:
 
-
             velocity = self._get_velocity(data.axes[1], data.axes[3])
             turn_radius = self._get_turn_radius(data.axes[0])
 
             pan = self._get_pan_update(data.axes[2])
             tilt = self._get_tilt_update(data.axes[3])
 
-            rospy.loginfo(f"V/R/P/T: {velocity}/{turn_radius}/{pan}/{tilt}")
             
             turning_point = None
             if abs(turn_radius) > PlatformStatics.MIN_ANGLE_DIFF:
                 turning_point = Point()
                 turning_point.y = -turn_radius
             
-            if turn_radius or abs(velocity) > 0.01:
-                r = create_request(velocity, 1.5*duration, self._last_platform_status, turning_point, pan, tilt)
-                with self._request_lock:
-                    self._last_request = r
+            r = create_request(velocity, 1.5*duration, self._last_platform_status, turning_point, pan, tilt)
+            with self._request_lock:
+                self._request = r
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
 
+    def _requests_changed(self, r1, r2) -> bool:
+        if not r1:
+            return False
+        
+        requests_equal = r1 == r2
+
+        if requests_equal:
+            return abs(r1.motor1.velocity) > 0.001 or \
+                abs(r1.motor2.velocity) > 0.001 or \
+                abs(r1.motor3.velocity) > 0.001 or \
+                abs(r1.motor4.velocity) > 0.001
+        else:
+            return True
+
+
     def _send_request(self, event=None):
         with self._request_lock:
-            if self._last_request:
-                self._move_request_publisher.publish(self._last_request)
-                self._last_request = None
+            if self._requests_changed(self._request, self._last_request):
+                self._move_request_publisher.publish(self._request)
+                self._last_request = self._request
 
 
     ## Handle GUI events

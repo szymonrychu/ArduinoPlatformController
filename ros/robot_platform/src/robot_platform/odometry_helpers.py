@@ -212,8 +212,7 @@ def non_empty_request(request:MoveRequest):
     r = r or abs(request.motor4.velocity) > 0
     return r
 
-
-def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None, tilt:float=None, pan:float=None) -> Optional[MoveRequest]:
+def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None, tilt:float=0.0, pan:float=0.0) -> Optional[MoveRequest]:
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, platform_status)
     limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, duration)
@@ -259,7 +258,7 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
         request.tilt.angle_provided = True
 
     if pan:
-        request.pan.angle = tilt
+        request.pan.angle = pan
         request.pan.angle_provided = True
 
     if non_empty_request(request):

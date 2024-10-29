@@ -5,7 +5,7 @@ import json
 import rospy
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import TransformStamped, Vector3, PoseStamped
-from robot_platform.msg import PlatformStatus, MoveRequest
+from robot_platform.msg import PlatformStatus, MoveRequest, Motor, Servo
 
 from .tf_helpers import get_quaterion_from_rpy
 
@@ -90,6 +90,9 @@ class IMUStatus(BaseModel):
 class ServoStatus(Message):
     angle: Optional[float] = None
     angle_provided: Optional[bool] = False
+
+    def __eq__(self, other):
+        return self.angle == other.angle and self.angle_provided == other.angle_provided
     
     def parse_ROS_TF(self, child_frame_id:str, base_frame_id:str, translation:Vector3 = None, timestamp:rospy.Time=None) -> TransformStamped:
         t = TransformStamped()
@@ -105,6 +108,10 @@ class MotorStatus(ServoStatus):
     velocity: Optional[float] = None
     distance: Optional[float] = None
     angle: Optional[float] = None
+    angle_provided: Optional[bool] = False
+
+    def __eq__(self, other):
+        return self.velocity == other.velocity and self.distance == other.distance and self.angle == other.angle and self.angle_provided == other.angle_provided
 
 class GPSStatus(BaseModel):
     fix: bool
@@ -138,6 +145,10 @@ class MotorServoStatuses(Message):
     motor2_servo: ServoStatus
     motor3_servo: ServoStatus
     motor4_servo: ServoStatus
+
+    def __eq__(self, other):
+        return self.motor1_servo == other.motor1_servo and self.motor2_servo == other.motor2_servo and \
+            self.motor3_servo == other.motor3_servo and self.motor4_servo == other.motor4_servo
 
 
 class StatusResponse(Message):
@@ -193,15 +204,26 @@ class Request(Message):
     tilt: Optional[ServoStatus] = ServoStatus()
     move_duration: Optional[float] = 0.0
 
+    def __eq__(self, other):
+        return self.move_duration == other.move_duration and \
+            self.motor1 == other.motor1 and \
+            self.motor2 == other.motor2 and \
+            self.motor3 == other.motor3 and \
+            self.motor4 == other.motor4 and \
+            self.pan == other.pan and \
+            self.tilt == other.tilt
+
     @staticmethod
     def from_MoveRequest(m:MoveRequest):
         r = Request()
+        r.move_duration = round(m.duration, 3)
+
         r.motor1 = MotorStatus()
         r.motor1.velocity = round(m.motor1.velocity, 3)
         if m.motor1.servo.angle_provided:
             r.motor1.angle = round(m.motor1.servo.angle, 5)
             
-        r.motor2 = MotorStatus()
+        r.motor2 = Motor()
         r.motor2.velocity = round(m.motor2.velocity, 3)
         if m.motor2.servo.angle_provided:
             r.motor2.angle = round(m.motor2.servo.angle, 5)
@@ -216,13 +238,14 @@ class Request(Message):
         if m.motor4.servo.angle_provided:
             r.motor4.angle = round(m.motor4.servo.angle, 5)
         
-        if m.pan.angle_provided:
-            r.pan = ServoStatus()
+        r.pan = ServoStatus()
+        if m.pan.angle and m.pan.angle_provided:
             r.pan.angle = round(m.pan.angle, 5)
-        if m.tilt.angle_provided:
-            r.tilt = ServoStatus()
+
+        r.tilt = ServoStatus()
+        if m.tilt.angle and m.tilt.angle_provided:
             r.tilt.angle = round(m.tilt.angle, 5)
-        r.move_duration = round(m.duration, 3)
+        
         return r
     
 
