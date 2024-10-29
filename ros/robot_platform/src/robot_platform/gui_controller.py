@@ -51,6 +51,8 @@ class MyViz(QWidget):
         self._left_trigger_was_max = False
         self._last_pan_angle = 0.0
         self._last_tilt_angle = 0.0
+        self._request_lock = Lock()
+        self._last_request = None
 
         ## rviz.VisualizationFrame is the main container widget of the
         ## regular RViz application, with menus, a toolbar, a status
@@ -166,8 +168,6 @@ class MyViz(QWidget):
 
         rospy.Timer(rospy.Duration(duration), self._send_request)
         self._rospy_timer = rospy.Timer(rospy.Duration(1), self._rospy_spin) # start the ros spin after 1 s
-        self._request_lock = Lock()
-        self._last_request = None
 
     def _rospy_spin(self, *args, **kwargs):
         rospy.spin()
@@ -198,9 +198,9 @@ class MyViz(QWidget):
             self._left_trigger_was_max = True
 
         if self._left_trigger_was_max:
-            boost = 1.0 + 3*(1-left_trigger)/2
+            boost = 0.5 + 3*(1-left_trigger)/2
         else:
-            boost = 1.0
+            boost = 0.5
     
         if abs(rel_velocity) > PlatformStatics.MOVE_VELOCITY/100.0:
             velocity = round(-PlatformStatics.MOVE_VELOCITY * (rel_velocity * boost), 2)
