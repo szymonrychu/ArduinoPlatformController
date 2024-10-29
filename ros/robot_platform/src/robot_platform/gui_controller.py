@@ -230,9 +230,9 @@ class MyViz(QWidget):
             return None
         yaw_update = self._last_pan_angle + x_axis*0.001
         if yaw_update >= math.pi/2:
-            yaw_update = math.pi
+            yaw_update = math.pi/2
         if yaw_update <= -math.pi/2:
-            yaw_update = -math.pi
+            yaw_update = -math.pi/2
         self._last_pan_angle = yaw_update
         return yaw_update
 
@@ -241,9 +241,9 @@ class MyViz(QWidget):
             return None
         tilt_update = self._last_tilt_angle + y_axis*0.002
         if tilt_update >= math.pi/2:
-            tilt_update = math.pi
+            tilt_update = math.pi/2
         if tilt_update <= -math.pi/2:
-            tilt_update = -math.pi
+            tilt_update = -math.pi/2
         self._last_tilt_angle = tilt_update
         return tilt_update
 

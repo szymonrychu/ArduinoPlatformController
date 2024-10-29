@@ -85,7 +85,6 @@ def check_if_points_are_close(points:List[Point]) -> bool:
         return False
 
     point_cordinate_deltas = []
-    points_distance = [0.001]
     for c_a, pa in enumerate(points):
         points_distance.append(math.sqrt(pa.x**2 + pa.y**2))
         for c_b, pb in enumerate(points):
@@ -93,12 +92,15 @@ def check_if_points_are_close(points:List[Point]) -> bool:
                 continue
             point_cordinate_deltas.append(pa.x - pb.x)
             point_cordinate_deltas.append(pa.y - pb.y)
-    max_points_distance = max(points_distance)
 
-    # relative_distance_tolerance = max(max_points_distance/1.0, 1.0) * PlatformStatics.MAX_DISTANCE_TOLERANCE
+    # compute max distance of the points from the center of the robot
+    max_point_distance = max(points_distance) if len(points_distance) > 0 else 0.0
+    # compute tolerance with the premise of the more distant the mean_points_distance is (the bigger turning radius), the more we can tolerate
+    max_relative_tolerance = PlatformStatics.MAX_DISTANCE_TOLERANCE * max(max_point_distance/10.0, 1.0)
 
-    # max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas]) if point_cordinate_deltas else PlatformStatics.MAX_DISTANCE_TOLERANCE
-    return max_points_distance < PlatformStatics.MAX_DISTANCE_TOLERANCE
+    max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas])
+
+    return max_coordinate_delta < max_relative_tolerance
 
 
 def limit_angle(angle:float) -> float:
