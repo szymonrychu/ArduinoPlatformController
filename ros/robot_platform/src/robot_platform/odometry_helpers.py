@@ -85,6 +85,7 @@ def check_if_points_are_close(points:List[Point]) -> bool:
         return False
 
     point_cordinate_deltas = []
+    points_distance = []
     for c_a, pa in enumerate(points):
         points_distance.append(math.sqrt(pa.x**2 + pa.y**2))
         for c_b, pb in enumerate(points):
