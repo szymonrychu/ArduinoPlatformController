@@ -209,18 +209,18 @@ class MyViz(QWidget):
         return velocity
 
     def _get_turn_radius(self, x_axis:float) -> float:
-        max_radius = 3.0
-        steps = 10
-        if x_axis > 0.05:
-            turn_coefficient = -1.0
-        elif x_axis < -0.05:
+        max_radius = 2.0
+        steps = 20
+        if x_axis > 1/float(steps):
             turn_coefficient = 1.0
+        elif x_axis < -1/float(steps):
+            turn_coefficient = -1.0
         else:
             turn_coefficient = 0.0
 
         rounded_x_axis = round(float(steps) * abs(x_axis))/float(steps)
 
-        abs_turn_radius = max_radius - max_radius * rounded_x_axis + PlatformStatics.ROBOT_WIDTH/2
+        abs_turn_radius = max_radius - max_radius * rounded_x_axis + PlatformStatics.ROBOT_WIDTH/2 + 0.01
 
         turn_radius = round(turn_coefficient * abs_turn_radius, 2)
         return turn_radius
@@ -260,9 +260,9 @@ class MyViz(QWidget):
             turning_point = None
             if abs(turn_radius) > PlatformStatics.MAX_DISTANCE_TOLERANCE:
                 turning_point = Point()
-                turning_point.y = -turn_radius
+                turning_point.y = turn_radius
             
-            r = create_request(velocity, duration, self._last_platform_status, turning_point, pan, tilt)
+            r = create_request(velocity, 5*duration, self._last_platform_status, turning_point, pan, tilt)
             with self._request_lock:
                 self._request = r
 
@@ -286,7 +286,6 @@ class MyViz(QWidget):
         with self._request_lock:
             if self._requests_changed(self._request, self._last_request):
                 self._move_request_publisher.publish(self._request)
-                print(f"sending request with angles: {self._request.motor1.servo.angle}/{self._request.motor2.servo.angle}/{self._request.motor3.servo.angle}/{self._request.motor4.servo.angle}")
                 self._last_request = self._request
 
 

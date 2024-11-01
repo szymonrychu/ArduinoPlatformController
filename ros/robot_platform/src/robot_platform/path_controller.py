@@ -14,9 +14,10 @@ from robot_platform.msg import PlatformStatus, MoveRequest
 from geometry_msgs.msg import PoseArray, Twist
 from nav_msgs.msg import Odometry
 
-TINY_ANGLE_DELTA = math.pi/36
+TINY_ANGLE_DELTA = math.pi/18
 SMALL_ANGLE_DELTA = math.pi/12
 SLOW_SPEED = 0.1
+MAX_SPEED = 0.25
 ROTATION_SPEED = math.pi/0.8
 TINY_WAIT_S = 0.1
 CAN_MOVE_CONTINOUSLY_CTR_MAX = 5
@@ -28,7 +29,6 @@ class PathPlatformController(ROSNode):
         ROSNode.__init__(self)
         self._last_platform_status = PlatformStatus()
         self._last_angle = 0
-        self.__can_move_continously = 0
 
         self._last_odometry = Odometry()
 
@@ -64,23 +64,19 @@ class PathPlatformController(ROSNode):
             r.motor4.servo.angle
         ]
         deltas_too_big = [
-            abs(s - r) > math.pi/36 for s, r in zip(status_angles, requested_angles)
+            abs(s - r) > TINY_ANGLE_DELTA for s, r in zip(status_angles, requested_angles)
         ]
         return any(deltas_too_big)
-        
-
-    def _can_move_continously(self, angle:float) -> bool:
-        return self.__can_move_continously == CAN_MOVE_CONTINOUSLY_CTR_MAX or abs(angle) < math.pi/36
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
         angle = 0
         move_velocity = 0
     
         if cmd_vel.linear.x > 0:
-            move_velocity = max(cmd_vel.linear.x, SLOW_SPEED)
+            move_velocity = min(max(cmd_vel.linear.x, SLOW_SPEED), MAX_SPEED)
             angle = cmd_vel.angular.z * 1.04
         elif cmd_vel.linear.x < 0:
-            move_velocity = min(cmd_vel.linear.x, -SLOW_SPEED)
+            move_velocity = max(min(cmd_vel.linear.x, -SLOW_SPEED), -MAX_SPEED)
             angle = cmd_vel.angular.z * 1.04
             
 
@@ -102,7 +98,7 @@ class PathPlatformController(ROSNode):
         if angle != 0 and self._controller_frequency != 0:
             turning_point.y = move_velocity / (angle * self._controller_frequency)
 
-        if (angle_delta_tiny or angle_tiny or self._can_move_continously(angle)) and not changes_direction:
+        if (angle_delta_tiny or angle_tiny) and not changes_direction:
             rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
             r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
             self.__send_request(r)
@@ -126,13 +122,6 @@ class PathPlatformController(ROSNode):
             self.__send_request(r) # send move forward request
 
     def _handle_platform_status(self, status:PlatformStatus):
-        if compute_relative_turning_point([
-                status.motor1.servo, status.motor2.servo, status.motor3.servo, status.motor4.servo
-            ]) is not None:
-            if self.__can_move_continously < CAN_MOVE_CONTINOUSLY_CTR_MAX:
-                self.__can_move_continously += 1
-        else:
-            self.__can_move_continously = 0
         self._last_platform_status = status
 
 

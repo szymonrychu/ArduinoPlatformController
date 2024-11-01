@@ -55,9 +55,6 @@ class PlatformStatics:
     WHEEL_RADIUS = 0.13
 
 def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:float, mb_y:float) -> Optional[Point]:
-    if abs(m_a - m_b) < PlatformStatics.MIN_ANGLE_DIFF:
-        return None
-
     tg90mA = math.tan(math.pi/2 - m_a) if 0.0 != m_a else 0.0
     tg90mB = math.tan(math.pi/2 - m_b) if 0.0 != m_b else 0.0
     
@@ -81,6 +78,7 @@ def compute_mean_turning_point(points:List[Point]) -> Optional[Point]:
 
 def check_if_points_are_close(points:List[Point], turning_radius:float = 0.0) -> bool:
     if not points or len(points) < 1:
+        print("no points provided")
         return False
 
     point_cordinate_deltas = []
@@ -94,21 +92,24 @@ def check_if_points_are_close(points:List[Point], turning_radius:float = 0.0) ->
             point_cordinate_deltas.append(pa.y - pb.y)
     
     if len(point_cordinate_deltas) < 1:
+        print("no point_cordinate_deltas provided")
         return False
 
     abs_turning_radius = abs(turning_radius)
     # compute tolerance with the premise of the more distant the mean_points_distance is (the bigger turning radius), the more we can tolerate
-    max_relative_tolerance = PlatformStatics.MAX_DISTANCE_TOLERANCE * max(abs_turning_radius**2, 1.0)
+    max_relative_tolerance = PlatformStatics.MAX_DISTANCE_TOLERANCE * max(abs_turning_radius, 1.0)
 
     max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas])
+
+    print(max_coordinate_delta, max_relative_tolerance, max_coordinate_delta < max_relative_tolerance)
 
     return max_coordinate_delta < max_relative_tolerance
 
 
 def limit_angle(angle:float) -> float:
-    if angle > math.pi/2:
+    if angle >= math.pi/2:
         return angle - math.pi
-    if angle < -math.pi/2:
+    if angle <= -math.pi/2:
         return angle + math.pi
     return angle
 
@@ -140,7 +141,7 @@ def compute_relative_turning_point(motors:List[MotorStatus]) -> Optional[Point]:
             turning_point = compute_turning_point(motor_a.angle, XA, YA, motor_b.angle, XB, YB)
             if turning_point:
                 partial_turning_points.append(turning_point)
-    
+        
     turning_point = compute_mean_turning_point(partial_turning_points)
     if turning_point and check_if_points_are_close(partial_turning_points, math.sqrt(turning_point.x**2 + turning_point.y**2)):
         return turning_point
@@ -203,6 +204,7 @@ def motor_request_to_status(request:MoveRequest) -> List[MotorStatus]:
         motor = MotorStatus()
         motor.velocity = motor_request.velocity
         motor.angle = motor_request.servo.angle
+        motors.append(motor)
     return motors
 
 def non_empty_request(request:MoveRequest):
@@ -225,7 +227,7 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
     motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, platform_status)
 
     request = MoveRequest()
-    request.duration = PlatformStatics.REQUEST_DURATION_COEFFICIENT * duration
+    request.duration = duration
 
     request.motor1.servo.angle = round(motor_servo_angle_deltas[0], 3)
     request.motor2.servo.angle = round(motor_servo_angle_deltas[1], 3)
@@ -240,21 +242,21 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
     velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
     
     if turning_point:
-        can_move_wheels_continously = True #compute_relative_turning_point(motor_request_to_status(request)) != None
-        turn_radius = math.sqrt(turning_point.x**2 + turning_point.y**2)
-        if turn_radius > PlatformStatics.MAX_DISTANCE_TOLERANCE:
-            velocity_coefficients = []
-            for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
-                motor_turn_radius = math.sqrt((m_y - turning_point.y)**2 + (m_x + turning_point.x)**2)
+        can_move_wheels_continously = compute_relative_turning_point(motor_request_to_status(request)) != None
+        # turn_radius = math.sqrt(turning_point.x**2 + turning_point.y**2)
+        # if turn_radius > PlatformStatics.MAX_DISTANCE_TOLERANCE:
+        #     velocity_coefficients = []
+        #     for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
+        #         motor_turn_radius = math.sqrt((m_y - turning_point.y)**2 + (m_x + turning_point.x)**2)
 
-                is_within_robot_width = min(0, m_y) < turning_point.y and turning_point.y < max(0, m_y)
-                c = -1.0 if is_within_robot_width else 1.0
+        #         is_within_robot_width = min(0, m_y) <= turning_point.y and turning_point.y <= max(0, m_y)
+        #         c = -1.0 if is_within_robot_width else 1.0
 
-                velocity_coefficients.append( c * motor_turn_radius / turn_radius)
-                if can_move_wheels_continously and is_within_robot_width:
-                    can_move_wheels_continously = False
+        #         velocity_coefficients.append( c * motor_turn_radius / turn_radius)
+        #         if can_move_wheels_continously and is_within_robot_width:
+        #             can_move_wheels_continously = False
     
-    if can_move_wheels_continously or max(delta_servo_angles) < PlatformStatics.MIN_ANGLE_DIFF:
+    if can_move_wheels_continously:
         request.motor1.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[0] * velocity, 3)
         request.motor2.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[1] * velocity, 3)
         request.motor3.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[2] * velocity, 3)
