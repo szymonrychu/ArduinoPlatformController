@@ -97,29 +97,32 @@ class PathPlatformController(ROSNode):
 
         if angle != 0 and self._controller_frequency != 0:
             turning_point.y = move_velocity / (angle * self._controller_frequency)
+        
+        r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
+        self.__send_request(r)
 
-        if (angle_delta_tiny or angle_tiny) and not changes_direction:
-            rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
-            r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
-            self.__send_request(r)
-        else:
-            rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
-            r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
-            r_in_place = deepcopy(r)
-            r_in_place.motor1.velocity = 0
-            r_in_place.motor2.velocity = 0
-            r_in_place.motor3.velocity = 0
-            r_in_place.motor4.velocity = 0
-            r_in_place.duration = ROTATION_SPEED * self._controller_frequency * (abs_angle_delta/math.pi) # min servo turn duration
-            self.__send_request(r_in_place)
-            time.sleep(r_in_place.duration) # wait until servos are fully turned
-            counter = 0
-            while self._still_turning(r_in_place) or self._cant_move_continously(angle):
-                if counter > 75:
-                    break
-                counter+=1
-                time.sleep(0.01)
-            self.__send_request(r) # send move forward request
+        # if (angle_delta_tiny or angle_tiny) and not changes_direction:
+        #     rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
+        #     r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
+        #     self.__send_request(r)
+        # else:
+        #     rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
+        #     r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
+        #     r_in_place = deepcopy(r)
+        #     r_in_place.motor1.velocity = 0
+        #     r_in_place.motor2.velocity = 0
+        #     r_in_place.motor3.velocity = 0
+        #     r_in_place.motor4.velocity = 0
+        #     r_in_place.duration = ROTATION_SPEED * self._controller_frequency * (abs_angle_delta/math.pi) # min servo turn duration
+        #     self.__send_request(r_in_place)
+        #     time.sleep(r_in_place.duration) # wait until servos are fully turned
+        #     counter = 0
+        #     while self._still_turning(r_in_place) or self._cant_move_continously(angle):
+        #         if counter > 75:
+        #             break
+        #         counter+=1
+        #         time.sleep(0.01)
+        #     self.__send_request(r) # send move forward request
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
