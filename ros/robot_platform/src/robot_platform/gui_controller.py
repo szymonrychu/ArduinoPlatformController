@@ -209,20 +209,20 @@ class MyViz(QWidget):
         return velocity
 
     def _get_turn_radius(self, x_axis:float) -> float:
-        turn_radius = round(-1.95 * x_axis, 2)
-        
-        if turn_radius < 0:
-            turn_radius = max(turn_radius, -1.99)
-        elif turn_radius > 0:
-            turn_radius = min(turn_radius, 1.99)
-        
-        if turn_radius > 0.05:
-            turn_radius = 2 - turn_radius + (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
-        elif turn_radius < -0.05:
-            turn_radius = -2 - turn_radius - (PlatformStatics.ROBOT_WIDTH/4 + 0.05)
+        max_radius = 3.0
+        steps = 10
+        if x_axis > 0.05:
+            turn_coefficient = -1.0
+        elif x_axis < -0.05:
+            turn_coefficient = 1.0
         else:
-            turn_radius = 0
-        
+            turn_coefficient = 0.0
+
+        rounded_x_axis = round(float(steps) * abs(x_axis))/float(steps)
+
+        abs_turn_radius = max_radius - max_radius * rounded_x_axis + PlatformStatics.ROBOT_WIDTH/2
+
+        turn_radius = round(turn_coefficient * abs_turn_radius, 2)
         return turn_radius
 
     def _get_pan_update(self, x_axis:float) -> float:
@@ -258,36 +258,35 @@ class MyViz(QWidget):
             tilt = self._get_tilt_update(data.axes[3])
             
             turning_point = None
-            if abs(turn_radius) > PlatformStatics.MIN_ANGLE_DIFF:
+            if abs(turn_radius) > PlatformStatics.MAX_DISTANCE_TOLERANCE:
                 turning_point = Point()
                 turning_point.y = -turn_radius
             
-            r = create_request(velocity, 1.5*duration, self._last_platform_status, turning_point, pan, tilt)
+            r = create_request(velocity, duration, self._last_platform_status, turning_point, pan, tilt)
             with self._request_lock:
                 self._request = r
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
 
-    def _requests_changed(self, r1, r2) -> bool:
-        if not r1:
-            return False
-        
-        requests_equal = r1 == r2
-
-        if requests_equal:
-            return abs(r1.motor1.velocity) > 0.001 or \
+    def _requests_changed(self, r1, r2) -> bool:    
+        return r1 is not None and \
+                (abs(r1.motor1.velocity) > 0.001 or \
                 abs(r1.motor2.velocity) > 0.001 or \
                 abs(r1.motor3.velocity) > 0.001 or \
-                abs(r1.motor4.velocity) > 0.001
-        else:
-            return True
-
+                abs(r1.motor4.velocity) > 0.001 or \
+                r1.motor1.servo.angle_provided or \
+                r1.motor2.servo.angle_provided or \
+                r1.motor3.servo.angle_provided or \
+                r1.motor4.servo.angle_provided or \
+                r1.pan.angle_provided or \
+                r1.tilt.angle_provided)
 
     def _send_request(self, event=None):
         with self._request_lock:
             if self._requests_changed(self._request, self._last_request):
                 self._move_request_publisher.publish(self._request)
+                print(f"sending request with angles: {self._request.motor1.servo.angle}/{self._request.motor2.servo.angle}/{self._request.motor3.servo.angle}/{self._request.motor4.servo.angle}")
                 self._last_request = self._request
 
 
