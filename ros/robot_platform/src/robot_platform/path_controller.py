@@ -16,8 +16,8 @@ from nav_msgs.msg import Odometry
 
 TINY_ANGLE_DELTA = math.pi/18
 SMALL_ANGLE_DELTA = math.pi/12
-SLOW_SPEED = 0.1
-MAX_SPEED = 0.25
+SLOW_SPEED = 0.15
+MAX_SPEED = 0.3
 ROTATION_SPEED = math.pi/0.8
 TINY_WAIT_S = 0.1
 CAN_MOVE_CONTINOUSLY_CTR_MAX = 5
@@ -60,14 +60,14 @@ class PathPlatformController(ROSNode):
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
         abs_move_velocity = min(max(abs(cmd_vel.linear.x), SLOW_SPEED), MAX_SPEED)
-        moves_slowly = abs_move_velocity == SLOW_SPEED
 
         move_velocity = abs_move_velocity if cmd_vel.linear.x > 0 else -abs_move_velocity
-        angle = 3.0 * cmd_vel.angular.z if moves_slowly else cmd_vel.angular.z
-        abs_turn_radius = max(MAX_TURN_RADIUS - angle if angle > 0 else -MAX_TURN_RADIUS + angle, PlatformStatics.ROBOT_WIDTH/2 + 0.01)
+        angle = cmd_vel.angular.z
+        abs_turn_radius = max(MAX_TURN_RADIUS - math.pi * abs(angle), PlatformStatics.ROBOT_WIDTH/2 + 0.01)
         turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
         turn_radius = turn_radius if move_velocity > 0 else -turn_radius
 
+        moves_slowly = abs_move_velocity == SLOW_SPEED
         abs_turn_delta = abs(angle - self._last_angle)
         tiny_angle_update = abs_turn_delta < TINY_ANGLE_DELTA
         small_angle_update = abs_turn_delta < SMALL_ANGLE_DELTA
