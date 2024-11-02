@@ -74,17 +74,23 @@ class PathPlatformController(ROSNode):
 
         turning_point = Point()
 
-        if turning_through_0_deg or changing_direction or abs_turn_delta > math.pi/3:
-            turning_point.y = turn_radius/2
+        if turning_through_0_deg:
+            r = create_request(0.0, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
+            self.__send_request(r)
+            return
+
+        if abs_turn_delta > math.pi/4:
+            turning_point.y = turn_radius
             r1 = create_request(0.0, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
             self.__send_request(r1)
             time.sleep(1/(2*self._controller_frequency))
             r2 = create_request(move_velocity, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
             self.__send_request(r2)
-        else:
-            turning_point.y = turn_radius
-            r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
-            self.__send_request(r)
+            return
+        
+        turning_point.y = turn_radius
+        r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
+        self.__send_request(r)
 
 
         # angle = 0
