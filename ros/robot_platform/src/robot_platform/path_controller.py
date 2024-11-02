@@ -51,39 +51,39 @@ class PathPlatformController(ROSNode):
     def __send_request(self, r):
         if r:
             self._move_request_publisher.publish(r)
-    
-    def _still_turning(self, r:MoveRequest) -> bool:
-        status_angles = [
-            self._last_platform_status.motor1.servo.angle,
-            self._last_platform_status.motor2.servo.angle,
-            self._last_platform_status.motor3.servo.angle,
-            self._last_platform_status.motor4.servo.angle
-        ]
-        requested_angles = [
-            r.motor1.servo.angle,
-            r.motor2.servo.angle,
-            r.motor3.servo.angle,
-            r.motor4.servo.angle
-        ]
-        deltas_too_big = [
-            abs(s - r) > TINY_ANGLE_DELTA for s, r in zip(status_angles, requested_angles)
-        ]
-        return any(deltas_too_big)
+
+    def _same_sign(self, x:float, y:float):
+        both_are_positive = x >= 0 and y >= 0
+        both_are_negative = x < 0 and y < 0
+        return both_are_positive or both_are_negative
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
         abs_move_velocity = min(max(abs(cmd_vel.linear.x), SLOW_SPEED), MAX_SPEED)
         move_velocity = abs_move_velocity if cmd_vel.linear.x > 0 else -abs_move_velocity
-        abs_turn_radius = 2.0 * max(abs(cmd_vel.angular.z), PlatformStatics.ROBOT_WIDTH/2 + 0.01)
+        angle = cmd_vel.angular.z
+        abs_turn_radius = 2.0 * max(1.0 - angle if angle > 0 else -1.0 + angle, PlatformStatics.ROBOT_WIDTH/2 + 0.01)
         turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
         turn_radius = turn_radius if move_velocity > 0 else -turn_radius
 
+        changing_direction = self._same_sign(move_velocity, self._last_velocity)
+        turning_through_0_deg = self._same_sign(angle, self._last_angle)
+        abs_turn_delta = abs(angle - self._last_angle)
+
+        self._last_velocity = move_velocity
+        self._last_angle = angle
+
         turning_point = Point()
         turning_point.y = turn_radius
-        # rospy.loginfo(cmd_vel.linear.x, cmd_vel.angular.z, move_velocity, turn_radius)
 
-        
-        r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
-        self.__send_request(r)
+        if turning_through_0_deg or abs_turn_delta > math.pi/3:
+            r1 = create_request(0.0, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
+            self.__send_request(r1)
+            time.sleep(1/(2*self._controller_frequency))
+            r2 = create_request(move_velocity, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
+            self.__send_request(r2)
+        else:
+            r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
+            self.__send_request(r)
 
 
         # angle = 0
