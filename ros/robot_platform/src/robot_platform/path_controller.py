@@ -21,6 +21,7 @@ MAX_SPEED = 0.25
 ROTATION_SPEED = math.pi/0.8
 TINY_WAIT_S = 0.1
 CAN_MOVE_CONTINOUSLY_CTR_MAX = 5
+MAX_TURN_RADIUS = 2.0
 
 REQUEST_DURATION=0.1
 MAX_SERVO_ROTATION_ANGLE_WITHIN_REQUEST = PlatformStatics.TURN_VELOCITY * REQUEST_DURATION
@@ -61,7 +62,7 @@ class PathPlatformController(ROSNode):
         abs_move_velocity = min(max(abs(cmd_vel.linear.x), SLOW_SPEED), MAX_SPEED)
         move_velocity = abs_move_velocity if cmd_vel.linear.x > 0 else -abs_move_velocity
         angle = cmd_vel.angular.z
-        abs_turn_radius = max(1.0 - angle if angle > 0 else -1.0 + angle, PlatformStatics.ROBOT_WIDTH/2 + 0.01)
+        abs_turn_radius = max(MAX_TURN_RADIUS - angle if angle > 0 else -MAX_TURN_RADIUS + angle, PlatformStatics.ROBOT_WIDTH/2 + 0.01)
         turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
         turn_radius = turn_radius if move_velocity > 0 else -turn_radius
 
