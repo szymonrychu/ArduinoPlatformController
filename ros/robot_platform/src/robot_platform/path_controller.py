@@ -71,10 +71,11 @@ class PathPlatformController(ROSNode):
         return any(deltas_too_big)
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
-        abs_turn_radius = max(abs(cmd_vel.angular.z), PlatformStatics.ROBOT_WIDTH/2 + 0.01)
-        turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
         abs_move_velocity = min(max(abs(cmd_vel.linear.x), SLOW_SPEED), MAX_SPEED)
         move_velocity = abs_move_velocity if cmd_vel.linear.x > 0 else -abs_move_velocity
+        abs_turn_radius = max(abs(cmd_vel.angular.z), PlatformStatics.ROBOT_WIDTH/2 + 0.01)
+        turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
+        turn_radius = turn_radius if move_velocity > 0 else -turn_radius
 
         turning_point = Point()
         turning_point.y = turn_radius
