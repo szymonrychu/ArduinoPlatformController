@@ -60,9 +60,11 @@ class PathPlatformController(ROSNode):
 
     def _handle_trajectory_update(self, cmd_vel:Twist):
         abs_move_velocity = min(max(abs(cmd_vel.linear.x), SLOW_SPEED), MAX_SPEED)
+        moves_slowly = abs_move_velocity == SLOW_SPEED
+
         move_velocity = abs_move_velocity if cmd_vel.linear.x > 0 else -abs_move_velocity
-        angle = cmd_vel.angular.z
-        abs_turn_radius = max(MAX_TURN_RADIUS - math.pi * angle if angle > 0 else -MAX_TURN_RADIUS + math.pi * angle, PlatformStatics.ROBOT_WIDTH/2 + 0.01)
+        angle = 3.0 * cmd_vel.angular.z if moves_slowly else cmd_vel.angular.z
+        abs_turn_radius = max(MAX_TURN_RADIUS - angle if angle > 0 else -MAX_TURN_RADIUS + angle, PlatformStatics.ROBOT_WIDTH/2 + 0.01)
         turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
         turn_radius = turn_radius if move_velocity > 0 else -turn_radius
 
@@ -71,7 +73,6 @@ class PathPlatformController(ROSNode):
         small_angle_update = abs_turn_delta < SMALL_ANGLE_DELTA
         changing_direction = self._same_sign(move_velocity, self._last_velocity)
         turning_through_0_deg = not self._same_sign(angle, self._last_angle)
-        moves_slowly = abs_move_velocity == SLOW_SPEED
 
         self._last_velocity = move_velocity
         self._last_angle = angle
