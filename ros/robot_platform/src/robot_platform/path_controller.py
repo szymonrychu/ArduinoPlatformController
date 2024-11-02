@@ -65,9 +65,11 @@ class PathPlatformController(ROSNode):
         turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
         turn_radius = turn_radius if move_velocity > 0 else -turn_radius
 
+        abs_turn_delta = abs(angle - self._last_angle)
+        tiny_angle_update = abs_turn_delta < TINY_ANGLE_DELTA
+        small_angle_update = abs_turn_delta < SMALL_ANGLE_DELTA
         changing_direction = self._same_sign(move_velocity, self._last_velocity)
         turning_through_0_deg = not self._same_sign(angle, self._last_angle)
-        abs_turn_delta = abs(angle - self._last_angle)
 
         self._last_velocity = move_velocity
         self._last_angle = angle
@@ -75,16 +77,25 @@ class PathPlatformController(ROSNode):
         turning_point = Point()
         turning_point.y = turn_radius
 
-        if turning_through_0_deg or abs_turn_delta > math.pi/4:
-            r1 = create_request(0.0, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
-            self.__send_request(r1)
-            time.sleep(1/(2*self._controller_frequency))
-            r2 = create_request(move_velocity, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
-            self.__send_request(r2)
+        if small_angle_update:
+            r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
+            self.__send_request(r)
+            return
+
+        if turning_through_0_deg:
+            r = create_request(0.0, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
+            self.__send_request(r)
             return
         
-        r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
-        self.__send_request(r)
+
+        
+        r1 = create_request(0.0, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
+        self.__send_request(r1)
+        time.sleep(1/(2*self._controller_frequency))
+        r2 = create_request(move_velocity, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
+        self.__send_request(r2)
+        return
+        
 
 
         # angle = 0
