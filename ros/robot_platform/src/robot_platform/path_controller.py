@@ -66,7 +66,7 @@ class PathPlatformController(ROSNode):
         turn_radius = turn_radius if move_velocity > 0 else -turn_radius
 
         changing_direction = self._same_sign(move_velocity, self._last_velocity)
-        turning_through_0_deg = self._same_sign(angle, self._last_angle)
+        turning_through_0_deg = not self._same_sign(angle, self._last_angle)
         abs_turn_delta = abs(angle - self._last_angle)
 
         self._last_velocity = move_velocity
