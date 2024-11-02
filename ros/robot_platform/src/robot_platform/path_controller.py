@@ -84,11 +84,6 @@ class PathPlatformController(ROSNode):
             r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
             self.__send_request(r)
             return
-
-        if turning_through_0_deg and not moves_slowly:
-            r = create_request(0.0, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
-            self.__send_request(r)
-            return
         
 
         
