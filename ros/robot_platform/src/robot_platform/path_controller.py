@@ -79,7 +79,7 @@ class PathPlatformController(ROSNode):
             r1 = create_request(0.0, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
             self.__send_request(r1)
             time.sleep(1/(2*self._controller_frequency))
-            r2 = create_request(move_velocity, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, None)
+            r2 = create_request(move_velocity, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
             self.__send_request(r2)
         else:
             turning_point.y = turn_radius
