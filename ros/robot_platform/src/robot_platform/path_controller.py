@@ -63,7 +63,7 @@ class PathPlatformController(ROSNode):
 
         move_velocity = abs_move_velocity if cmd_vel.linear.x > 0 else -abs_move_velocity
         angle = cmd_vel.angular.z
-        abs_turn_radius = max(MAX_TURN_RADIUS - abs(angle), PlatformStatics.ROBOT_WIDTH/2 + 0.01)
+        abs_turn_radius = max(MAX_TURN_RADIUS - 1.05 * abs(angle), PlatformStatics.ROBOT_WIDTH/2 + 0.01)
         turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
         turn_radius = turn_radius if move_velocity > 0 else -turn_radius
 
