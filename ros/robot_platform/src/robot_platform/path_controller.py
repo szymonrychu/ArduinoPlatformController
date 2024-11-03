@@ -17,14 +17,7 @@ from nav_msgs.msg import Odometry
 TINY_ANGLE_DELTA = math.pi/18
 SMALL_ANGLE_DELTA = math.pi/12
 SLOW_SPEED = 0.1
-MAX_SPEED = 0.3
-ROTATION_SPEED = math.pi/0.8
-TINY_WAIT_S = 0.1
-CAN_MOVE_CONTINOUSLY_CTR_MAX = 5
-MAX_TURN_RADIUS = 1.0
-
-REQUEST_DURATION=0.1
-MAX_SERVO_ROTATION_ANGLE_WITHIN_REQUEST = PlatformStatics.TURN_VELOCITY * REQUEST_DURATION
+MAX_SPEED = 0.4
 
 class PathPlatformController(ROSNode):
 
@@ -85,77 +78,8 @@ class PathPlatformController(ROSNode):
         else:
             move_velocity = MAX_SPEED if cmd_vel.linear.x > 0 else -MAX_SPEED
 
-
-        # if small_angle_update and not moves_slowly:
-        r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
+        r = create_request(move_velocity, 1/self._controller_frequency + 1.0, self._last_platform_status, turning_point)
         self.__send_request(r)
-        return
-        
-
-        
-        r1 = create_request(0.0, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
-        self.__send_request(r1)
-        time.sleep(1/(2*self._controller_frequency))
-        r2 = create_request(move_velocity, 1/(2*self._controller_frequency) + 0.5, self._last_platform_status, turning_point)
-        self.__send_request(r2)
-        return
-        
-
-
-        # angle = 0
-        # move_velocity = 0
-    
-        # if cmd_vel.linear.x > 0:
-        #     move_velocity = min(max(cmd_vel.linear.x, SLOW_SPEED), MAX_SPEED)
-        #     angle = cmd_vel.angular.z * 1.04
-        # elif cmd_vel.linear.x < 0:
-        #     move_velocity = max(min(cmd_vel.linear.x, -SLOW_SPEED), -MAX_SPEED)
-        #     angle = cmd_vel.angular.z * 1.04
-            
-
-        # abs_angle_delta = abs(angle - self._last_angle)
-        # crossing_0_angle = (angle > 0 and self._last_angle < 0) or (angle < 0 and self._last_angle > 0) and abs_angle_delta > SMALL_ANGLE_DELTA
-        
-
-        # angle_delta_tiny = abs_angle_delta < TINY_ANGLE_DELTA
-        # moves_slowly = abs(move_velocity) == SLOW_SPEED
-        # angle_tiny = abs(angle) < TINY_ANGLE_DELTA
-        # changes_direction = (move_velocity < 0 and self._last_velocity > 0) or (move_velocity > 0 and self._last_velocity < 0)
-
-        # self._last_angle = angle
-        # self._last_velocity = move_velocity
-
-
-        # turning_point = Point()
-
-        # if angle != 0 and self._controller_frequency != 0:
-        #     turning_point.y = move_velocity / (angle * self._controller_frequency)
-        
-        # r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
-        # self.__send_request(r)
-
-        # if (angle_delta_tiny or angle_tiny) and not changes_direction:
-        #     rospy.loginfo(f"Handling tiny turn without slowdown delta={abs_angle_delta}")
-        #     r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
-        #     self.__send_request(r)
-        # else:
-        #     rospy.loginfo(f"Handling big turn with full stop and servo readjustment delta={abs_angle_delta}")
-        #     r = create_request(move_velocity, 1.2, self._last_platform_status, turning_point)
-        #     r_in_place = deepcopy(r)
-        #     r_in_place.motor1.velocity = 0
-        #     r_in_place.motor2.velocity = 0
-        #     r_in_place.motor3.velocity = 0
-        #     r_in_place.motor4.velocity = 0
-        #     r_in_place.duration = ROTATION_SPEED * self._controller_frequency * (abs_angle_delta/math.pi) # min servo turn duration
-        #     self.__send_request(r_in_place)
-        #     time.sleep(r_in_place.duration) # wait until servos are fully turned
-        #     counter = 0
-        #     while self._still_turning(r_in_place) or self._cant_move_continously(angle):
-        #         if counter > 75:
-        #             break
-        #         counter+=1
-        #         time.sleep(0.01)
-        #     self.__send_request(r) # send move forward request
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status
