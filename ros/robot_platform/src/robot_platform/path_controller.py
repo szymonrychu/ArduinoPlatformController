@@ -78,7 +78,7 @@ class PathPlatformController(ROSNode):
         else:
             move_velocity = MAX_SPEED if cmd_vel.linear.x > 0 else -MAX_SPEED
 
-        r = create_request(move_velocity, 1/self._controller_frequency + 1.0, self._last_platform_status, turning_point)
+        r = create_request(move_velocity, 1/self._controller_frequency, self._last_platform_status, turning_point)
         self.__send_request(r)
 
     def _handle_platform_status(self, status:PlatformStatus):

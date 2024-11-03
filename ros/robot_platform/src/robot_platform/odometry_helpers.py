@@ -51,7 +51,7 @@ class PlatformStatics:
     MIN_ANGLE_DIFF = 0.01
     MAX_DISTANCE_TOLERANCE = 0.025
     REQUEST_DURATION_COEFFICIENT = 1.5 # how much additional time to count into a move, so we get overlapped requests
-
+    DURATION_OVERLAP_STATIC=1.0
     WHEEL_RADIUS = 0.13
 
 def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:float, mb_y:float) -> Optional[Point]:
@@ -182,7 +182,7 @@ def limit_delta_servo_velocity_angles(delta_servo_angles:List[float], duration:f
     max_abs_delta_servo_angle = max([abs(a) for a in delta_servo_angles])
     if max_abs_delta_servo_angle == 0:
         return delta_servo_angles
-    max_possible_servo_angle = min([max_abs_delta_servo_angle, (duration - 1.0) * PlatformStatics.TURN_VELOCITY])
+    max_possible_servo_angle = min([max_abs_delta_servo_angle, duration * PlatformStatics.TURN_VELOCITY])
     delta_servo_coefficient = max_possible_servo_angle / max_abs_delta_servo_angle
     result = []
     for delta_servo_angle in delta_servo_angles:
