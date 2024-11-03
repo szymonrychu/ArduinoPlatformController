@@ -16,7 +16,7 @@ from nav_msgs.msg import Odometry
 
 TINY_ANGLE_DELTA = math.pi/18
 SMALL_ANGLE_DELTA = math.pi/12
-SLOW_SPEED = 0.15
+SLOW_SPEED = 0.1
 MAX_SPEED = 0.3
 ROTATION_SPEED = math.pi/0.8
 TINY_WAIT_S = 0.1
@@ -63,7 +63,7 @@ class PathPlatformController(ROSNode):
 
         move_velocity = abs_move_velocity if cmd_vel.linear.x > 0 else -abs_move_velocity
         angle = cmd_vel.angular.z
-        abs_turn_radius = move_velocity / max(abs(angle)* self._controller_frequency, PlatformStatics.ROBOT_WIDTH/2 + 0.01)
+        abs_turn_radius = move_velocity / abs(angle)* self._controller_frequency
         turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
         # turn_radius = turn_radius if move_velocity > 0 else -turn_radius
 
@@ -79,6 +79,9 @@ class PathPlatformController(ROSNode):
 
         turning_point = Point()
         turning_point.y = turn_radius
+
+        if changing_direction:
+            move_velocity = SLOW_SPEED if cmd_vel.linear.x > 0 else -SLOW_SPEED
 
         # if small_angle_update and not moves_slowly:
         r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
