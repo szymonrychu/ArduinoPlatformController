@@ -46,7 +46,7 @@ class PlatformStatics:
     ]
 
 
-    TURN_VELOCITY = 1.57079632*2 # 90degrees in 1s *2
+    TURN_VELOCITY = math.pi/3
     MOVE_VELOCITY = 1.5
     MIN_ANGLE_DIFF = 0.01
     MAX_DISTANCE_TOLERANCE = 0.025
@@ -97,11 +97,9 @@ def check_if_points_are_close(points:List[Point], turning_radius:float = 0.0) ->
 
     abs_turning_radius = abs(turning_radius)
     # compute tolerance with the premise of the more distant the mean_points_distance is (the bigger turning radius), the more we can tolerate
-    max_relative_tolerance = PlatformStatics.MAX_DISTANCE_TOLERANCE * max(abs_turning_radius, 1.0)
+    max_relative_tolerance = PlatformStatics.MAX_DISTANCE_TOLERANCE * max(abs_turning_radius/2.0, 1.0)
 
     max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas])
-
-    print(max_coordinate_delta, max_relative_tolerance, max_coordinate_delta < max_relative_tolerance)
 
     return max_coordinate_delta < max_relative_tolerance
 
