@@ -82,6 +82,9 @@ class PathPlatformController(ROSNode):
 
         if changing_direction:
             move_velocity = SLOW_SPEED if cmd_vel.linear.x > 0 else -SLOW_SPEED
+        else:
+            move_velocity = MAX_SPEED if cmd_vel.linear.x > 0 else -MAX_SPEED
+
 
         # if small_angle_update and not moves_slowly:
         r = create_request(move_velocity, 1/self._controller_frequency + 0.5, self._last_platform_status, turning_point)
