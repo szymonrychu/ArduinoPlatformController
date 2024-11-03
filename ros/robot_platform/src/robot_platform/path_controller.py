@@ -71,7 +71,7 @@ class PathPlatformController(ROSNode):
         abs_turn_delta = abs(angle - self._last_angle)
         tiny_angle_update = abs_turn_delta < TINY_ANGLE_DELTA
         small_angle_update = abs_turn_delta < SMALL_ANGLE_DELTA
-        changing_direction = self._same_sign(move_velocity, self._last_velocity)
+        changing_direction = not self._same_sign(move_velocity, self._last_velocity)
         turning_through_0_deg = not self._same_sign(angle, self._last_angle)
 
         self._last_velocity = move_velocity
