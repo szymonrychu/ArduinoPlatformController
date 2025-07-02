@@ -23,7 +23,7 @@ class PathPlatformController(ROSNode):
 
 
     def __init__(self):
-        ROSNode.__init__(self)
+        ROSNode.__init__(self, 'path_controller')
         self._last_platform_status = PlatformStatus()
         self._last_angle = 0
 

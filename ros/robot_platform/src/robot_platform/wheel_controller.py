@@ -31,7 +31,7 @@ from .tf_helpers import *
 class WheelController(ROSNode, SafeSerialWrapper):
 
     def __init__(self):
-        ROSNode.__init__(self)
+        ROSNode.__init__(self, 'wheel_controller')
         self._message_counter = 0
         self._motor_distances = [0.0] * PlatformStatics.MOTOR_NUM
         self._total_yaw = 0.0
