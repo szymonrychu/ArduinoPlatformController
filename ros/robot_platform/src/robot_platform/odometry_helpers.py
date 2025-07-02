@@ -76,7 +76,7 @@ def compute_mean_turning_point(points:List[Point]) -> Optional[Point]:
     p.y = sum([w.y for w in points])/points_len
     return p
 
-def check_if_points_are_close(points:List[Point]) -> bool:
+def check_if_points_are_close(points:List[Point], turning_radius) -> bool:
     if not points or len(points) < 1:
         return False
 
