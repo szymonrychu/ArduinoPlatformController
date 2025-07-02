@@ -249,7 +249,8 @@ class MyViz(QWidget):
 
     def _handle_joystick_updates(self, data:Joy):
 
-        if data.axes:
+        if data.axes and any([abs(d) > 0.001 for d in data.axes]):
+            self._send_stop_command()
 
             velocity = self._get_velocity(data.axes[1], data.axes[2])
             turn_radius = self._get_turn_radius(data.axes[0])
@@ -265,6 +266,9 @@ class MyViz(QWidget):
             r = create_request(velocity, 5*duration, self._last_platform_status, turning_point, pan, tilt)
             with self._request_lock:
                 self._request = r
+        else:
+            with self._request_lock:
+                self._request = None
 
     def _handle_platform_status(self, status:PlatformStatus):
         self._last_platform_status = status

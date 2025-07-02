@@ -138,4 +138,3 @@ def main():
     platform = JoyPlatformController()
     signal.signal(signal.SIGINT, platform.stop)
     signal.signal(signal.SIGTERM, platform.stop)
-    platform.start()

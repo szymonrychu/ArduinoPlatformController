@@ -88,4 +88,3 @@ def main():
     platform = PathPlatformController()
     signal.signal(signal.SIGINT, platform.stop)
     signal.signal(signal.SIGTERM, platform.stop)
-    platform.start()
