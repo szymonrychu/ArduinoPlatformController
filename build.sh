@@ -3,7 +3,7 @@
 set -euo nounset
 
 
-sudo systemctl stop ros
+sudo systemctl stop ros_robot_platform
 
 readonly GIT_REPO_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
