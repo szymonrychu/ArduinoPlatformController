@@ -217,26 +217,38 @@ def non_empty_request(request:MoveRequest):
     r = r or abs(request.motor4.velocity) > 0
     return r
 
-def create_request(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None, tilt:float=0.0, pan:float=0.0) -> Optional[MoveRequest]:
+def create_requests(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None, tilt:float=0.0, pan:float=0.0) -> List[MoveRequest]:
+    request = MoveRequest()
+    request.duration = duration
+    velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
+
+    requests = []
+    
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, platform_status)
     limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, duration)
     motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, platform_status)
+    max_motor_servo_angle_delta = max([abs(a) for a in motor_servo_angle_deltas])
+    motor_turn_time = max_motor_servo_angle_delta/PlatformStatics.TURN_VELOCITY
 
-    request = MoveRequest()
-    request.duration = duration
+    turn_request = MoveRequest()
+    turn_request.duration = motor_turn_time
+    turn_request.motor1.servo.angle = round(motor_servo_angle_deltas[0], 3)
+    turn_request.motor2.servo.angle = round(motor_servo_angle_deltas[1], 3)
+    turn_request.motor3.servo.angle = round(motor_servo_angle_deltas[2], 3)
+    turn_request.motor4.servo.angle = round(motor_servo_angle_deltas[3], 3)
+    turn_request.motor1.servo.angle_provided = abs(platform_status.motor1.servo.angle - motor_servo_angle_deltas[0]) > 0.01
+    turn_request.motor2.servo.angle_provided = abs(platform_status.motor2.servo.angle - motor_servo_angle_deltas[1]) > 0.01
+    turn_request.motor3.servo.angle_provided = abs(platform_status.motor3.servo.angle - motor_servo_angle_deltas[2]) > 0.01
+    turn_request.motor4.servo.angle_provided = abs(platform_status.motor4.servo.angle - motor_servo_angle_deltas[3]) > 0.01
+
+    if any([m.servo.angle_provided for m in [turn_request.motor1, turn_request.motor2, turn_request.motor3, turn_request.motor4]]):
+        requests.append(turn_request)
 
     request.motor1.servo.angle = round(motor_servo_angle_deltas[0], 3)
     request.motor2.servo.angle = round(motor_servo_angle_deltas[1], 3)
     request.motor3.servo.angle = round(motor_servo_angle_deltas[2], 3)
     request.motor4.servo.angle = round(motor_servo_angle_deltas[3], 3)
-    request.motor1.servo.angle_provided = abs(platform_status.motor1.servo.angle - motor_servo_angle_deltas[0]) > 0.01
-    request.motor2.servo.angle_provided = abs(platform_status.motor2.servo.angle - motor_servo_angle_deltas[1]) > 0.01
-    request.motor3.servo.angle_provided = abs(platform_status.motor3.servo.angle - motor_servo_angle_deltas[2]) > 0.01
-    request.motor4.servo.angle_provided = abs(platform_status.motor4.servo.angle - motor_servo_angle_deltas[3]) > 0.01
-    
-    can_move_wheels_continously = True
-    velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
     
     if turning_point:
         can_move_wheels_continously = compute_relative_turning_point(motor_request_to_status(request)) != None
@@ -253,19 +265,20 @@ def create_request(velocity:float, duration:float, platform_status:PlatformStatu
                 if can_move_wheels_continously and is_within_robot_width:
                     can_move_wheels_continously = False
     
-    if can_move_wheels_continously:
-        request.motor1.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[0] * velocity, 3)
-        request.motor2.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[1] * velocity, 3)
-        request.motor3.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[2] * velocity, 3)
-        request.motor4.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[3] * velocity, 3)
+    request.motor1.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[0] * velocity, 3)
+    request.motor2.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[1] * velocity, 3)
+    request.motor3.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[2] * velocity, 3)
+    request.motor4.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[3] * velocity, 3)
     
-    if tilt:
-        request.tilt.angle = round(tilt, 3)
-        request.tilt.angle_provided = True
+    # if tilt:
+    #     request.tilt.angle = round(tilt, 3)
+    #     request.tilt.angle_provided = True
 
-    if pan:
-        request.pan.angle = round(pan, 3)
-        request.pan.angle_provided = True
+    # if pan:
+    #     request.pan.angle = round(pan, 3)
+    #     request.pan.angle_provided = True
 
     if non_empty_request(request):
-        return request
+        requests.append(request)
+    
+    return requests
