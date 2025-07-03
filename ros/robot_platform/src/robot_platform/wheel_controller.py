@@ -148,7 +148,8 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
-        if all([m.ready for m in response.motor_list]) and timestamp > self._next_request_finish_time:
+        # if all([m.ready for m in response.motor_list]) and timestamp > self._next_request_finish_time:
+        if timestamp > self._next_request_finish_time:
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
