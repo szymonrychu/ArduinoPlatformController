@@ -232,7 +232,7 @@ def create_requests(velocity:float, duration:float, platform_status:PlatformStat
     motor_turn_time = max_motor_servo_angle_delta/PlatformStatics.TURN_VELOCITY
 
     turn_request = MoveRequest()
-    turn_request.duration = motor_turn_time
+    turn_request.duration = 1.5 * motor_turn_time
     turn_request.motor1.servo.angle = round(motor_servo_angle_deltas[0], 3)
     turn_request.motor2.servo.angle = round(motor_servo_angle_deltas[1], 3)
     turn_request.motor3.servo.angle = round(motor_servo_angle_deltas[2], 3)
