@@ -166,10 +166,10 @@ class WheelController(ROSNode, SafeSerialWrapper):
                 odometry.twist.covariance[35] = 0.01
             self._odometry_publisher.publish(odometry)
 
-        pose_stamped = PoseStamped()
-        pose_stamped.header = odometry.header
-        pose_stamped.pose = odometry.pose.pose
-        self._pose_publisher.publish(pose_stamped)
+            pose_stamped = PoseStamped()
+            pose_stamped.header = odometry.header
+            pose_stamped.pose = odometry.pose.pose
+            self._pose_publisher.publish(pose_stamped)
 
         # transforms.append(create_static_transform(self._odom_frame_id, self._base_footprint_frame_id, 0, 0, 0, 0, 0, self._total_yaw, rospy_time_now))
         
