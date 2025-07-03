@@ -103,6 +103,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         rospy.loginfo(f"requesting: '{json_r}'")
         if not self.write_data(json_r):
             self.stop()
+        time.sleep(r.move_duration)
 
     def parse_serial(self, raw_data:String):
         rospy_time_now = rospy.Time.now()
