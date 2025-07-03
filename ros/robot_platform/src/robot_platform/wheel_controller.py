@@ -145,25 +145,26 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
-        odometry = Odometry()
-        odometry.header.stamp = rospy_time_now
-        odometry.header.frame_id = self._base_frame_id
-        odometry.child_frame_id = self._odom_frame_id
-        odometry.pose.pose.position.x = self._total_X
-        odometry.pose.pose.position.y = self._total_Y
-        odometry.pose.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
-        odometry.twist.twist.linear.x = mean_distance_delta / (timestamp - self._last_timestmamp)
-        odometry.twist.twist.angular.z = yaw_delta / (timestamp - self._last_timestmamp)
+        if all([m.ready for m in response.motor_list]):
+            odometry = Odometry()
+            odometry.header.stamp = rospy_time_now
+            odometry.header.frame_id = self._base_frame_id
+            odometry.child_frame_id = self._odom_frame_id
+            odometry.pose.pose.position.x = self._total_X
+            odometry.pose.pose.position.y = self._total_Y
+            odometry.pose.pose.orientation = get_quaterion_from_rpy(0, 0, self._total_yaw)
+            odometry.twist.twist.linear.x = mean_distance_delta / (timestamp - self._last_timestmamp)
+            odometry.twist.twist.angular.z = yaw_delta / (timestamp - self._last_timestmamp)
 
-        if odometry.twist.twist.linear.x  == 0 and odometry.twist.twist.angular.z == 0:
-            odometry.twist.covariance[0] = 0.01 / 1000
-            odometry.twist.covariance[7] = 0.01 / 1000
-            odometry.twist.covariance[35] = 0.01 / 1000000
-        else:
-            odometry.twist.covariance[0] = 0.01
-            odometry.twist.covariance[7] = 0.01
-            odometry.twist.covariance[35] = 0.01
-        self._odometry_publisher.publish(odometry)
+            if odometry.twist.twist.linear.x  == 0 and odometry.twist.twist.angular.z == 0:
+                odometry.twist.covariance[0] = 0.01 / 1000
+                odometry.twist.covariance[7] = 0.01 / 1000
+                odometry.twist.covariance[35] = 0.01 / 1000000
+            else:
+                odometry.twist.covariance[0] = 0.01
+                odometry.twist.covariance[7] = 0.01
+                odometry.twist.covariance[35] = 0.01
+            self._odometry_publisher.publish(odometry)
 
         pose_stamped = PoseStamped()
         pose_stamped.header = odometry.header

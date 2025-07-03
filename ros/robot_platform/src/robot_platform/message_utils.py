@@ -90,6 +90,7 @@ class IMUStatus(BaseModel):
 class ServoStatus(Message):
     angle: Optional[float] = 0.0
     angle_provided: Optional[bool] = False
+    ready: Optional[bool] = False
 
     def __eq__(self, other):
         return self.angle == other.angle and self.angle_provided == other.angle_provided
@@ -109,6 +110,7 @@ class MotorStatus(ServoStatus):
     distance: Optional[float] = None
     angle: Optional[float] = None
     angle_provided: Optional[bool] = False
+    ready: Optional[bool] = False
 
     def __eq__(self, other):
         return self.velocity == other.velocity and self.distance == other.distance and self.angle == other.angle and self.angle_provided == other.angle_provided
@@ -179,17 +181,23 @@ class StatusResponse(Message):
         platform_status.motor1.distance = self.motor1.distance
         platform_status.motor1.velocity = self.motor1.velocity
         platform_status.motor1.servo.angle = self.motor1.angle
+        platform_status.motor1.ready = self.motor1.ready
         platform_status.motor2.distance = self.motor2.distance
         platform_status.motor2.velocity = self.motor2.velocity
         platform_status.motor2.servo.angle = self.motor2.angle
+        platform_status.motor2.ready = self.motor2.ready
         platform_status.motor3.distance = self.motor3.distance
         platform_status.motor3.velocity = self.motor3.velocity
         platform_status.motor3.servo.angle = self.motor3.angle
+        platform_status.motor3.ready = self.motor3.ready
         platform_status.motor4.distance = self.motor4.distance
         platform_status.motor4.velocity = self.motor4.velocity
         platform_status.motor4.servo.angle = self.motor4.angle
+        platform_status.motor4.ready = self.motor4.ready
         platform_status.pan.angle = self.pan.angle
+        platform_status.pan.ready = self.pan.ready
         platform_status.tilt.angle = self.tilt.angle
+        platform_status.tilt.ready = self.tilt.ready
         platform_status.imu = self.imu.parse_ROS_IMU(header_frame_id, timestamp)
         platform_status.gps = self.gps.parse_ROS_GPS(header_frame_id, timestamp)
         platform_status.battery = self.battery.parse_ROS_Battery(header_frame_id, timestamp)

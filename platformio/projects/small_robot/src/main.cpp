@@ -285,27 +285,33 @@ void loop(void){
     m1["velocity"] = motor1.currentVelocity();
     m1["distance"] = motor1.currentDistanceDelta();
     m1["angle"] = motor1.readServo();
+    m1["ready"] motor1.servoReady() && motor1.isStopped();
 
     JsonObject m2 = doc.createNestedObject("motor2");
     m2["velocity"] = motor2.currentVelocity();
     m2["distance"] = motor2.currentDistanceDelta();
     m2["angle"] = motor2.readServo();
+    m2["ready"] motor2.servoReady() && motor2.isStopped();
 
     JsonObject m3 = doc.createNestedObject("motor3");
     m3["velocity"] = motor3.currentVelocity();
     m3["distance"] = motor3.currentDistanceDelta();
     m3["angle"] = motor3.readServo();
+    m3["ready"] motor3.servoReady() && motor3.isStopped();
 
     JsonObject m4 = doc.createNestedObject("motor4");
     m4["velocity"] = motor4.currentVelocity();
     m4["distance"] = motor4.currentDistanceDelta();
     m4["angle"] = motor4.readServo();
+    m4["ready"] motor4.servoReady() && motor4.isStopped();
 
     JsonObject pan = doc.createNestedObject("pan");
     pan["angle"] = servoPan.readServo();
+    pan["ready"] = servoPan.servoReady();
 
     JsonObject tilt = doc.createNestedObject("tilt");
     tilt["angle"] = servoTilt.readServo();
+    tilt["ready"] = servoTilt.servoReady();
 
     serializeJson(doc, Serial);
     Serial.println("");
