@@ -148,6 +148,9 @@ def compute_relative_turning_point(motors:List[MotorStatus]) -> Optional[Point]:
 def _if_between(x, a, b):
     return (a > x and x > b)
 
+def _same_signs(a:float, b:float) -> bool:
+    return (a > 0 and b > 0) or (a < 0 and b < 0)
+
 def _get_motor_list_from_platform_status(platform_status:PlatformStatus) -> List[Motor]:
     return [
         platform_status.motor1,
@@ -232,7 +235,9 @@ def create_requests(velocity:float, duration:float, platform_status:PlatformStat
     motor_turn_time = max_motor_servo_angle_delta/PlatformStatics.TURN_VELOCITY
 
     turn_request = MoveRequest()
-    turn_request.duration = 3 * motor_turn_time
+    turn_request.duration = motor_turn_time
+    if max_motor_servo_angle_delta > math.pi/18:
+        turn_request.duration *= 4
     turn_request.motor1.servo.angle = round(motor_servo_angle_deltas[0], 3)
     turn_request.motor2.servo.angle = round(motor_servo_angle_deltas[1], 3)
     turn_request.motor3.servo.angle = round(motor_servo_angle_deltas[2], 3)
