@@ -46,7 +46,7 @@ class PlatformStatics:
     ]
 
 
-    TURN_VELOCITY = math.pi/3
+    TURN_VELOCITY = math.pi/(0.18*3)
     MOVE_VELOCITY = 1.5
     MIN_ANGLE_DIFF = 0.01
     MAX_DISTANCE_TOLERANCE = 0.025
