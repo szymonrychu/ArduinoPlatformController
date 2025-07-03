@@ -38,6 +38,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._total_X = 0.0
         self._total_Y = 0.0
         self._last_timestmamp = time.time()
+        self._next_request_finish_time = time.time()
 
         serial_dev = rospy.get_param('~serial_dev')
         serial_baudrate = rospy.get_param('~serial_baudrate')
@@ -97,6 +98,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
 
     def _handle_wheel_inputs(self, raw_data:MoveRequest):
         r = Request.from_MoveRequest(raw_data)
+        self._next_request_finish_time = r.move_duration + time.time()
         json_r = r.model_dump_json(exclude_none=True, exclude_unset=True)
         rospy.loginfo(f"requesting: '{json_r}'")
         if not self.write_data(json_r):
@@ -145,7 +147,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
-        if all([m.ready for m in response.motor_list]):
+        if all([m.ready for m in response.motor_list]) and timestamp > self._next_request_finish_time:
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
