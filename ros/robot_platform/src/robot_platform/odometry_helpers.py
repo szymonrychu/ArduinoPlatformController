@@ -244,26 +244,25 @@ def create_requests(velocity:float, duration:float, platform_status:PlatformStat
 
     if any([m.servo.angle_provided for m in [turn_request.motor1, turn_request.motor2, turn_request.motor3, turn_request.motor4]]):
         requests.append(turn_request)
-
-    request.motor1.servo.angle = round(motor_servo_angle_deltas[0], 3)
-    request.motor2.servo.angle = round(motor_servo_angle_deltas[1], 3)
-    request.motor3.servo.angle = round(motor_servo_angle_deltas[2], 3)
-    request.motor4.servo.angle = round(motor_servo_angle_deltas[3], 3)
+        request.motor1.servo.angle = round(motor_servo_angle_deltas[0], 3)
+        request.motor2.servo.angle = round(motor_servo_angle_deltas[1], 3)
+        request.motor3.servo.angle = round(motor_servo_angle_deltas[2], 3)
+        request.motor4.servo.angle = round(motor_servo_angle_deltas[3], 3)
     
-    if turning_point:
-        can_move_wheels_continously = compute_relative_turning_point(motor_request_to_status(request)) != None
-        turn_radius = math.sqrt(turning_point.x**2 + turning_point.y**2)
-        if turn_radius > PlatformStatics.MAX_DISTANCE_TOLERANCE:
-            velocity_coefficients = []
-            for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
-                motor_turn_radius = math.sqrt((m_y - turning_point.y)**2 + (m_x + turning_point.x)**2)
+        if turning_point:
+            can_move_wheels_continously = compute_relative_turning_point(motor_request_to_status(request)) != None
+            turn_radius = math.sqrt(turning_point.x**2 + turning_point.y**2)
+            if turn_radius > PlatformStatics.MAX_DISTANCE_TOLERANCE:
+                velocity_coefficients = []
+                for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
+                    motor_turn_radius = math.sqrt((m_y - turning_point.y)**2 + (m_x + turning_point.x)**2)
 
-                is_within_robot_width = min(0, m_y) <= turning_point.y and turning_point.y <= max(0, m_y)
-                c = -1.0 if is_within_robot_width else 1.0
+                    is_within_robot_width = min(0, m_y) <= turning_point.y and turning_point.y <= max(0, m_y)
+                    c = -1.0 if is_within_robot_width else 1.0
 
-                velocity_coefficients.append( c * motor_turn_radius / turn_radius)
-                if can_move_wheels_continously and is_within_robot_width:
-                    can_move_wheels_continously = False
+                    velocity_coefficients.append( c * motor_turn_radius / turn_radius)
+                    if can_move_wheels_continously and is_within_robot_width:
+                        can_move_wheels_continously = False
     
     request.motor1.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[0] * velocity, 3)
     request.motor2.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[1] * velocity, 3)

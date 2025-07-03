@@ -63,19 +63,8 @@ class PathPlatformController(ROSNode):
             turn_radius = abs_turn_radius if cmd_vel.angular.z > 0 else -abs_turn_radius
             turning_point.y = turn_radius
 
-        moves_slowly = abs_move_velocity == SLOW_SPEED
-        abs_turn_delta = abs(angle - self._last_angle)
-        tiny_angle_update = abs_turn_delta < TINY_ANGLE_DELTA
-        small_angle_update = abs_turn_delta < SMALL_ANGLE_DELTA
-        changing_direction = not self._same_sign(move_velocity, self._last_velocity)
-        turning_through_0_deg = not self._same_sign(angle, self._last_angle)
-
         self._last_velocity = move_velocity
         self._last_angle = angle
-
-
-        if changing_direction:
-            move_velocity = SLOW_SPEED if cmd_vel.linear.x > 0 else -SLOW_SPEED
 
         for r in create_requests(move_velocity, 1/self._controller_frequency, self._last_platform_status, turning_point):
             self.__send_request(r)
