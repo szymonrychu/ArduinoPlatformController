@@ -1,0 +1,23 @@
+{
+  "name": "ROS Noetic Dev",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "runArgs": [
+    "--env", "DISPLAY=host.docker.internal:0",
+    "--env", "QT_X11_NO_MITSHM=1",
+    "--volume", "/tmp/.X11-unix:/tmp/.X11-unix",
+  ],
+  "forwardPorts": [11311, 9090],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-ros.ros",
+        "platformio.platformio-ide"
+      ]
+    }
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ros/catkin_ws/src/ArduinoPlatformController,type=bind,consistency=delegated",
+  "workspaceFolder": "/home/ros/catkin_ws/src/ArduinoPlatformController"
+}
