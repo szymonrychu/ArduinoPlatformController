@@ -2,5 +2,7 @@
 .pioenvs
 .piolibdeps
 .vscode/*
+**/.vscode/*
+.idea
 
 ansible/buffer/openvpn/**

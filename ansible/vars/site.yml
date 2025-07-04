@@ -1,5 +1,0 @@
-vpn_master_hostname: robot
-
-vpn_static_client_dict:
-  overlord: 10.8.0.8
-  mobile-overlord: 10.8.0.9
