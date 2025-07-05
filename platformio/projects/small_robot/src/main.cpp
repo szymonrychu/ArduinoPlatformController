@@ -88,6 +88,8 @@ JSONCommand command = JSONCommand("\n", commandHandler);
 uint64_t lastCommandTimestampMicros = 0;
 uint64_t moveTimeout = 0;
 
+char* moveUuid = "";
+
 void commandHandler(char* input){
   DynamicJsonDocument doc(512);
   deserializeJson(doc, input);
@@ -96,11 +98,15 @@ void commandHandler(char* input){
   double moveDuration = 0;
   lastCommandTimestampMicros = micros();
 
-  if(!obj["move_duration"].isNull()){
-    moveDuration = obj["move_duration"];
+  if(!obj["duration"].isNull()){
+    moveDuration = obj["duration"];
     moveTimeout = (uint64_t)(1000000.0 * moveDuration) + lastCommandTimestampMicros;
   } else {
     moveTimeout = 0;
+  }
+
+  if(!obj["moveUuid"].isNull()){
+    moveUuid = String(obj["moveUuid"]).c_str();
   }
 
   bool resetMotorsControllers = true;
@@ -110,31 +116,44 @@ void commandHandler(char* input){
       motor1.drive(obj["motor1"]["velocity"]);
       resetMotorsControllers = false;
     }
-    if(!obj["motor1"]["angle"].isNull()) motor1.writeServo(obj["motor1"]["angle"], moveDuration);
   }
-
+  if(!obj["servo1"].isNull()){
+    if(!obj["servo1"]["angle"].isNull()){
+      motor1.writeServo(obj["servo1"]["angle"], moveDuration);
+    }
+  }
   if(!obj["motor2"].isNull()){
     if(!obj["motor2"]["velocity"].isNull()){
       motor2.drive(obj["motor2"]["velocity"]);
       resetMotorsControllers = false;
     }
-    if(!obj["motor2"]["angle"].isNull()) motor2.writeServo(obj["motor2"]["angle"], moveDuration);
   }
-
+  if(!obj["servo2"].isNull()){
+    if(!obj["servo2"]["angle"].isNull()){
+      motor2.writeServo(obj["servo2"]["angle"], moveDuration);
+    }
+  }
   if(!obj["motor3"].isNull()){
     if(!obj["motor3"]["velocity"].isNull()){
       motor3.drive(obj["motor3"]["velocity"]);
       resetMotorsControllers = false;
     }
-    if(!obj["motor3"]["angle"].isNull()) motor3.writeServo(obj["motor3"]["angle"], moveDuration);
   }
-
+  if(!obj["servo3"].isNull()){
+    if(!obj["servo3"]["angle"].isNull()){
+      motor3.writeServo(obj["servo3"]["angle"], moveDuration);
+    }
+  }
   if(!obj["motor4"].isNull()){
     if(!obj["motor4"]["velocity"].isNull()){
       motor4.drive(obj["motor4"]["velocity"]);
       resetMotorsControllers = false;
     }
-    if(!obj["motor4"]["angle"].isNull()) motor4.writeServo(obj["motor4"]["angle"], moveDuration);
+  }
+  if(!obj["servo4"].isNull()){
+    if(!obj["servo4"]["angle"].isNull()){
+      motor4.writeServo(obj["servo4"]["angle"], moveDuration);
+    }
   }
   if(resetMotorsControllers){
     motor1.resetDistanceVelocity();
@@ -151,7 +170,6 @@ void commandHandler(char* input){
   if(!obj["tilt"].isNull()){
     if(!obj["tilt"]["angle"].isNull()) servoTilt.writeServo(obj["tilt"]["angle"], moveDuration);
   }
-
 }
 
 void serialEvent() {
@@ -235,11 +253,9 @@ void loop(void){
   if(loopCounter == 0){
     StaticJsonDocument<1024> doc;
     doc["micros"] = currentTimeMicros;
-    doc["int_temp"] = temp;
-    if(moveTimeout > 0){
-      doc["move_duration"] = ((double)(moveTimeout - currentTimeMicros))/1000000.0;
-    } else {
-      doc["move_duration"] = 0.0;
+    doc["temp"] = temp;
+    if(moveUuid != "") {
+      doc["moveUuid"] = moveUuid;
     }
 
     JsonObject batt = doc.createNestedObject("battery");
@@ -284,34 +300,32 @@ void loop(void){
     JsonObject m1 = doc.createNestedObject("motor1");
     m1["velocity"] = motor1.currentVelocity();
     m1["distance"] = motor1.currentDistanceDelta();
-    m1["angle"] = motor1.readServo();
-    m1["ready"] = motor1.servoReady() && motor1.isStopped();
+    JsonObject s1 = doc.createNestedObject("servo1");
+    s1["angle"] = motor1.readServo();
 
     JsonObject m2 = doc.createNestedObject("motor2");
     m2["velocity"] = motor2.currentVelocity();
     m2["distance"] = motor2.currentDistanceDelta();
-    m2["angle"] = motor2.readServo();
-    m2["ready"] = motor2.servoReady() && motor2.isStopped();
+    JsonObject s2 = doc.createNestedObject("servo2");
+    s2["angle"] = motor2.readServo();
 
     JsonObject m3 = doc.createNestedObject("motor3");
     m3["velocity"] = motor3.currentVelocity();
     m3["distance"] = motor3.currentDistanceDelta();
-    m3["angle"] = motor3.readServo();
-    m3["ready"] = motor3.servoReady() && motor3.isStopped();
+    JsonObject s3 = doc.createNestedObject("servo3");
+    s3["angle"] = motor3.readServo();
 
     JsonObject m4 = doc.createNestedObject("motor4");
     m4["velocity"] = motor4.currentVelocity();
     m4["distance"] = motor4.currentDistanceDelta();
-    m4["angle"] = motor4.readServo();
-    m4["ready"] = motor4.servoReady() && motor4.isStopped();
+    JsonObject s4 = doc.createNestedObject("servo4");
+    s4["angle"] = motor4.readServo();
 
     JsonObject pan = doc.createNestedObject("pan");
     pan["angle"] = servoPan.readServo();
-    pan["ready"] = servoPan.servoReady();
 
     JsonObject tilt = doc.createNestedObject("tilt");
     tilt["angle"] = servoTilt.readServo();
-    tilt["ready"] = servoTilt.servoReady();
 
     serializeJson(doc, Serial);
     Serial.println("");

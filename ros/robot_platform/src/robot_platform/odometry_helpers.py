@@ -1,16 +1,19 @@
 
-from .message_utils import MotorStatus
+from .models import Motor, Servo, Request, Status
 from .tf_helpers import *
 
 from typing import List, Optional
 
 import math
-from robot_platform.msg import PlatformStatus, MoveRequest, Motor
+from robot_platform.msg import PlatformStatus
 from geometry_msgs.msg import Point
 
 
 
 class PlatformStatics:
+    '''
+    Class describing statics used in the robot
+    '''
     MOTOR_NUM = 4
     ROBOT_LENGTH = 0.360
     ROBOT_WIDTH = 0.290
@@ -53,8 +56,24 @@ class PlatformStatics:
     REQUEST_DURATION_COEFFICIENT = 1.5 # how much additional time to count into a move, so we get overlapped requests
     DURATION_OVERLAP_STATIC=1.0
     WHEEL_RADIUS = 0.13
+    SLOW_SPEED = 0.1
+    MAX_SPEED = 0.4
 
 def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:float, mb_y:float) -> Optional[Point]:
+    """
+    Function computes turning point for 2 wheels based on angle and X,Y position of the wheel
+
+    Args:
+        m_a (float): motor A angle
+        ma_x (float): motor A X coordinate
+        ma_y (float): motor A Y coordinate
+        m_b (float): motor B angle
+        mb_x (float): motor B X coordinate
+        mb_y (float): motor B Y coordinate
+
+    Returns:
+        Optional[Point]: returns Point if the wheels are not pararell
+    """
     tg90mA = math.tan(math.pi/2 - m_a) if 0.0 != m_a else 0.0
     tg90mB = math.tan(math.pi/2 - m_b) if 0.0 != m_b else 0.0
     
@@ -62,11 +81,21 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
         return None
 
     p = Point()
-    # p.x = -(tg90mA * ma_x - tg90mB * mb_x - ma_y - mb_y) / (tg90mA + tg90mB)
+    p.x = -(tg90mA * ma_x - tg90mB * mb_x - ma_y - mb_y) / (tg90mA + tg90mB)
     p.y = -(tg90mA * ma_x - ma_y)
     return p
 
 def compute_mean_turning_point(points:List[Point]) -> Optional[Point]:
+    """
+    Function takes list of Points and computes returns mean 
+    coordinates for them, then returns this mean values as new Point
+
+    Args:
+        points (List[Point]): List of Points to compute mean from 
+
+    Returns:
+        Optional[Point]: returns Mean Point if the list is defined and not empty
+    """
     if not points or len(points) < 1:
         return None
     
@@ -76,8 +105,19 @@ def compute_mean_turning_point(points:List[Point]) -> Optional[Point]:
     p.y = sum([w.y for w in points])/points_len
     return p
 
-def check_if_points_are_close(points:List[Point], turning_radius:float) -> bool:
-    if not points or len(points) < 1:
+def check_if_points_are_close(points:List[Point], tolerance:float = PlatformStatics.MAX_DISTANCE_TOLERANCE) -> bool:
+    """
+    Validates if the points are reasonably close to each other.
+    Tolerance can be adjusted.
+
+    Args:
+        points (List[Point]): List of points to validate
+        tolerance (float, optional): tolerance when validating the distance between points. Defaults to PlatformStatics.MAX_DISTANCE_TOLERANCE.
+
+    Returns:
+        bool: _description_
+    """    
+    if not points:
         return False
 
     point_cordinate_deltas = []
@@ -90,48 +130,61 @@ def check_if_points_are_close(points:List[Point], turning_radius:float) -> bool:
             point_cordinate_deltas.append(pa.x - pb.x)
             point_cordinate_deltas.append(pa.y - pb.y)
     
-    if len(point_cordinate_deltas) < 1:
-        print("no point_cordinate_deltas provided")
+    if not point_cordinate_deltas:
+        rospy.logwarn("no point_cordinate_deltas provided")
         return False
-
-    abs_turning_radius = abs(turning_radius)
-    # compute tolerance with the premise of the more distant the mean_points_distance is (the bigger turning radius), the more we can tolerate
-    max_relative_tolerance = PlatformStatics.MAX_DISTANCE_TOLERANCE * max(abs_turning_radius/2.0, 1.0)
-
+    
     max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas])
-
-    return max_coordinate_delta < max_relative_tolerance
+    return max_coordinate_delta < tolerance
 
 
 def limit_angle(angle:float) -> float:
-    if angle >= math.pi/2:
-        return angle - math.pi
-    if angle <= -math.pi/2:
-        return angle + math.pi
+    """Limits angle in Radians to range between [-math.pi/2, math.pi/2]
+
+    Args:
+        angle (float): input angle
+
+    Returns:
+        float: normalized angle
+    """    
+    while angle >= math.pi/2:
+        angle -= math.pi
+    while angle <= -math.pi/2:
+        angle += math.pi
     return angle
 
-def rad2deg(angle_rad_list:List[float], round_:int = 4):
-    r = []
-    for a in angle_rad_list:
-        a_deg = round(180.0 * a / math.pi, round_)
-        r.append(f"{a_deg}")
-    if len(angle_rad_list) > 1:
-        return f"[{','.join(r)}]"
-    else:
-        return r[0]
+def compute_turning_radius_yaw_delta(relative_turning_point:Point, motors:List[Motor]) -> Tuple[float, float]:
+    """
+    Computes turning radius and increment yaw angle delta from turning point and motor distance.
+    For this computation to be valid, motors have to be turned in a way, so lines created out extending their
+    axises are crossing each other in the same point (relative_turning_point)
 
-def compute_turning_radius_yaw_delta(relative_turning_point:Point, motors:List[Motor]) -> Tuple[float]:
-    motors_num = len(motors)
-    mean_distance_delta = sum([m.distance for m in motors]) / motors_num
+    Args:
+        relative_turning_point (Point): Point where motor axises are crossing
+        motors (List[Motor]): List of motors used in the computation
+
+    Returns:
+        Tuple[float, float]: tumple with turning radius and delta yaw 
+    """
+    mean_distance_delta = sum([m.distance for m in motors]) / len(motors)
     turning_radius = math.sqrt(relative_turning_point.x ** 2 + relative_turning_point.y ** 2)
     yaw_delta = mean_distance_delta / turning_radius
     return (turning_radius, yaw_delta)
 
-def compute_relative_turning_point(motors:List[MotorStatus]) -> Optional[Point]:
+def compute_relative_turning_point(servos:List[Servo], turning_radius_scalling_factor:float = 0.5) -> Optional[Point]: 
+    """
+    Takes list of ServoStatus objects and tries to find relative turning point out of the lists
+
+    Args:
+        servos (List[ServoStatus]): List of Servo objects
+        turning_radius_scalling_factor (float, optional): Scalling factor for the tolerance. Defaults to 0.5.
+
+    Returns:
+        Optional[Point]: If possible consist of a point, where the wheel axises are crossing
+    """ 
     partial_turning_points = []
-    turning_radius = 0.0
-    for c_a, motor_a in enumerate(motors):
-        for c_b, motor_b in enumerate(motors):
+    for c_a, motor_a in enumerate(servos):
+        for c_b, motor_b in enumerate(servos):
             if c_a >= c_b:
                 continue
             (XA, YA), (XB, YB) = PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_a], PlatformStatics.ROBOT_MOTORS_DIMENSIONS[c_b]
@@ -140,27 +193,25 @@ def compute_relative_turning_point(motors:List[MotorStatus]) -> Optional[Point]:
                 partial_turning_points.append(turning_point)
         
     turning_point = compute_mean_turning_point(partial_turning_points)
-    if turning_point and check_if_points_are_close(partial_turning_points, math.sqrt(turning_point.x**2 + turning_point.y**2)):
-        return turning_point
+
+    if turning_point:
+        abs_turning_radius_scalled = turning_radius_scalling_factor * math.sqrt(turning_point.x**2 + turning_point.y**2)
+        tolerance_scalled = max(abs_turning_radius_scalled, 1.0)
+        if check_if_points_are_close(partial_turning_points, tolerance_scalled):
+            return turning_point
     return None
 
+def compute_target_servo_angles(turning_point:Optional[Point]=None) -> List[float]:
+    """
+    Function takes turning point and computes list of angles that each servo of the platform should reach.
+    If no turning point is provided, angles are set to 0.
 
-def _if_between(x, a, b):
-    return (a > x and x > b)
+    Args:
+        turning_point (Optional[Point], optional): Point where lines drawed from motor axises will cross. Defaults to None.
 
-def _same_signs(a:float, b:float) -> bool:
-    return (a > 0 and b > 0) or (a < 0 and b < 0)
-
-def _get_motor_list_from_platform_status(platform_status:PlatformStatus) -> List[Motor]:
-    return [
-        platform_status.motor1,
-        platform_status.motor2,
-        platform_status.motor3,
-        platform_status.motor4
-    ]
-
-
-def compute_target_servo_angles(turning_point:Point=None) -> List[float]:
+    Returns:
+        List[float]: List of angles, each servo should have, so the platform could safely turn around given point
+    """    
     if not turning_point:
         return [0.0] * PlatformStatics.MOTOR_NUM
     
@@ -174,115 +225,114 @@ def compute_target_servo_angles(turning_point:Point=None) -> List[float]:
     
     return target_angles
 
-def compute_delta_servo_angles(target_angles:List[float], platform_status:PlatformStatus) -> List[float]:
+def compute_delta_servo_angles(target_angles:List[float], servos:List[Servo]) -> List[float]:
+    """
+    Computes delta between servo angles reported by platform and target angles provided
+
+    Args:
+        target_angles (List[float]): angles for platform servos to reach
+        servos (List[ServoStatus]): List of Servo objects
+
+    Returns:
+        List[float]: List of delta angles
+    """
     delta_servo_angles = []
-    for target_angle, motor_status in zip(target_angles, _get_motor_list_from_platform_status(platform_status)):
-        delta_servo_angles.append(target_angle - motor_status.servo.angle)
+    for target_angle, servo in zip(target_angles, servos):
+        delta_servo_angles.append(target_angle - servo.angle)
     return delta_servo_angles
 
-def limit_delta_servo_velocity_angles(delta_servo_angles:List[float], duration:float) -> List[float]:
+def limit_delta_servo_velocity_angles(delta_servo_angles:List[float], duration:float, turn_velocity:float = PlatformStatics.TURN_VELOCITY) -> List[float]:
+    """
+    Limit angle deltas based on the duration provided.
+
+    Args:
+        delta_servo_angles (List[float]): List of delta angles
+        duration (float): duration around which the deltas should be scalled
+        turn_velocity (float, optional): turn_velocity to limit the turn angles around. Defaults to PlatformStatics.TURN_VELOCITY.
+
+    Returns:
+        List[float]: List of limiteddelta angles
+    """
     max_abs_delta_servo_angle = max([abs(a) for a in delta_servo_angles])
     if max_abs_delta_servo_angle == 0:
         return delta_servo_angles
-    max_possible_servo_angle = min([max_abs_delta_servo_angle, duration * PlatformStatics.TURN_VELOCITY])
-    delta_servo_coefficient = max_possible_servo_angle / max_abs_delta_servo_angle
-    result = []
-    for delta_servo_angle in delta_servo_angles:
-        result.append(delta_servo_coefficient * delta_servo_angle)
-    return result
 
+    max_possible_servo_angle = min([max_abs_delta_servo_angle, duration * turn_velocity])
+    delta_angle_coefficient = max_possible_servo_angle / max_abs_delta_servo_angle
+    return [ delta_angle_coefficient * delta_servo_angle for delta_servo_angle in delta_servo_angles]
 
-def compute_new_angle_updates(delta_servo_angles:List[float], platform_status:PlatformStatus) -> List[float]:
+def compute_new_angle_updates(delta_servo_angles:List[float], servos:List[Servo]) -> List[float]:
+    """
+    Takes delta angles and computes absolute requests for the platform for the next request
+
+    Args:
+        delta_servo_angles (List[float]): List of delta angles
+        servos (List[Servo]): List of Servo objects
+
+    Returns:
+        List[float]: List of angles
+    """    
     target_angles = []
-    for delta_angle, motor_status in zip(delta_servo_angles, _get_motor_list_from_platform_status(platform_status)):
-        target_angles.append(delta_angle + motor_status.servo.angle)
+    for delta_angle, servo in zip(delta_servo_angles, servos):
+        target_angles.append(delta_angle + servo.angle)
     return target_angles
 
-def motor_request_to_status(request:MoveRequest) -> List[MotorStatus]:
-    motors = []
-    for motor_request in [request.motor1, request.motor2, request.motor3, request.motor4]:
-        motor = MotorStatus()
-        motor.velocity = motor_request.velocity
-        motor.angle = motor_request.servo.angle
-        motors.append(motor)
-    return motors
+def create_requests(duration:float, platform_status:PlatformStatus, velocity:float = PlatformStatics.MOVE_VELOCITY, turn_duration:Optional[float] = None, turning_point:Optional[Point]=None, tilt:float=0.0, pan:float=0.0) -> List[Request]:
+    """_summary_
 
-def non_empty_request(request:MoveRequest):
-    r = request.motor1.servo.angle_provided
-    r = r or request.motor2.servo.angle_provided
-    r = r or request.motor3.servo.angle_provided
-    r = r or request.motor4.servo.angle_provided
-    r = r or request.pan.angle_provided
-    r = r or request.tilt.angle_provided
-    r = r or abs(request.motor1.velocity) > 0
-    r = r or abs(request.motor2.velocity) > 0
-    r = r or abs(request.motor3.velocity) > 0
-    r = r or abs(request.motor4.velocity) > 0
-    return r
+    Args:
+        duration (float): _description_
+        platform_status (PlatformStatus): _description_
+        velocity (float, optional): _description_. Defaults to PlatformStatics.MOVE_VELOCITY.
+        turn_duration (Optional[float], optional): _description_. Defaults to None.
+        turning_point (Optional[Point], optional): _description_. Defaults to None.
+        tilt (float, optional): _description_. Defaults to 0.0.
+        pan (float, optional): _description_. Defaults to 0.0.
 
-def create_requests(velocity:float, duration:float, platform_status:PlatformStatus, turning_point:Point=None, tilt:float=0.0, pan:float=0.0) -> List[MoveRequest]:
-    request = MoveRequest()
-    request.duration = duration
-    velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
-
-    requests = []
-    
+    Returns:
+        List[Request]: _description_
+    """
+    servos = [
+        Servo.from_ROS_ServoStatus(platform_status.servo1),
+        Servo.from_ROS_ServoStatus(platform_status.servo2),
+        Servo.from_ROS_ServoStatus(platform_status.servo3),
+        Servo.from_ROS_ServoStatus(platform_status.servo4),
+    ]
+    motor_turn_time = turn_duration or duration
     target_servo_angles = compute_target_servo_angles(turning_point)
-    delta_servo_angles = compute_delta_servo_angles(target_servo_angles, platform_status)
-    limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, duration)
-    motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, platform_status)
-    max_motor_servo_angle_delta = max([abs(a) for a in motor_servo_angle_deltas])
-    motor_turn_time = max_motor_servo_angle_delta/PlatformStatics.TURN_VELOCITY
+    delta_servo_angles = compute_delta_servo_angles(target_servo_angles, servos)
+    limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
+    motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
 
-    turn_request = MoveRequest()
-    turn_request.duration = motor_turn_time
-    if max_motor_servo_angle_delta > math.pi/18:
-        turn_request.duration *= 4
-    turn_request.motor1.servo.angle = round(motor_servo_angle_deltas[0], 3)
-    turn_request.motor2.servo.angle = round(motor_servo_angle_deltas[1], 3)
-    turn_request.motor3.servo.angle = round(motor_servo_angle_deltas[2], 3)
-    turn_request.motor4.servo.angle = round(motor_servo_angle_deltas[3], 3)
-    turn_request.motor1.servo.angle_provided = abs(platform_status.motor1.servo.angle - motor_servo_angle_deltas[0]) > 0.01
-    turn_request.motor2.servo.angle_provided = abs(platform_status.motor2.servo.angle - motor_servo_angle_deltas[1]) > 0.01
-    turn_request.motor3.servo.angle_provided = abs(platform_status.motor3.servo.angle - motor_servo_angle_deltas[2]) > 0.01
-    turn_request.motor4.servo.angle_provided = abs(platform_status.motor4.servo.angle - motor_servo_angle_deltas[3]) > 0.01
-
-    if any([m.servo.angle_provided for m in [turn_request.motor1, turn_request.motor2, turn_request.motor3, turn_request.motor4]]):
-        requests.append(turn_request)
-        request.motor1.servo.angle = round(motor_servo_angle_deltas[0], 3)
-        request.motor2.servo.angle = round(motor_servo_angle_deltas[1], 3)
-        request.motor3.servo.angle = round(motor_servo_angle_deltas[2], 3)
-        request.motor4.servo.angle = round(motor_servo_angle_deltas[3], 3)
-    
-        if turning_point:
-            can_move_wheels_continously = compute_relative_turning_point(motor_request_to_status(request)) != None
-            turn_radius = math.sqrt(turning_point.x**2 + turning_point.y**2)
-            if turn_radius > PlatformStatics.MAX_DISTANCE_TOLERANCE:
-                velocity_coefficients = []
-                for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
-                    motor_turn_radius = math.sqrt((m_y - turning_point.y)**2 + (m_x + turning_point.x)**2)
-
-                    is_within_robot_width = min(0, m_y) <= turning_point.y and turning_point.y <= max(0, m_y)
-                    c = -1.0 if is_within_robot_width else 1.0
-
-                    velocity_coefficients.append( c * motor_turn_radius / turn_radius)
-                    if can_move_wheels_continously and is_within_robot_width:
-                        can_move_wheels_continously = False
-    
-    request.motor1.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[0] * velocity, 3)
-    request.motor2.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[1] * velocity, 3)
-    request.motor3.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[2] * velocity, 3)
-    request.motor4.velocity = round(PlatformStatics.MOVE_VELOCITY * velocity_coefficients[3] * velocity, 3)
-    
-    # if tilt:
-    #     request.tilt.angle = round(tilt, 3)
-    #     request.tilt.angle_provided = True
-
-    # if pan:
-    #     request.pan.angle = round(pan, 3)
-    #     request.pan.angle_provided = True
-
-    if non_empty_request(request):
-        requests.append(request)
-    
-    return requests
+    current_turning_point = compute_relative_turning_point(servos)
+    if current_turning_point != None:
+        request = Request.from_ROS_PlatformStatus(platform_status)
+        request.duration = duration
+        request.servo1 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo1, round(motor_servo_angle_deltas[0], 3))
+        request.servo2 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo2, round(motor_servo_angle_deltas[1], 3))
+        request.servo3 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo3, round(motor_servo_angle_deltas[2], 3))
+        request.servo4 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo4, round(motor_servo_angle_deltas[3], 3))
+        velocity_coefficients = []
+        current_turn_radius = math.sqrt(current_turning_point.x**2 + current_turning_point.y**2)
+        for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
+            motor_turn_radius = math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2)
+            is_within_robot_width = min(0, m_y) <= current_turning_point.y and current_turning_point.y <= max(0, m_y)
+            c = -1.0 if is_within_robot_width else 1.0
+            velocity_coefficients.append( c * motor_turn_radius / current_turn_radius)
+        request.motor1 = Motor(velocity = round(velocity_coefficients[0] * velocity, 3))
+        request.motor2 = Motor(velocity = round(velocity_coefficients[1] * velocity, 3))
+        request.motor3 = Motor(velocity = round(velocity_coefficients[2] * velocity, 3))
+        request.motor4 = Motor(velocity = round(velocity_coefficients[3] * velocity, 3))
+        return [ request ]
+    else:
+        turn_request = Request.from_ROS_PlatformStatus(platform_status)
+        turn_request.duration = motor_turn_time
+        turn_request.servo1 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo1, round(motor_servo_angle_deltas[0], 3))
+        turn_request.servo2 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo2, round(motor_servo_angle_deltas[1], 3))
+        turn_request.servo3 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo3, round(motor_servo_angle_deltas[2], 3))
+        turn_request.servo4 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo4, round(motor_servo_angle_deltas[3], 3))
+        turn_request.motor1 = None
+        turn_request.motor2 = None
+        turn_request.motor3 = None
+        turn_request.motor4 = None
+        return [ turn_request ]

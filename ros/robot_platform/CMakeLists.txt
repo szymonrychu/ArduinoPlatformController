@@ -13,10 +13,9 @@ catkin_python_setup()
 
 add_message_files(
   FILES
-  Motor.msg
-  MoveRequest.msg
+  MotorStatus.msg
+  ServoStatus.msg
   PlatformStatus.msg
-  Servo.msg
 )
 
 generate_messages(
@@ -31,7 +30,7 @@ catkin_package(
 )
 
 catkin_install_python(
-  PROGRAMS nodes/wheel_controller nodes/joy_controller nodes/path_controller nodes/gui_controller
+  PROGRAMS nodes/platform_controller nodes/joy_controller nodes/gui_controller
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

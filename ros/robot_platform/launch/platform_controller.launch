@@ -10,7 +10,9 @@
   <arg name="computed_turning_point_frame_id" default="computed_turning_point" />
   <arg name="imu_frame_id" default="base_imu" />
   <arg name="camera_frame_id" default="camera_link" />
+  <arg name="controller_frequency" value="$(arg controller_frequency)" />
 
+  <arg name="cmd_vel_input_topic" default="/cmd_vel" />
   <arg name="battery_state_output_topic" default="/robot_platform/battery" />
   <arg name="gps_state_output_topic" default="/robot_platform/gps"/>
   <arg name="imu_state_output_topic" default="/robot_platform/imu"/>
@@ -24,6 +26,7 @@
 
     <param name="serial_dev" type="string" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_13671670-if00" />
     <param name="serial_baudrate" type="int" value="115200" />
+    <param name="controller_frequency" value="$(arg controller_frequency)" />
 
     <param name="base_frame_id" type="string" value="$(arg base_frame_id)" />
     <param name="odom_frame_id" type="string" value="$(arg odom_frame_id)" />
@@ -33,14 +36,12 @@
     <param name="imu_frame_id" type="string" value="$(arg imu_frame_id)" />
     <param name="camera_frame_id" type="string" value="$(arg camera_frame_id)" />
     
-    <param name="raw_input_topic" type="string" value="/robot_platform/raw_serial_request" />
-    <param name="shutdown_command_input_topic" type="string" value="$(arg shutdown_command_input_topic)" />
-    <param name="raw_output_topic" type="string" value="/robot_platform/raw_serial_response" />
+    <param name="cmd_vel_input_topic" type="string" value="$(arg cmd_vel_input_topic)" />
+    <!-- <param name="shutdown_command_input_topic" type="string" value="$(arg shutdown_command_input_topic)" /> -->
     
     <param name="battery_state_output_topic" type="string" value="$(arg battery_state_output_topic)" />
     <param name="gps_state_output_topic" type="string" value="$(arg gps_state_output_topic)" />
     <param name="imu_state_output_topic" type="string" value="$(arg imu_state_output_topic)" />
-    <param name="wheel_positions_input_topic" type="string" value="$(arg wheel_positions_input_topic)" />
     <param name="platform_status_output_topic" type="string" value="$(arg platform_status_output_topic)" />
     <param name="odometry_output_topic" type="string" value="$(arg odom_state_output_topic)" />
     <param name="pose_output_topic" type="string" value="$(arg pose_output_topic)" />

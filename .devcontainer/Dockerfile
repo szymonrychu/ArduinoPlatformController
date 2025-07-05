@@ -49,7 +49,8 @@ RUN set -xe;\
         x11-xserver-utils \
         ;\
     rm -rf /var/lib/apt/lists/*;\
-    pip3 install platformio
+    pip3 install platformio;\
+    pip3 install pydantic
 
 RUN useradd -m -s /bin/bash -G sudo,dialout ros;\
     echo 'ros ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ros;\
@@ -72,6 +73,5 @@ RUN set -xe;\
         echo 'export PYTHONPATH="$PYTHONPATH:/home/ros/catkin_ws/devel/lib/python3/dist-packages" >> /home/ros/.bashrc';\
         cd /home/ros/catkin_ws;\
         catkin_make"
-
 
 WORKDIR /home/ros/catkin_ws

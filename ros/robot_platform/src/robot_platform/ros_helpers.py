@@ -13,8 +13,8 @@ class ROSNode():
     def is_running(self):
         return not rospy.is_shutdown()
 
-    def stop(self, reason='', *_args, **_kwargs):
-        rospy.signal_shutdown(reason)
+    def stop(self, *_args, **_kwargs):
+        rospy.signal_shutdown(reason='')
 
 class ThreadedROSNode(Thread):
 
@@ -23,7 +23,7 @@ class ThreadedROSNode(Thread):
         rospy.init_node(name, log_level=env2log())
 
     def start(self):
-        Thread.start()
+        Thread.start(self)
 
     def __spin(self):
         rospy.spin()

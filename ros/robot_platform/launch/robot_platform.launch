@@ -37,24 +37,17 @@
     <arg name="platform_status_input_topic" value="$(arg platform_status_output_topic)" />
   </include> -->
 
-  <include file="$(find robot_platform)/launch/path_controller.launch">
-    <arg name="move_request_output_topic" value="$(arg wheel_positions_input_topic)" />
-    <arg name="platform_status_input_topic" value="$(arg platform_status_output_topic)" />
-    <arg name="odometry_input_topic" value="$(arg odom_state_output_topic)" />
-		<arg name="controller_frequency" value="$(arg controller_frequency)" />
-  </include>
-
-  <include file="$(find robot_platform)/launch/wheel_controller.launch">
+  <include file="$(find robot_platform)/launch/platform_controller.launch">
     <arg name="odom_frame_id" value="$(arg odom_frame_id)" />
     <arg name="base_frame_id" value="$(arg base_frame_id)" />
     <arg name="laser_frame_id" value="$(arg laser_frame_id)" />
     <arg name="base_footprint_frame_id" value="$(arg base_footprint_frame_id)" />
+		<arg name="controller_frequency" value="$(arg controller_frequency)" />
     
     <arg name="battery_state_output_topic" value="$(arg battery_state_output_topic)" />
     <arg name="gps_state_output_topic" value="$(arg gps_state_output_topic)" />
     <arg name="imu_state_output_topic" value="$(arg imu_state_output_topic)" />
-    <arg name="wheel_positions_input_topic" value="$(arg wheel_positions_input_topic)" />
-    <arg name="shutdown_command_input_topic" value="$(arg shutdown_command_input_topic)" />
+    <!-- <arg name="shutdown_command_input_topic" value="$(arg shutdown_command_input_topic)" /> -->
     <arg name="platform_status_output_topic" value="$(arg platform_status_output_topic)" />
     <arg name="odom_state_output_topic" value="$(arg odom_state_output_topic)" />
     <arg name="pose_output_topic" value="$(arg pose_output_topic)" />
