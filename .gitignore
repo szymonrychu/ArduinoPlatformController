@@ -6,3 +6,4 @@
 .idea
 
 ansible/buffer/openvpn/**
+**/*.egg-info
