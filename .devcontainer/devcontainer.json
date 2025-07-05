@@ -19,5 +19,9 @@
     }
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/ros/catkin_ws/src/ArduinoPlatformController,type=bind,consistency=delegated",
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/home/ros/.ssh,type=bind,consistency=cached"
+  ],
+  "postStartCommand": "bash -c 'source /opt/ros/noetic/setup.bash; cd /home/ros/catkin_ws; catkin_make'",
   "workspaceFolder": "/home/ros/catkin_ws/src/ArduinoPlatformController"
 }

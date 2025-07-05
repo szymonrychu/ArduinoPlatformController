@@ -1,0 +1,6 @@
+{
+  "cmake.sourceDirectory": "/home/ros/catkin_ws/src/ArduinoPlatformController/ros/robot_platform",
+  "python.analysis.extraPaths": [
+    "/home/ros/catkin_ws/devel/lib/python3/dist-packages"
+  ]
+}

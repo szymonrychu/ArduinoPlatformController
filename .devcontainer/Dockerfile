@@ -48,7 +48,8 @@ RUN set -xe;\
         libice6 \
         x11-xserver-utils \
         ;\
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*;\
+    pip3 install platformio
 
 RUN useradd -m -s /bin/bash -G sudo,dialout ros;\
     echo 'ros ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ros;\
@@ -67,6 +68,8 @@ RUN set -xe;\
 RUN set -xe;\
     bash -c "\
         source /opt/ros/${ROS_DISTRO}/setup.bash;\
+        echo 'source /home/ros/catkin_ws/devel/setup.bash' >> /home/ros/.bashrc;\
+        echo 'export PYTHONPATH="$PYTHONPATH:/home/ros/catkin_ws/devel/lib/python3/dist-packages" >> /home/ros/.bashrc';\
         cd /home/ros/catkin_ws;\
         catkin_make"
 
