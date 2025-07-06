@@ -69,8 +69,6 @@ class WheelController(SafeSerialWrapper):
         
         self._last_cmd_vel_lock = Lock()
         self._last_cmd_vel = None
-
-        rospy.spin()
         
         rospy.Subscriber(wheel_positions_input_topic, PlatformRequest, self._handle_wheel_inputs)
         rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
@@ -85,6 +83,8 @@ class WheelController(SafeSerialWrapper):
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
         rospy.loginfo('Initialised')
+
+        rospy.spin()
 
         # zero robot actuators
         result = self.write_requests(create_requests(3, PlatformStatus()))
