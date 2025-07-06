@@ -30,12 +30,10 @@ class WheelController(SafeSerialWrapper):
 
     def __init__(self):
         rospy.init_node('wheel_controller', log_level=rospy.DEBUG)
-        rospy.loginfo('Started')
 
         serial_dev = rospy.get_param('~serial_dev')
         serial_baudrate = rospy.get_param('~serial_baudrate')
         SafeSerialWrapper.__init__(self, serial_dev, serial_baudrate)
-        rospy.loginfo('Initialised serial')
 
         # frames for TF
         self._base_frame_id = str(rospy.get_param('~base_frame_id'))
@@ -61,8 +59,6 @@ class WheelController(SafeSerialWrapper):
         pose_output_topic = rospy.get_param('~pose_output_topic')
 
         self._controller_frequency = int(rospy.get_param('~controller_frequency')) # type: ignore
-
-        rospy.loginfo('Loaded params')
         
         self._last_timestmamp = time.time()
         self._motor_distances = [0.0] * PlatformStatics.MOTOR_NUM
@@ -88,13 +84,10 @@ class WheelController(SafeSerialWrapper):
         rospy.Timer(rospy.Duration.from_sec(0.001), self._handle_serial)
         rospy.spin()
 
-        rospy.loginfo('Initialised')
         # zero robot actuators
         result = self.write_requests(create_requests(3, PlatformStatus()))
         if not result:
             rospy.signal_shutdown(reason="Couldn't write requests!")
-
-        rospy.loginfo('Primed')
 
     def _handle_wheel_inputs(self, raw_data:PlatformRequest):
         """
@@ -105,8 +98,6 @@ class WheelController(SafeSerialWrapper):
         """        
         r = Request.from_ROS_PlatformRequest(raw_data)
         json_r = r.model_dump_json(exclude_none=True, exclude_unset=True)
-        rospy.loginfo(f"requesting: '{json_r}'")
-        print(f"requesting: '{json_r}'")
         if not self.write_data(json_r):
             self.stop()
 
@@ -114,28 +105,22 @@ class WheelController(SafeSerialWrapper):
         result = []
         for r in requests:
             r_json = r.model_dump_json(exclude_none=True, exclude_unset=True)
-            rospy.loginfo(f"Requesting: '{r_json}'")
             result.append(self.write_data(r_json))
         return all(result)
     
     def _handle_cmdvel(self, ros_data:Twist):
         with self._last_cmd_vel_lock:
-            rospy.loginfo("Parsed cmd_vel")
             self._last_cmd_vel = ros_data
 
     def _handle_serial(self, *_args, **_kwargs):
         raw_data = self.read_data()
         if not raw_data:
-            rospy.logerr('Can\'t read data')
             return
 
         response = parse_response(raw_data)
         if not response:
             rospy.logerr(f"Couldn't parse data '{raw_data}'")
             return
-
-
-        rospy.loginfo("Parsed serial")
 
         with self._last_cmd_vel_lock:
             if self._last_cmd_vel:
@@ -163,9 +148,7 @@ class WheelController(SafeSerialWrapper):
         if self._last_platform_status.gps:
             self._gps_state_publisher.publish(self._last_platform_status.gps)
 
-        rospy.loginfo_throttle(60, f"Battery level: {response.battery.voltage}V")
-
-        rospy.loginfo("Published topics")
+        rospy.loginfo_throttle(5, f"Battery level: {response.battery.voltage}V")
 
         mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
         computed_turning_point = compute_relative_turning_point(response.servo_list)
@@ -173,15 +156,11 @@ class WheelController(SafeSerialWrapper):
         if computed_turning_point:
             _, yaw_delta = compute_turning_radius_yaw_delta(computed_turning_point, response.motor_list)
             self._total_yaw += -yaw_delta if computed_turning_point.y < 0 else yaw_delta
-        
-
-        rospy.loginfo("Computed total yaw")
 
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
         if response.move_uuid == None:
-            rospy.loginfo("Publishing odom")
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
@@ -207,9 +186,8 @@ class WheelController(SafeSerialWrapper):
             pose_stamped.pose = odometry.pose.pose
             self._pose_publisher.publish(pose_stamped)
         else:
-            rospy.loginfo(f"Move: {response.move_uuid}")
+            rospy.loginfo_throttle(1, f"Move: {response.move_uuid}")
 
-        rospy.loginfo(f"Producing transforms")
         transforms = [
             create_static_transform(self._base_frame_id, self._laser_frame_id, 0.13, 0.0, 0.30, 0, 0, math.pi, rospy_time_now),
             create_static_transform(self._base_frame_id, self._camera_frame_id, 0.13, 0.0, 0.5, 0, -response.tilt.angle/2, response.pan.angle, rospy_time_now)
