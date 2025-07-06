@@ -48,7 +48,6 @@ class WheelController(ROSNode, SafeSerialWrapper):
         # input topics
         cmd_vel_input_topic = rospy.get_param('~cmd_vel_input_topic')
         # shutdown_command_input_topic = rospy.get_param('~shutdown_command_input_topic')
-        rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
         # rospy.Subscriber(shutdown_command_input_topic, String, self._handle_shutdown_command)
 
         # output topics
@@ -58,12 +57,6 @@ class WheelController(ROSNode, SafeSerialWrapper):
         imu_state_output_topic = rospy.get_param('~imu_state_output_topic')
         odometry_output_topic = rospy.get_param('~odometry_output_topic')
         pose_output_topic = rospy.get_param('~pose_output_topic')
-        self._platform_status_publisher = rospy.Publisher(platform_status_output_topic, PlatformStatus, queue_size=10)
-        self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState, queue_size=10)
-        self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix, queue_size=10)
-        self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu, queue_size=10)
-        self._odometry_publisher = rospy.Publisher(odometry_output_topic, Odometry, queue_size=10)
-        self._pose_publisher = rospy.Publisher(pose_output_topic, PoseStamped, queue_size=10)
 
         self._controller_frequency = int(rospy.get_param('~controller_frequency')) # type: ignore
         
@@ -73,14 +66,28 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._last_cmd_vel_lock = Lock()
         self._last_cmd_vel = None
 
+        self.spin()
+        
+        rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
+        self._platform_status_publisher = rospy.Publisher(platform_status_output_topic, PlatformStatus, queue_size=10)
+        self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState, queue_size=10)
+        self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix, queue_size=10)
+        self._imu_state_publisher = rospy.Publisher(imu_state_output_topic, Imu, queue_size=10)
+        self._odometry_publisher = rospy.Publisher(odometry_output_topic, Odometry, queue_size=10)
+        self._pose_publisher = rospy.Publisher(pose_output_topic, PoseStamped, queue_size=10)
+
         # init ROS with tf
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
-        self.spin()
+
+        rospy.loginfo('Initialised')
 
         # zero robot actuators
         result = self.write_requests(create_requests(3, PlatformStatus()))
         if not result:
             self.stop()
+
+        rospy.loginfo('Primed')
+
 
     def write_requests(self, requests:List[Request]) -> bool:
         result = []
@@ -97,10 +104,12 @@ class WheelController(ROSNode, SafeSerialWrapper):
     def _handle_serial(self, *_args, **_kwargs):
         raw_data = self.read_data()
         if not raw_data:
+            rospy.logerr('Can\'t read data')
             return
 
         response = parse_response(raw_data)
         if not response:
+            rospy.logerr(f"Couldn't parse data '{raw_data}'")
             return
 
         if self._last_cmd_vel:
