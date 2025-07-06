@@ -105,7 +105,9 @@ class WheelController(SafeSerialWrapper):
         result = []
         for r in requests:
             r_json = r.model_dump_json(exclude_none=True, exclude_unset=True)
-            result.append(self.write_data(r_json))
+            r = self.write_data(r_json)
+            rospy.loginfo(f"requesting: '{r_json}' with result: '{'T' if r else 'F'}'")
+            result.append(r)
         return all(result)
     
     def _handle_cmdvel(self, ros_data:Twist):
