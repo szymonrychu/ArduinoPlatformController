@@ -16,6 +16,9 @@ add_message_files(
   MotorStatus.msg
   ServoStatus.msg
   PlatformStatus.msg
+  MotorRequest.msg
+  ServoRequest.msg
+  PlatformRequest.msg
 )
 
 generate_messages(

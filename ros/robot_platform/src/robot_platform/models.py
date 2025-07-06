@@ -12,7 +12,7 @@ from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import TransformStamped, Vector3, PoseStamped
 from geometry_msgs.msg import Quaternion as ROSQuaternion
 
-from robot_platform.msg import PlatformStatus, ServoStatus, MotorStatus
+from robot_platform.msg import PlatformStatus, ServoStatus, MotorStatus, PlatformRequest, MotorRequest, ServoRequest
 
 from .tf_helpers import get_quaterion_from_rpy, limit_angle
 from .platform_statics import PlatformStatics
@@ -318,3 +318,32 @@ class Request(Message):
     def from_ROS_PlatformStatus(platform_status:PlatformStatus) -> 'Request':
         return Request.from_Status(Status.from_ROS_PlatformStatus(platform_status))
     
+    @staticmethod
+    def from_ROS_PlatformRequest(platform_request:PlatformRequest) -> 'Request':
+        request = Request()
+        request.duration = platform_request.duration.data.to_sec()
+
+        if platform_request.motor1.defined:
+            request.motor1 = Motor(velocity=platform_request.motor1.velocity, distance=platform_request.motor1.distance)
+        if platform_request.motor2.defined:
+            request.motor2 = Motor(velocity=platform_request.motor2.velocity, distance=platform_request.motor2.distance)
+        if platform_request.motor3.defined:
+            request.motor3 = Motor(velocity=platform_request.motor3.velocity, distance=platform_request.motor3.distance)
+        if platform_request.motor4.defined:
+            request.motor4 = Motor(velocity=platform_request.motor4.velocity, distance=platform_request.motor4.distance)
+        
+        if platform_request.servo1.defined:
+            request.servo1 = Servo(angle=platform_request.servo1.angle)
+        if platform_request.servo2.defined:
+            request.servo2 = Servo(angle=platform_request.servo2.angle)
+        if platform_request.servo3.defined:
+            request.servo3 = Servo(angle=platform_request.servo3.angle)
+        if platform_request.servo4.defined:
+            request.servo4 = Servo(angle=platform_request.servo4.angle)
+    
+        if platform_request.pan.defined:
+            request.pan = Servo(angle=platform_request.pan.angle)
+        if platform_request.tilt.defined:
+            request.tilt = Servo(angle=platform_request.tilt.angle)
+        
+        return request

@@ -13,7 +13,7 @@ from typing import List, Optional
 from uuid import UUID
 from threading import Lock
 
-from robot_platform.msg import PlatformStatus, MoveRequest
+from robot_platform.msg import PlatformStatus, PlatformRequest
 from std_msgs.msg import String, Duration
 from geometry_msgs.msg import Twist, PoseStamped, Pose, TransformStamped, Point, PointStamped
 from nav_msgs.msg import Odometry
@@ -48,6 +48,7 @@ class WheelController(SafeSerialWrapper):
 
         # input topics
         cmd_vel_input_topic = rospy.get_param('~cmd_vel_input_topic')
+        wheel_positions_input_topic = rospy.get_param('~wheel_positions_input_topic')
         # shutdown_command_input_topic = rospy.get_param('~shutdown_command_input_topic')
         # rospy.Subscriber(shutdown_command_input_topic, String, self._handle_shutdown_command)
 
@@ -71,6 +72,7 @@ class WheelController(SafeSerialWrapper):
 
         rospy.spin()
         
+        rospy.Subscriber(wheel_positions_input_topic, PlatformRequest, self._handle_wheel_inputs)
         rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
         self._platform_status_publisher = rospy.Publisher(platform_status_output_topic, PlatformStatus, queue_size=10)
         self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState, queue_size=10)
@@ -91,6 +93,18 @@ class WheelController(SafeSerialWrapper):
 
         rospy.loginfo('Primed')
 
+    def _handle_wheel_inputs(self, raw_data:PlatformRequest):
+        """
+        Function handling incoming PlatformRequests
+
+        Args:
+            raw_data (PlatformRequest): input provided by rospy with data incoming from external Publisher
+        """        
+        r = Request.from_ROS_PlatformRequest(raw_data)
+        json_r = r.model_dump_json(exclude_none=True, exclude_unset=True)
+        rospy.loginfo(f"requesting: '{json_r}'")
+        if not self.write_data(json_r):
+            self.stop()
 
     def write_requests(self, requests:List[Request]) -> bool:
         result = []
