@@ -1,4 +1,4 @@
-import math.pi
+import math
 
 class PlatformStatics:
     '''
