@@ -137,22 +137,6 @@ def check_if_points_are_close(points:List[Point], tolerance:float = PlatformStat
     max_coordinate_delta = max([abs(c) for c in point_cordinate_deltas])
     return max_coordinate_delta < tolerance
 
-
-def limit_angle(angle:float) -> float:
-    """Limits angle in Radians to range between [-math.pi/2, math.pi/2]
-
-    Args:
-        angle (float): input angle
-
-    Returns:
-        float: normalized angle
-    """    
-    while angle >= math.pi/2:
-        angle -= math.pi
-    while angle <= -math.pi/2:
-        angle += math.pi
-    return angle
-
 def compute_turning_radius_yaw_delta(relative_turning_point:Point, motors:List[Motor]) -> Tuple[float, float]:
     """
     Computes turning radius and increment yaw angle delta from turning point and motor distance.
