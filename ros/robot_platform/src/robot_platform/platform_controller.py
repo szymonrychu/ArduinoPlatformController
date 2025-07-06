@@ -66,7 +66,9 @@ class WheelController(SafeSerialWrapper):
         
         self._motor_distances = [0.0] * PlatformStatics.MOTOR_NUM
         self._last_platform_status = None
-        
+        self._total_yaw = 0.0
+        self._total_X = 0.0
+        self._total_Y = 0.0
         self._last_cmd_vel_lock = Lock()
         self._last_cmd_vel = None
         
