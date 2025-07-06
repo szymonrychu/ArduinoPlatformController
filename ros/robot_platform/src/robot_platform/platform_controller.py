@@ -82,10 +82,10 @@ class WheelController(SafeSerialWrapper):
         # init ROS with tf
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
-        rospy.loginfo('Initialised')
-
+        rospy.Timer(rospy.Duration.from_sec(0.001), self._handle_serial)
         rospy.spin()
 
+        rospy.loginfo('Initialised')
         # zero robot actuators
         result = self.write_requests(create_requests(3, PlatformStatus()))
         if not result:
