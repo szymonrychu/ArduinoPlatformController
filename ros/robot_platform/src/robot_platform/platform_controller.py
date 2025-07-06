@@ -117,6 +117,7 @@ class WheelController(SafeSerialWrapper):
     
     def _handle_cmdvel(self, ros_data:Twist):
         with self._last_cmd_vel_lock:
+            rospy.loginfo("Parsed cmd_vel")
             self._last_cmd_vel = ros_data
 
     def _handle_serial(self, *_args, **_kwargs):
@@ -130,7 +131,8 @@ class WheelController(SafeSerialWrapper):
             rospy.logerr(f"Couldn't parse data '{raw_data}'")
             return
 
-        rospy.loginfo_throttle(10, f"raw_data='{raw_data}', response={str(response)}")
+
+        rospy.loginfo("Parsed serial")
 
         with self._last_cmd_vel_lock:
             if self._last_cmd_vel:
@@ -160,17 +162,23 @@ class WheelController(SafeSerialWrapper):
 
         rospy.loginfo_throttle(60, f"Battery level: {response.battery.voltage}V")
 
+        rospy.loginfo("Published topics")
+
         mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
         computed_turning_point = compute_relative_turning_point(response.servo_list)
         yaw_delta = 0
         if computed_turning_point:
             _, yaw_delta = compute_turning_radius_yaw_delta(computed_turning_point, response.motor_list)
             self._total_yaw += -yaw_delta if computed_turning_point.y < 0 else yaw_delta
+        
+
+        rospy.loginfo("Computed total yaw")
 
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
         if response.move_uuid == None:
+            rospy.loginfo("Publishing odom")
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
@@ -198,6 +206,7 @@ class WheelController(SafeSerialWrapper):
         else:
             rospy.loginfo(f"Move: {response.move_uuid}")
 
+        rospy.loginfo(f"Producing transforms")
         transforms = [
             create_static_transform(self._base_frame_id, self._laser_frame_id, 0.13, 0.0, 0.30, 0, 0, math.pi, rospy_time_now),
             create_static_transform(self._base_frame_id, self._camera_frame_id, 0.13, 0.0, 0.5, 0, -response.tilt.angle/2, response.pan.angle, rospy_time_now)
