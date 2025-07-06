@@ -16,10 +16,10 @@ import genpy
 class FireForgetPublisher():
    def __init__(self, topic:str, type:Type, data:genpy.Message):
       rospy.init_node('tmp_node')
-      rospy.Timer(rospy.Duration.from_sec(0.1), callback=self._publish, oneshot=True)
-      rospy.spin()
       self._publisher = rospy.Publisher(topic, data_class=type)
       self.__data = data
+      rospy.Timer(rospy.Duration.from_sec(0.1), callback=self._publish, oneshot=True)
+      rospy.spin()
 
    def _publish(self, *_args, **_kwargs):
       self._publisher.publish(self.__data)
