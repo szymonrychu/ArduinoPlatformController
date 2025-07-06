@@ -130,6 +130,8 @@ class WheelController(SafeSerialWrapper):
             rospy.logerr(f"Couldn't parse data '{raw_data}'")
             return
 
+        rospy.loginfo_throttle(10, f"raw_data='{raw_data}', response={str(response)}")
+
         with self._last_cmd_vel_lock:
             if self._last_cmd_vel:
                 abs_move_velocity = min(max(abs(self._last_cmd_vel.linear.x), PlatformStatics.SLOW_SPEED), PlatformStatics.MAX_SPEED)
