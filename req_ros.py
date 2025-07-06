@@ -16,7 +16,6 @@ import genpy
 
 class FireForgetPublisher():
    def __init__(self, topic:str, typ:Type, data:genpy.Message):
-      rospy.init_node('tmp_node')
       self._publisher = rospy.Publisher(topic, typ, queue_size=1)
       self.__data = data
       rospy.Timer(rospy.Duration.from_sec(0.1), callback=self._publish, oneshot=True)
@@ -56,6 +55,8 @@ def main():
    args = parser.parse_args()
    inputs = vars(args)
    
+   rospy.init_node('tmp_node')
+
    if inputs['command'] == 'raw':
       request = PlatformRequest()
       request.duration = inputs['duration']
