@@ -19,7 +19,9 @@ from .platform_statics import PlatformStatics
 
 
 class Message(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, alias_generator=to_camel)
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    # model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, alias_generator=to_camel)
+
 
 class Battery(BaseModel):
     voltage: float
@@ -347,3 +349,4 @@ class Request(Message):
             request.tilt = Servo(angle=platform_request.tilt.angle)
         
         return request
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, alias_generator=to_camel)
