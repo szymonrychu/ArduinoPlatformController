@@ -64,6 +64,7 @@ class WheelController(SafeSerialWrapper):
 
         rospy.loginfo('Loaded params')
         
+        self._last_timestmamp = time.time()
         self._motor_distances = [0.0] * PlatformStatics.MOTOR_NUM
         self._last_platform_status = None
         self._total_yaw = 0.0
