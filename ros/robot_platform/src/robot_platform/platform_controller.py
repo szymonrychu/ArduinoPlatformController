@@ -167,6 +167,8 @@ class WheelController(ROSNode, SafeSerialWrapper):
             pose_stamped.header = odometry.header
             pose_stamped.pose = odometry.pose.pose
             self._pose_publisher.publish(pose_stamped)
+        else:
+            rospy.loginfo(f"Move: {response.move_uuid}")
 
         transforms = [
             create_static_transform(self._base_frame_id, self._laser_frame_id, 0.13, 0.0, 0.30, 0, 0, math.pi, rospy_time_now),
