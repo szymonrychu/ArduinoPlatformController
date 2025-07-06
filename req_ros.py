@@ -3,6 +3,7 @@
 import rospy
 import argparse
 import time
+import math
 
 import tf_conversions
 
@@ -68,18 +69,18 @@ def main():
          request.motor4 = MotorRequest(velocity=inputs['motor4_velocity'])
       
       if inputs['servo1_angle']:
-         request.servo1 = ServoRequest(angle=inputs['servo1_angle'])
+         request.servo1 = ServoRequest(angle=math.radians(inputs['servo1_angle']))
       if inputs['servo2_angle']:
-         request.servo2 = ServoRequest(angle=inputs['servo2_angle'])
+         request.servo2 = ServoRequest(angle=math.radians(inputs['servo2_angle']))
       if inputs['servo3_angle']:
-         request.servo3 = ServoRequest(angle=inputs['servo3_angle'])
+         request.servo3 = ServoRequest(angle=math.radians(inputs['servo3_angle']))
       if inputs['servo4_angle']:
-         request.servo4 = ServoRequest(angle=inputs['servo4_angle'])
+         request.servo4 = ServoRequest(angle=math.radians(inputs['servo4_angle']))
    
       if inputs['pan_angle']:
-         request.pan = ServoRequest(angle=inputs['pan_angle'])
+         request.pan = ServoRequest(angle=math.radians(inputs['pan_angle']))
       if inputs['tilt_angle']:
-         request.tilt = ServoRequest(angle=inputs['tilt_angle'])
+         request.tilt = ServoRequest(angle=math.radians(inputs['tilt_angle']))
       FireForgetPublisher(inputs['topic'], PlatformRequest, request)
    
    if inputs['command'] == 'goal':
