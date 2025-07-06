@@ -27,10 +27,10 @@ from .serial_utils import SafeSerialWrapper
 from .tf_helpers import *
 
 
-class WheelController(ROSNode, SafeSerialWrapper):
+class WheelController(SafeSerialWrapper):
 
     def __init__(self):
-        ROSNode.__init__(self, 'platform_controller')
+        rospy.init_node('wheel_controller')
         rospy.loginfo('Started')
 
         serial_dev = rospy.get_param('~serial_dev')
@@ -70,7 +70,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._last_cmd_vel_lock = Lock()
         self._last_cmd_vel = None
 
-        self.spin()
+        rospy.spin()
         
         rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
         self._platform_status_publisher = rospy.Publisher(platform_status_output_topic, PlatformStatus, queue_size=10)
@@ -88,7 +88,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         # zero robot actuators
         result = self.write_requests(create_requests(3, PlatformStatus()))
         if not result:
-            self.stop()
+            rospy.signal_shutdown(reason="Couldn't write requests!")
 
         rospy.loginfo('Primed')
 
@@ -196,6 +196,10 @@ class WheelController(ROSNode, SafeSerialWrapper):
         self._tf2_broadcaster.sendTransform(transforms)
         
         self._last_timestmamp = timestamp
+
+    def stop(self, *args, **kwargs):
+        rospy.signal_shutdown(reason="Stopping gracefully!")
+
 
 def main():
     platform = WheelController()
