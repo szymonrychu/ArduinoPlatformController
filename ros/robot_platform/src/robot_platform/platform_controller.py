@@ -31,10 +31,12 @@ class WheelController(ROSNode, SafeSerialWrapper):
 
     def __init__(self):
         ROSNode.__init__(self, 'platform_controller')
+        rospy.loginfo('Started')
 
         serial_dev = rospy.get_param('~serial_dev')
         serial_baudrate = rospy.get_param('~serial_baudrate')
         SafeSerialWrapper.__init__(self, serial_dev, serial_baudrate)
+        rospy.loginfo('Initialised serial')
 
         # frames for TF
         self._base_frame_id = str(rospy.get_param('~base_frame_id'))
@@ -59,6 +61,8 @@ class WheelController(ROSNode, SafeSerialWrapper):
         pose_output_topic = rospy.get_param('~pose_output_topic')
 
         self._controller_frequency = int(rospy.get_param('~controller_frequency')) # type: ignore
+
+        rospy.loginfo('Loaded params')
         
         self._motor_distances = [0.0] * PlatformStatics.MOTOR_NUM
         self._last_platform_status = None
