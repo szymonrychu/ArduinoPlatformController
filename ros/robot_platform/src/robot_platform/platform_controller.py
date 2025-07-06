@@ -29,7 +29,7 @@ from .tf_helpers import *
 class WheelController(SafeSerialWrapper):
 
     def __init__(self):
-        rospy.init_node('wheel_controller')
+        rospy.init_node('wheel_controller', log_level=rospy.DEBUG)
         rospy.loginfo('Started')
 
         serial_dev = rospy.get_param('~serial_dev')
