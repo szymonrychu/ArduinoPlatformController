@@ -14,24 +14,9 @@ from geometry_msgs.msg import Quaternion as ROSQuaternion
 
 from robot_platform.msg import PlatformStatus, ServoStatus, MotorStatus
 
-from .tf_helpers import get_quaterion_from_rpy
-from .odometry_helpers import PlatformStatics
+from .tf_helpers import get_quaterion_from_rpy, limit_angle
+from .platform_statics import PlatformStatics
 
-
-def _limit_angle(angle:float) -> float:
-    """Limits angle in Radians to range between [-math.pi/2, math.pi/2]
-
-    Args:
-        angle (float): input angle
-
-    Returns:
-        float: normalized angle
-    """    
-    while angle >= math.pi/2:
-        angle -= math.pi
-    while angle <= -math.pi/2:
-        angle += math.pi
-    return angle
 
 class Message(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, alias_generator=to_camel)
@@ -164,7 +149,7 @@ class Motor(Message):
         if translation:
             t.transform.translation = translation
         if wheel_diameter > 0:
-            t.transform.rotation = get_quaterion_from_rpy(0, 0, _limit_angle(self.distance / wheel_diameter))
+            t.transform.rotation = get_quaterion_from_rpy(0, 0, limit_angle(self.distance / wheel_diameter))
         return t
 
 class GPS(BaseModel):

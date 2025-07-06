@@ -6,7 +6,6 @@ import math
 
 from .odometry_helpers import PlatformStatics, create_requests, compute_relative_turning_point, compute_turning_radius_yaw_delta
 import rospy
-import tf_conversions
 import tf2_ros
 
 from math import pi as PI
