@@ -22,7 +22,7 @@
   <arg name="platform_status_output_topic" default="/robot_platform/status"/>
   <arg name="shutdown_command_input_topic" default="/robot_platform/shutdown"/>
 
-  <node pkg="robot_platform" type="robot_platform" name="platform_controller" output="screen" respawn="true">
+  <node pkg="robot_platform" type="platform_controller" name="platform_controller" output="screen" respawn="true">
 
     <param name="serial_dev" type="string" value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_13671670-if00" />
     <param name="serial_baudrate" type="int" value="115200" />

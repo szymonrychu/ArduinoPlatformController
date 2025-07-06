@@ -142,9 +142,7 @@ class WheelController(SafeSerialWrapper):
         if self._last_platform_status.gps:
             self._gps_state_publisher.publish(self._last_platform_status.gps)
 
-        if self._message_counter == 0:
-            rospy.loginfo(f"Battery level: {response.battery.voltage}V")
-        self._message_counter = (self._message_counter + 1) % 100
+        rospy.loginfo_throttle(60, f"Battery level: {response.battery.voltage}V")
 
         mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
         computed_turning_point = compute_relative_turning_point(response.servo_list)
