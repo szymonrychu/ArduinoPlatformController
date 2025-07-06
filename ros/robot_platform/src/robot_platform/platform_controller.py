@@ -86,6 +86,7 @@ class WheelController(ROSNode, SafeSerialWrapper):
         result = []
         for r in requests:
             r_json = r.model_dump_json(exclude_none=True, exclude_unset=True)
+            rospy.loginfo(f"Requesting: '{r_json}'")
             result.append(self.write_data(r_json))
         return all(result)
     
