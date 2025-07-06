@@ -9,10 +9,10 @@ import tf_conversions
 
 from typing import Type
 from geometry_msgs.msg import PoseStamped, Quaternion
-from robot_platform.msg import PlatformRequest, ServoRequest, MotorRequest
+from robot_platform.msg import PlatformRequest, MotorRequest, ServoRequest
+from std_msgs.msg import Float32
 
 import genpy
-
 
 class FireForgetPublisher():
    def __init__(self, topic:str, typ:Type, data:genpy.Message):
@@ -60,37 +60,27 @@ def main():
       request = PlatformRequest()
       request.duration = inputs['duration']
       if inputs['motor1_velocity']:
-         request.motor1.velocity=inputs['motor1_velocity']
-         request.motor1.defined = True
+         request.motor1 = MotorRequest(velocity=inputs['motor1_velocity'], defined=True)
       if inputs['motor2_velocity']:
-         request.motor2.velocity=inputs['motor2_velocity']
-         request.motor2.defined = True
+         request.motor2 = MotorRequest(velocity=inputs['motor2_velocity'], defined=True)
       if inputs['motor3_velocity']:
-         request.motor3.velocity=inputs['motor3_velocity']
-         request.motor3.defined = True
+         request.motor3 = MotorRequest(velocity=inputs['motor3_velocity'], defined=True)
       if inputs['motor4_velocity']:
-         request.motor4.velocity=inputs['motor4_velocity']
-         request.motor4.defined = True
+         request.motor4 = MotorRequest(velocity=inputs['motor3_velocity'], defined=True)
       
       if inputs['servo1_angle']:
-         request.servo1.angle=math.radians(inputs['servo1_angle'])
-         request.servo1.defined = True
+         request.servo1 = ServoRequest(angle=math.radians(inputs['servo1_angle']), defined=True)
       if inputs['servo2_angle']:
-         request.servo2.angle=math.radians(inputs['servo2_angle'])
-         request.servo2.defined = True
+         request.servo2 = ServoRequest(angle=math.radians(inputs['servo2_angle']), defined=True)
       if inputs['servo3_angle']:
-         request.servo3.angle=math.radians(inputs['servo3_angle'])
-         request.servo3.defined = True
+         request.servo3 = ServoRequest(angle=math.radians(inputs['servo3_angle']), defined=True)
       if inputs['servo4_angle']:
-         request.servo4.angle=math.radians(inputs['servo4_angle'])
-         request.servo4.defined = True
+         request.servo4 = ServoRequest(angle=math.radians(inputs['servo4_angle']), defined=True)
    
       if inputs['pan_angle']:
-         request.pan.angle = math.radians(inputs['pan_angle'])
-         request.pan.defined = True
+         request.pan = ServoRequest(angle=math.radians(inputs['pan_angle']), defined=True)
       if inputs['tilt_angle']:
-         request.tilt.angle = math.radians(inputs['tilt_angle'])
-         request.tilt.defined = True
+         request.tilt = ServoRequest(angle=math.radians(inputs['tilt_angle']), defined=True)
       FireForgetPublisher(inputs['topic'], PlatformRequest, request)
    
    if inputs['command'] == 'goal':
