@@ -10,7 +10,7 @@
   <arg name="computed_turning_point_frame_id" default="computed_turning_point" />
   <arg name="imu_frame_id" default="base_imu" />
   <arg name="camera_frame_id" default="camera_link" />
-  <arg name="controller_frequency" value="$(arg controller_frequency)" />
+  <arg name="controller_frequency" value="1" />
 
   <arg name="cmd_vel_input_topic" default="/cmd_vel" />
   <arg name="battery_state_output_topic" default="/robot_platform/battery" />
