@@ -103,6 +103,7 @@ class WheelController(SafeSerialWrapper):
         r = Request.from_ROS_PlatformRequest(raw_data)
         json_r = r.model_dump_json(exclude_none=True, exclude_unset=True)
         rospy.loginfo(f"requesting: '{json_r}'")
+        print(f"requesting: '{json_r}'")
         if not self.write_data(json_r):
             self.stop()
 
