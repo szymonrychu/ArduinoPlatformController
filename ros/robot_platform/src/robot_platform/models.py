@@ -114,7 +114,7 @@ class Servo(Message):
     def from_ROS_ServoStatus_and_delta_angle(status: ServoStatus, delta_angle:float) -> Union['Servo', None]:
         if abs(delta_angle) > PlatformStatics.MIN_ANGLE_DIFF:
             servo = Servo.from_ROS_ServoStatus(status)
-            servo.angle += delta_angle
+            servo.angle += round(delta_angle, 3)
             return servo
         return None
 

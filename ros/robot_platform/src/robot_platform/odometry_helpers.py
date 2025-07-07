@@ -242,10 +242,10 @@ def create_requests(duration:float, platform_status:PlatformStatus, velocity:flo
     if current_turning_point != None:
         request = Request.from_ROS_PlatformStatus(platform_status)
         request.duration = duration
-        request.servo1 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo1, round(motor_servo_angle_deltas[0], 3))
-        request.servo2 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo2, round(motor_servo_angle_deltas[1], 3))
-        request.servo3 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo3, round(motor_servo_angle_deltas[2], 3))
-        request.servo4 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo4, round(motor_servo_angle_deltas[3], 3))
+        request.servo1 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo1, motor_servo_angle_deltas[0])
+        request.servo2 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo2, motor_servo_angle_deltas[1])
+        request.servo3 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo3, motor_servo_angle_deltas[2])
+        request.servo4 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo4, motor_servo_angle_deltas[3])
         velocity_coefficients = []
         current_turn_radius = math.sqrt(current_turning_point.x**2 + current_turning_point.y**2)
         for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
@@ -261,10 +261,10 @@ def create_requests(duration:float, platform_status:PlatformStatus, velocity:flo
     else:
         turn_request = Request.from_ROS_PlatformStatus(platform_status)
         turn_request.duration = motor_turn_time
-        turn_request.servo1 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo1, round(motor_servo_angle_deltas[0], 3))
-        turn_request.servo2 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo2, round(motor_servo_angle_deltas[1], 3))
-        turn_request.servo3 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo3, round(motor_servo_angle_deltas[2], 3))
-        turn_request.servo4 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo4, round(motor_servo_angle_deltas[3], 3))
+        turn_request.servo1 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo1, motor_servo_angle_deltas[0])
+        turn_request.servo2 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo2, motor_servo_angle_deltas[1])
+        turn_request.servo3 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo3, motor_servo_angle_deltas[2])
+        turn_request.servo4 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo4, motor_servo_angle_deltas[3])
         turn_request.motor1 = None
         turn_request.motor2 = None
         turn_request.motor3 = None
