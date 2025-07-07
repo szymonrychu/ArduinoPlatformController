@@ -46,5 +46,5 @@ class PlatformStatics:
     REQUEST_DURATION_COEFFICIENT = 1.5 # how much additional time to count into a move, so we get overlapped requests
     DURATION_OVERLAP_STATIC=1.1
     WHEEL_RADIUS = 0.13
-    SLOW_SPEED = 0.1
-    MAX_SPEED = 0.3
+    SLOW_SPEED = 0.2
+    MAX_SPEED = 0.5
