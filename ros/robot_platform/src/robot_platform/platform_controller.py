@@ -69,6 +69,7 @@ class WheelController(SafeSerialWrapper):
         self._total_Y = 0.0
         self._last_cmd_vel_lock = Lock()
         self._last_cmd_vel = None
+        self._primed = False
         
         rospy.Subscriber(wheel_positions_input_topic, PlatformRequest, self._handle_wheel_inputs)
         rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
@@ -89,7 +90,7 @@ class WheelController(SafeSerialWrapper):
     def _prime_motors(self, *_args, **_kwargs):
         result = self.write_requests([
             Request(
-                duration=3,
+                duration=2,
                 servo1=Servo(angle=0),
                 servo2=Servo(angle=0),
                 servo3=Servo(angle=0),
@@ -100,6 +101,7 @@ class WheelController(SafeSerialWrapper):
         ])
         if not result:
             rospy.signal_shutdown(reason="Couldn't write requests!")
+        self._primed = True
 
     def _handle_wheel_inputs(self, raw_data:PlatformRequest):
         """
@@ -115,6 +117,7 @@ class WheelController(SafeSerialWrapper):
 
     def write_requests(self, requests:List[Request]) -> bool:
         result = []
+        self._primed = False
         for r in requests:
             r_json = r.model_dump_json(exclude_none=True, exclude_unset=True)
             partial_result = self.write_data(r_json)
@@ -201,6 +204,8 @@ class WheelController(SafeSerialWrapper):
             pose_stamped.pose = odometry.pose.pose
             self._pose_publisher.publish(pose_stamped)
             rospy.loginfo_throttle(10, f"Waiting for next move request")
+            if not self._primed:
+                self._prime_motors()
         else:
             rospy.loginfo_throttle(1, f"Move: {response.move_uuid}")
 
