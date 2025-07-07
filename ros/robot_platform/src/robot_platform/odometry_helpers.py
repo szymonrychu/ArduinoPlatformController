@@ -232,22 +232,11 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         Servo.from_ROS_ServoStatus(platform_status.servo3),
         Servo.from_ROS_ServoStatus(platform_status.servo4),
     ]
-    servos_mean_angle = sum([servo.angle for servo in servos]) / len(servos)
-    max_servo_angle_diff_from_mean = max([abs(servo.angle - servos_mean_angle) for servo in servos])
-    drives_straight = max_servo_angle_diff_from_mean < PlatformStatics.MIN_ANGLE_DIFF
     motor_turn_time = turn_duration or duration
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, servos)
     limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
     motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
-
-    if drives_straight:
-        request = Request.from_ROS_PlatformStatus(platform_status)
-        request.motor1 = Motor(velocity = round(velocity, 3))
-        request.motor2 = Motor(velocity = round(velocity, 3))
-        request.motor3 = Motor(velocity = round(velocity, 3))
-        request.motor4 = Motor(velocity = round(velocity, 3))
-        return request
 
     current_turning_point = compute_relative_turning_point(servos)
     if current_turning_point == None:
@@ -264,9 +253,6 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         return turn_request
 
     else:
-
-
-
         request = Request.from_ROS_PlatformStatus(platform_status)
         request.duration = duration
         request.servo1 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo1, motor_servo_angle_deltas[0])
@@ -284,7 +270,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
             individual_turn_radiuses.append(math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2))
         max_individual_turn_radius = max(individual_turn_radiuses)
-        velocity_coefficients = [1.0 * itr/max_individual_turn_radius for itr in individual_turn_radiuses]
+        velocity_coefficients = [itr/max_individual_turn_radius for itr in individual_turn_radiuses]
         
         request.motor1 = Motor(velocity = round(velocity_coefficients[0] * velocity, 3))
         request.motor2 = Motor(velocity = round(velocity_coefficients[1] * velocity, 3))
