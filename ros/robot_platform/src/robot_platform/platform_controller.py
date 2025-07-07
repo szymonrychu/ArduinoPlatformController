@@ -119,15 +119,12 @@ class WheelController(SafeSerialWrapper):
             self.stop()
 
     def write_requests(self, request:Request) -> bool:
-        result = []
         self._primed = False
         r_json = request.model_dump_json(exclude_none=True, exclude_unset=True)
         partial_result = self.write_data(r_json)
         rospy.loginfo(f"requesting: '{r_json}' with result: '{'T' if partial_result else 'F'}'")
-        result.append(partial_result)
         self._last_command_uuid = request.move_uuid
-        time.sleep(request.duration)
-        return all(result)
+        return partial_result
     
     def _handle_cmdvel(self, ros_data:Twist):
         with self._last_cmd_vel_lock:
