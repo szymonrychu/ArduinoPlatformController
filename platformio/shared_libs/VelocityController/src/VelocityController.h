@@ -76,12 +76,15 @@ public:
     if(angle < -PI/2) angle = -PI/2;
     if(angle > PI/2) angle = PI/2;
     double angleDelta = abs(angle - this->servoValueRadians);
+    if(angleDelta < 0.0001) angleDelta = 0.0001; 
     double minTimeS = SERVO_FULL_ROTATION_UPDATE_SPEED*(angleDelta/PI);
-    if(timeS != 0 && minTimeS > timeS ) { 
-      double angleCoefficient = timeS/minTimeS;
-      angle = angle * angleCoefficient;
-    } else if(minTimeS == 0) {
+    if(timeS == 0){
       timeS = minTimeS;
+    } else {
+      if(timeS < minTimeS){
+        double angleCoefficient = timeS/minTimeS;
+        angle = angle * angleCoefficient;
+      }
     }
     unsigned long timeMs = (unsigned long)(timeS * 1000.0);
     this->ramp.go(angle/PI, timeMs, LINEAR);
