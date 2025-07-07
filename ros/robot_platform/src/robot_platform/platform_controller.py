@@ -159,7 +159,7 @@ class WheelController(SafeSerialWrapper):
                 
                 if self._last_platform_status:
                     request = create_request(PlatformStatics.DURATION_OVERLAP_STATIC/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point)
-                    report_odom = not all([request.motor1 == None, request.motor2 == None, request.motor3 == None, request.motor4 == None, ])
+                    report_odom = not all([request.motor1 == None, request.motor2 == None, request.motor3 == None, request.motor4 == None])
                     self.write_requests(request)
                 self._last_cmd_vel = None
 
@@ -183,7 +183,7 @@ class WheelController(SafeSerialWrapper):
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
-        if response.move_uuid == None and report_odom:
+        if response.move_uuid == None or report_odom:
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
