@@ -70,6 +70,8 @@ class WheelController(SafeSerialWrapper):
         self._last_cmd_vel_lock = Lock()
         self._last_cmd_vel = None
         self._primed = False
+        self._waiting_count = 0
+        self._max_waiting_count = 10
         
         rospy.Subscriber(wheel_positions_input_topic, PlatformRequest, self._handle_wheel_inputs)
         rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
@@ -204,9 +206,13 @@ class WheelController(SafeSerialWrapper):
             pose_stamped.pose = odometry.pose.pose
             self._pose_publisher.publish(pose_stamped)
             rospy.loginfo_throttle(10, f"Waiting for next move request")
-            if not self._primed:
+        
+            if self._waiting_count < self._max_waiting_count:
+                self._waiting_count += 1 
+            elif not self._primed:
                 self._prime_motors()
         else:
+            self._waiting_count = 0
             rospy.loginfo_throttle(1, f"Move: {response.move_uuid}")
 
         transforms = [
