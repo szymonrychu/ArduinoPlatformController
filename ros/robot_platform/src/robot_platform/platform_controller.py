@@ -82,9 +82,10 @@ class WheelController(SafeSerialWrapper):
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
         rospy.Timer(rospy.Duration.from_sec(0.001), self._handle_serial)
+        rospy.Timer(rospy.Duration.from_sec(1), self._prime_motors, oneshot=True)
         rospy.spin()
 
-        # zero robot actuators
+    def _prime_motors(self, *_args, **_kwargs):
         result = self.write_requests(create_requests(3, PlatformStatus()))
         if not result:
             rospy.signal_shutdown(reason="Couldn't write requests!")
