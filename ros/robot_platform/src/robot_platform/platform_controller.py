@@ -61,6 +61,7 @@ class WheelController(SafeSerialWrapper):
         self._controller_frequency = int(rospy.get_param('~controller_frequency')) # type: ignore
         
         self._last_timestmamp = time.time()
+        self._last_command_uuid = None
         self._motor_distances = [0.0] * PlatformStatics.MOTOR_NUM
         self._last_platform_status = None
         self._total_yaw = 0.0
@@ -119,7 +120,7 @@ class WheelController(SafeSerialWrapper):
             partial_result = self.write_data(r_json)
             rospy.loginfo(f"requesting: '{r_json}' with result: '{'T' if partial_result else 'F'}'")
             result.append(partial_result)
-            time.sleep(r.duration)
+            self._last_command_uuid = r.move_uuid
         return all(result)
     
     def _handle_cmdvel(self, ros_data:Twist):
@@ -150,7 +151,7 @@ class WheelController(SafeSerialWrapper):
                     turning_point.y = turn_radius
                 
                 if self._last_platform_status:
-                    self.write_requests(create_requests(1/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point))
+                    self.write_requests(create_requests(1.2/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point))
                 self._last_cmd_vel = None
 
         rospy_time_now = rospy.Time.now()
@@ -173,7 +174,7 @@ class WheelController(SafeSerialWrapper):
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
-        if response.move_uuid == None:
+        if response.move_uuid == None or self._last_command_uuid != response.move_uuid:
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
@@ -224,7 +225,3 @@ def main():
     signal.signal(signal.SIGINT, platform.stop)
     signal.signal(signal.SIGTERM, platform.stop)
 
-
-
-
-{"duration":1.0,"motor1":{"velocity":0.856},"motor2":{"velocity":0.962},"motor3":{"velocity":0.962},"motor4":{"velocity":0.856},"servo1":{"angle":-0.111},"servo2":{"angle":-0.2},"servo3":{"angle":0.2},"servo4":{"angle":0.111}}
