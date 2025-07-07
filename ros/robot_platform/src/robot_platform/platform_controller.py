@@ -225,3 +225,6 @@ def main():
     signal.signal(signal.SIGTERM, platform.stop)
 
 
+
+
+{"duration":1.0,"motor1":{"velocity":0.856},"motor2":{"velocity":0.962},"motor3":{"velocity":0.962},"motor4":{"velocity":0.856},"servo1":{"angle":-0.111},"servo2":{"angle":-0.2},"servo3":{"angle":0.2},"servo4":{"angle":0.111}}

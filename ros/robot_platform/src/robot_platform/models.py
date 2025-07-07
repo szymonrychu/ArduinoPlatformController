@@ -312,8 +312,6 @@ class Request(Message):
             r.distance = s.distance
         for s, r in zip(status.servo_list, request.servo_list):
             r.angle = s.angle
-        request.pan = Servo(angle=status.pan.angle)
-        request.tilt = Servo(angle=status.tilt.angle)
         return request
 
     @staticmethod
