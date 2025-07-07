@@ -140,6 +140,7 @@ class WheelController(SafeSerialWrapper):
                 
                 if self._last_platform_status:
                     self.write_requests(create_requests(1/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point))
+                self._last_cmd_vel = None
 
         rospy_time_now = rospy.Time.now()
         timestamp = time.time()
