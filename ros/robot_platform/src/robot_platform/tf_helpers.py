@@ -14,9 +14,9 @@ def limit_angle(angle:float) -> float:
     Returns:
         float: normalized angle
     """    
-    while angle >= math.pi/2:
+    if angle >= math.pi/2:
         angle -= math.pi
-    while angle <= -math.pi/2:
+    elif angle <= -math.pi/2:
         angle += math.pi
     return angle
 
