@@ -121,6 +121,7 @@ class WheelController(SafeSerialWrapper):
             rospy.loginfo(f"requesting: '{r_json}' with result: '{'T' if partial_result else 'F'}'")
             result.append(partial_result)
             self._last_command_uuid = r.move_uuid
+            time.sleep(r.duration)
         return all(result)
     
     def _handle_cmdvel(self, ros_data:Twist):
