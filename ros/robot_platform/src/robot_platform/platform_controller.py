@@ -71,7 +71,7 @@ class WheelController(SafeSerialWrapper):
         self._last_cmd_vel = None
         self._primed = False
         self._waiting_count = 0
-        self._max_waiting_count = 2000
+        self._prime_after = 0
         
         rospy.Subscriber(wheel_positions_input_topic, PlatformRequest, self._handle_wheel_inputs)
         rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
@@ -124,6 +124,7 @@ class WheelController(SafeSerialWrapper):
         partial_result = self.write_data(r_json)
         rospy.loginfo(f"requesting: '{r_json}' with result: '{'T' if partial_result else 'F'}'")
         self._last_command_uuid = request.move_uuid
+        self._prime_after = time.time() + 2
         return partial_result
     
     def _handle_cmdvel(self, ros_data:Twist):
@@ -180,10 +181,8 @@ class WheelController(SafeSerialWrapper):
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
-        if response.move_uuid == None:
-            if self._waiting_count < self._max_waiting_count:
-                self._waiting_count += 1 
-            elif not self._primed:
+        if timestamp > self._prime_after:
+            if not self._primed:
                 self._prime_motors()
         else:
             self._waiting_count = 0
