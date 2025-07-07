@@ -21,7 +21,7 @@ from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 
 from .ros_helpers import ROSNode
 from .log_utils import env2log
-from .models import parse_response, Request
+from .models import parse_response, Request, Motor, Servo
 from .serial_utils import SafeSerialWrapper
 from .tf_helpers import *
 
@@ -86,7 +86,17 @@ class WheelController(SafeSerialWrapper):
         rospy.spin()
 
     def _prime_motors(self, *_args, **_kwargs):
-        result = self.write_requests(create_requests(3, PlatformStatus()))
+        result = self.write_requests([
+            Request(
+                duration=3,
+                servo1=Servo(angle=0),
+                servo2=Servo(angle=0),
+                servo3=Servo(angle=0),
+                servo4=Servo(angle=0),
+                pan=Servo(angle=0),
+                tilt=Servo(angle=0),
+            )
+        ])
         if not result:
             rospy.signal_shutdown(reason="Couldn't write requests!")
 
