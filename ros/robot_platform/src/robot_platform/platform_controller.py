@@ -151,8 +151,6 @@ class WheelController(SafeSerialWrapper):
         if self._last_platform_status.gps:
             self._gps_state_publisher.publish(self._last_platform_status.gps)
 
-        rospy.loginfo_throttle(5, f"Battery level: {response.battery.voltage}V")
-
         mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
         computed_turning_point = compute_relative_turning_point(response.servo_list)
         yaw_delta = 0
@@ -188,6 +186,7 @@ class WheelController(SafeSerialWrapper):
             pose_stamped.header = odometry.header
             pose_stamped.pose = odometry.pose.pose
             self._pose_publisher.publish(pose_stamped)
+            rospy.loginfo_throttle(10, f"Waiting for next move request")
         else:
             rospy.loginfo_throttle(1, f"Move: {response.move_uuid}")
 
@@ -199,10 +198,10 @@ class WheelController(SafeSerialWrapper):
             transforms.append(create_static_transform(self._base_frame_id, f"motor{c+1}base", m_x, m_y, 0, 0, 0, 0, rospy_time_now))
             transforms.append(create_static_transform(f"motor{c+1}base", f"motor{c+1}servo", 0, 0, 0, 0, 0, -servo.angle, rospy_time_now))
             transforms.append(motor.to_ROS_TF2(f"motor{c+1}servo", f"motor{c+1}wheel", PlatformStatics.WHEEL_RADIUS, timestamp=rospy_time_now))
-        
         self._tf2_broadcaster.sendTransform(transforms)
-        
+
         self._last_timestmamp = timestamp
+        rospy.loginfo_throttle(5, f"Battery level: {response.battery.voltage}V")
 
     def stop(self, *args, **kwargs):
         rospy.signal_shutdown(reason="Stopping gracefully!")
