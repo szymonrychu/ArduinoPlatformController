@@ -103,6 +103,7 @@ class WheelController(SafeSerialWrapper):
         ])
         if not result:
             rospy.signal_shutdown(reason="Couldn't write requests!")
+        rospy.loginfo('Motors primed!')
         self._primed = True
 
     def _handle_wheel_inputs(self, raw_data:PlatformRequest):
