@@ -20,9 +20,14 @@ from .log_utils import env2log
 
 ## Finally import the RViz bindings themselves.
 from rviz import bindings as rviz
+from typing import Optional, List
 
-from .odometry_helpers import PlatformStatics, create_request
 import rospy
+
+from .platform_statics import PlatformStatics
+from .models import Request
+from .odometry_helpers import create_requests
+
 
 from sensor_msgs.msg import Joy, JoyFeedback
 from actionlib_msgs.msg import GoalID
@@ -167,7 +172,7 @@ class MyViz(QWidget):
 
         self._cancel_move_publisher = rospy.Publisher('/move_base/cancel', GoalID)
 
-        rospy.Timer(rospy.Duration(duration), self._send_request)
+        rospy.Timer(rospy.Duration.from_sec(duration), self._send_request)
         self._rospy_timer = rospy.Timer(rospy.Duration(1), self._rospy_spin) # start the ros spin after 1 s
 
     def _rospy_spin(self, *args, **kwargs):
@@ -225,7 +230,7 @@ class MyViz(QWidget):
         turn_radius = round(turn_coefficient * abs_turn_radius, 2)
         return turn_radius
 
-    def _get_pan_update(self, x_axis:float) -> float:
+    def _get_pan_update(self, x_axis:float) -> Optional[float]:
         if abs(x_axis) < 0.01:
             return None
         yaw_update = self._last_pan_angle + x_axis*0.001
@@ -236,7 +241,7 @@ class MyViz(QWidget):
         self._last_pan_angle = yaw_update
         return yaw_update
 
-    def _get_tilt_update(self, y_axis:float) -> float:
+    def _get_tilt_update(self, y_axis:float) -> Optional[float]:
         if abs(y_axis) < 0.01:
             return None
         tilt_update = self._last_tilt_angle + y_axis*0.002
@@ -246,6 +251,15 @@ class MyViz(QWidget):
             tilt_update = -math.pi/2
         self._last_tilt_angle = tilt_update
         return tilt_update
+
+    def write_requests(self, requests:List[Request]) -> bool:
+        result = []
+        for r in requests:
+            r_json = r.model_dump_json(exclude_none=True, exclude_unset=True)
+            r = self.write_data(r_json)
+            rospy.loginfo(f"requesting: '{r_json}' with result: '{'T' if r else 'F'}'")
+            result.append(r)
+        return all(result)
 
     def _handle_joystick_updates(self, data:Joy):
 
@@ -263,7 +277,7 @@ class MyViz(QWidget):
                 turning_point = Point()
                 turning_point.y = turn_radius
             
-            r = create_request(velocity, 5*duration, self._last_platform_status, turning_point, pan, tilt)
+            r = create_requests(duration, self._last_platform_status, velocity, duration, turning_point, tilt or 0, pan or 0)
             with self._request_lock:
                 self._request = r
         else:
@@ -308,10 +322,10 @@ class MyViz(QWidget):
 
     ## The view buttons just call switchToView() with the name of a saved view.
     def onTopButtonClick( self ):
-        self.switchToView( "map" );
+        self.switchToView( "map" )
         
     def onSideButtonClick( self ):
-        self.switchToView( "base_link" );
+        self.switchToView( "base_link" )
         
     ## switchToView() works by looping over the views saved in the
     ## ViewManager and looking for one with a matching name.
