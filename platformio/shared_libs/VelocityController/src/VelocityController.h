@@ -73,12 +73,16 @@ public:
   }
 
   bool writeServo(double angle, double timeS=0){
-    double angleDelta = abs(angle - this->servoValueRadians);
-    if(angleDelta < 0.0001) angleDelta = 0.0001; 
-    double minTimeS = SERVO_FULL_ROTATION_UPDATE_SPEED*(angleDelta/PI);
-    if(timeS == 0 || timeS < minTimeS) timeS = minTimeS;
     if(angle < -PI/2) angle = -PI/2;
     if(angle > PI/2) angle = PI/2;
+    double angleDelta = abs(angle - this->servoValueRadians);
+    double minTimeS = SERVO_FULL_ROTATION_UPDATE_SPEED*(angleDelta/PI);
+    if(minTimeS > timeS) { 
+      double angleCoefficient = timeS/minTimeS;
+      angle = angle * angleCoefficient;
+    } else if(minTimeS == 0) {
+      timeS = minTimeS;
+    }
     unsigned long timeMs = (unsigned long)(timeS * 1000.0);
     this->ramp.go(angle/PI, timeMs, LINEAR);
     return true;
