@@ -246,13 +246,22 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         request.servo2 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo2, motor_servo_angle_deltas[1])
         request.servo3 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo3, motor_servo_angle_deltas[2])
         request.servo4 = Servo.from_ROS_ServoStatus_and_delta_angle(platform_status.servo4, motor_servo_angle_deltas[3])
+        turning_point_under_robot = False
         velocity_coefficients = []
-        current_turn_radius = math.sqrt(current_turning_point.x**2 + current_turning_point.y**2)
-        for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
-            motor_turn_radius = math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2)
-            is_within_robot_width = min(0, m_y) <= current_turning_point.y and current_turning_point.y <= max(0, m_y)
-            c = -PlatformStatics.MOVE_VELOCITY if is_within_robot_width else PlatformStatics.MOVE_VELOCITY
-            velocity_coefficients.append( c * motor_turn_radius / current_turn_radius)
+        if turning_point:
+            turning_point_within_platform_length = -PlatformStatics.ROBOT_LENGTH/2 < turning_point.y < PlatformStatics.ROBOT_LENGTH/2
+            turning_point_within_platform_width = -PlatformStatics.ROBOT_WIDTH/2 < turning_point.x < PlatformStatics.ROBOT_WIDTH/2
+            turning_point_under_robot = turning_point_within_platform_length and turning_point_within_platform_width
+            
+            # if not turning_point_under_robot:
+            individual_turn_radiuses = []
+            for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
+                individual_turn_radiuses.append(math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2))
+            max_individual_turn_radius = max(individual_turn_radiuses)
+            velocity_coefficients = [1.0 * itr/max_individual_turn_radius for itr in individual_turn_radiuses]
+        else:
+            velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
+        
         request.motor1 = Motor(velocity = round(velocity_coefficients[0] * velocity, 3))
         request.motor2 = Motor(velocity = round(velocity_coefficients[1] * velocity, 3))
         request.motor3 = Motor(velocity = round(velocity_coefficients[2] * velocity, 3))
