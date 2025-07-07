@@ -77,7 +77,7 @@ public:
     if(angle > PI/2) angle = PI/2;
     double angleDelta = abs(angle - this->servoValueRadians);
     double minTimeS = SERVO_FULL_ROTATION_UPDATE_SPEED*(angleDelta/PI);
-    if(minTimeS != 0 && minTimeS > timeS ) { 
+    if(timeS != 0 && minTimeS > timeS ) { 
       double angleCoefficient = minTimeS/timeS;
       angle = angle * angleCoefficient;
     } else if(minTimeS == 0) {
