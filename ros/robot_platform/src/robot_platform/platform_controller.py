@@ -4,7 +4,7 @@ import signal
 import time
 import math
 
-from .odometry_helpers import PlatformStatics, create_requests, compute_relative_turning_point, compute_turning_radius_yaw_delta
+from .odometry_helpers import PlatformStatics, create_request, compute_relative_turning_point, compute_turning_radius_yaw_delta
 import rospy
 import tf2_ros
 
@@ -90,7 +90,7 @@ class WheelController(SafeSerialWrapper):
         rospy.spin()
 
     def _prime_motors(self, *_args, **_kwargs):
-        result = self.write_requests([
+        result = self.write_requests(
             Request(
                 duration=2,
                 servo1=Servo(angle=0),
@@ -100,7 +100,7 @@ class WheelController(SafeSerialWrapper):
                 pan=Servo(angle=0),
                 tilt=Servo(angle=0),
             )
-        ])
+        )
         if not result:
             rospy.signal_shutdown(reason="Couldn't write requests!")
         rospy.loginfo('Motors primed!')
@@ -118,16 +118,15 @@ class WheelController(SafeSerialWrapper):
         if not self.write_data(json_r):
             self.stop()
 
-    def write_requests(self, requests:List[Request]) -> bool:
+    def write_requests(self, request:Request) -> bool:
         result = []
         self._primed = False
-        for r in requests:
-            r_json = r.model_dump_json(exclude_none=True, exclude_unset=True)
-            partial_result = self.write_data(r_json)
-            rospy.loginfo(f"requesting: '{r_json}' with result: '{'T' if partial_result else 'F'}'")
-            result.append(partial_result)
-            self._last_command_uuid = r.move_uuid
-            time.sleep(r.duration)
+        r_json = request.model_dump_json(exclude_none=True, exclude_unset=True)
+        partial_result = self.write_data(r_json)
+        rospy.loginfo(f"requesting: '{r_json}' with result: '{'T' if partial_result else 'F'}'")
+        result.append(partial_result)
+        self._last_command_uuid = request.move_uuid
+        time.sleep(request.duration)
         return all(result)
     
     def _handle_cmdvel(self, ros_data:Twist):
@@ -143,7 +142,8 @@ class WheelController(SafeSerialWrapper):
         if not response:
             rospy.logerr(f"Couldn't parse data '{raw_data}'")
             return
-
+        
+        report_odom = True
         with self._last_cmd_vel_lock:
             if self._last_cmd_vel:
                 abs_move_velocity = min(max(abs(self._last_cmd_vel.linear.x), PlatformStatics.SLOW_SPEED), PlatformStatics.MAX_SPEED)
@@ -158,7 +158,9 @@ class WheelController(SafeSerialWrapper):
                     turning_point.y = turn_radius
                 
                 if self._last_platform_status:
-                    self.write_requests(create_requests(PlatformStatics.DURATION_OVERLAP_STATIC/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point))
+                    request = create_request(PlatformStatics.DURATION_OVERLAP_STATIC/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point)
+                    report_odom = not all([request.motor1 == None, request.motor2 == None, request.motor3 == None, request.motor4 == None, ])
+                    self.write_requests(request)
                 self._last_cmd_vel = None
 
         rospy_time_now = rospy.Time.now()
@@ -181,7 +183,7 @@ class WheelController(SafeSerialWrapper):
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
-        if response.move_uuid == None or self._last_command_uuid != response.move_uuid:
+        if response.move_uuid == None and report_odom:
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
