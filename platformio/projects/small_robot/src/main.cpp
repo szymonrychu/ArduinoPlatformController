@@ -161,7 +161,6 @@ void commandHandler(char* input){
     motor3.resetDistanceVelocity();
     motor4.resetDistanceVelocity();
   }
-  
 
   if(!obj["pan"].isNull()){
     if(!obj["pan"]["angle"].isNull()) servoPan.writeServo(obj["pan"]["angle"], moveDuration);
