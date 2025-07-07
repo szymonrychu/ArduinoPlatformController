@@ -183,7 +183,15 @@ class WheelController(SafeSerialWrapper):
         self._total_X += mean_distance_delta * math.cos(self._total_yaw)
         self._total_Y += mean_distance_delta * math.sin(self._total_yaw)
 
-        if response.move_uuid == None or report_odom:
+        if response.move_uuid == None:
+            if self._waiting_count < self._max_waiting_count:
+                self._waiting_count += 1 
+            elif not self._primed:
+                self._prime_motors()
+        else:
+            self._waiting_count = 0
+
+        if report_odom:
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
@@ -210,14 +218,6 @@ class WheelController(SafeSerialWrapper):
             self._pose_publisher.publish(pose_stamped)
             rospy.loginfo_throttle(10, f"Waiting for next move request")
         
-            if self._waiting_count < self._max_waiting_count:
-                self._waiting_count += 1 
-            elif not self._primed:
-                self._prime_motors()
-        else:
-            self._waiting_count = 0
-            rospy.loginfo_throttle(1, f"Move: {response.move_uuid}")
-
         transforms = [
             create_static_transform(self._base_frame_id, self._laser_frame_id, 0.13, 0.0, 0.30, 0, 0, math.pi, rospy_time_now),
             create_static_transform(self._base_frame_id, self._camera_frame_id, 0.13, 0.0, 0.5, 0, -response.tilt.angle/2, response.pan.angle, rospy_time_now)
