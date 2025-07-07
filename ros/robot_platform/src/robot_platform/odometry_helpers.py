@@ -253,10 +253,10 @@ def create_requests(duration:float, platform_status:PlatformStatus, velocity:flo
             is_within_robot_width = min(0, m_y) <= current_turning_point.y and current_turning_point.y <= max(0, m_y)
             c = -1.0 if is_within_robot_width else 1.0
             velocity_coefficients.append( c * motor_turn_radius / current_turn_radius)
-        request.motor1 = Motor(velocity = 1.5 * round(velocity_coefficients[0] * velocity, 3))
-        request.motor2 = Motor(velocity = 1.5 * round(velocity_coefficients[1] * velocity, 3))
-        request.motor3 = Motor(velocity = 1.5 * round(velocity_coefficients[2] * velocity, 3))
-        request.motor4 = Motor(velocity = 1.5 * round(velocity_coefficients[3] * velocity, 3))
+        request.motor1 = Motor(velocity = 3 * round(velocity_coefficients[0] * velocity, 3))
+        request.motor2 = Motor(velocity = 3 * round(velocity_coefficients[1] * velocity, 3))
+        request.motor3 = Motor(velocity = 3 * round(velocity_coefficients[2] * velocity, 3))
+        request.motor4 = Motor(velocity = 3 * round(velocity_coefficients[3] * velocity, 3))
         return [ request ]
     else:
         turn_request = Request.from_ROS_PlatformStatus(platform_status)
