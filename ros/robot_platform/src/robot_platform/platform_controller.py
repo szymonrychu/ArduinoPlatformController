@@ -151,7 +151,7 @@ class WheelController(SafeSerialWrapper):
                     turning_point.y = turn_radius
                 
                 if self._last_platform_status:
-                    self.write_requests(create_requests(1.2/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point))
+                    self.write_requests(create_requests(PlatformStatics.DURATION_OVERLAP_STATIC/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point))
                 self._last_cmd_vel = None
 
         rospy_time_now = rospy.Time.now()

@@ -251,7 +251,7 @@ def create_requests(duration:float, platform_status:PlatformStatus, velocity:flo
         for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
             motor_turn_radius = math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2)
             is_within_robot_width = min(0, m_y) <= current_turning_point.y and current_turning_point.y <= max(0, m_y)
-            c = 2.0 if is_within_robot_width else -2.0
+            c = PlatformStatics.MOVE_VELOCITY if is_within_robot_width else -PlatformStatics.MOVE_VELOCITY
             velocity_coefficients.append( c * motor_turn_radius / current_turn_radius)
         request.motor1 = Motor(velocity = round(velocity_coefficients[0] * velocity, 3))
         request.motor2 = Motor(velocity = round(velocity_coefficients[1] * velocity, 3))
