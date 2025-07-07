@@ -71,7 +71,7 @@ class WheelController(SafeSerialWrapper):
         self._last_cmd_vel = None
         self._primed = False
         self._waiting_count = 0
-        self._max_waiting_count = 100
+        self._max_waiting_count = 2000
         
         rospy.Subscriber(wheel_positions_input_topic, PlatformRequest, self._handle_wheel_inputs)
         rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
