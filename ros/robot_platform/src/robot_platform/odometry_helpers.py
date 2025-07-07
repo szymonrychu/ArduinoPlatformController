@@ -255,10 +255,10 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     else:
         request = Request.from_ROS_PlatformStatus(platform_status)
         request.duration = duration
-        request.servo1 = Servo(angle=motor_servo_angle_deltas[0])
-        request.servo2 = Servo(angle=motor_servo_angle_deltas[1])
-        request.servo3 = Servo(angle=motor_servo_angle_deltas[2])
-        request.servo4 = Servo(angle=motor_servo_angle_deltas[3])
+        request.servo1 = Servo(angle=round(motor_servo_angle_deltas[0], 3))
+        request.servo2 = Servo(angle=round(motor_servo_angle_deltas[1], 3))
+        request.servo3 = Servo(angle=round(motor_servo_angle_deltas[2], 3))
+        request.servo4 = Servo(angle=round(motor_servo_angle_deltas[3], 3))
         # turning_point_under_robot = False
 
         # turning_point_within_platform_length = -PlatformStatics.ROBOT_LENGTH/2 < current_turning_point.y < PlatformStatics.ROBOT_LENGTH/2
