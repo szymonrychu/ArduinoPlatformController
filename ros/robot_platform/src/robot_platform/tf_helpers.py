@@ -5,7 +5,7 @@ import numpy as np
 import rospy
 import math
 
-def limit_angle(angle:float) -> float:
+def limit_angle(angle:float) -> Tuple[float, bool]:
     """Limits angle in Radians to range between [-math.pi/2, math.pi/2]
 
     Args:
@@ -13,12 +13,13 @@ def limit_angle(angle:float) -> float:
 
     Returns:
         float: normalized angle
-    """    
+    """
+    reversed = False
     if angle >= math.pi/2:
-        angle -= math.pi
+        angle -= math.pi 
     elif angle <= -math.pi/2:
         angle += math.pi
-    return angle
+    return angle, reversed
 
 def add_points(p1:Point, p2:Point=None) -> Point:
     if not p2:

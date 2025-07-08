@@ -149,7 +149,7 @@ def check_if_wheels_are_pararell(servos:List[Servo]) -> bool:
     min_angle = min([s.angle for s in servos])
     return max_angle - min_angle < PlatformStatics.MIN_ANGLE_DIFF
 
-def compute_target_servo_angles(turning_point:Optional[Point]=None) -> List[float]:
+def compute_target_servo_angles(turning_point:Optional[Point]=None) -> Tuple[List[float], List[bool]]:
     """
     Function takes turning point and computes list of angles that each servo of the platform should reach.
     If no turning point is provided, angles are set to 0.
@@ -158,20 +158,23 @@ def compute_target_servo_angles(turning_point:Optional[Point]=None) -> List[floa
         turning_point (Optional[Point], optional): Point where lines drawed from motor axises will cross. Defaults to None.
 
     Returns:
-        List[float]: List of angles, each servo should have, so the platform could safely turn around given point
+       Tuple[List[float], List[bool]]: List of angles and list of bools, 1st contains angles for servos to reach, 2nd contains info if angle was reversed
     """    
     if not turning_point:
-        return [0.0] * PlatformStatics.MOTOR_NUM
+        return [0.0] * PlatformStatics.MOTOR_NUM, [False] * PlatformStatics.MOTOR_NUM
     
     relative_turning_points = []
     for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
         relative_turning_points.append((m_x - turning_point.x, m_y - turning_point.y))
     
     target_angles = []
+    reversed_angles = []
     for (tp_x, tp_y) in relative_turning_points:
-        target_angles.append(limit_angle(math.atan2(tp_x, tp_y)))
+        target_angle, reversed = limit_angle(math.atan2(tp_x, tp_y))
+        target_angles.append(target_angle)
+        reversed_angles.append(reversed)
     
-    return target_angles
+    return target_angles, reversed_angles
 
 def compute_delta_servo_angles(target_angles:List[float], servos:List[Servo]) -> List[float]:
     """
@@ -262,40 +265,16 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         Servo.from_ROS_ServoStatus(platform_status.servo4),
     ]
     motor_turn_time = turn_duration or duration
-    target_servo_angles = compute_target_servo_angles(turning_point)
+    target_servo_angles, reversed_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, servos)
 
     current_turning_point = compute_relative_turning_point(servos)
     wheels_pararell = check_if_wheels_are_pararell(servos)
-    
-    if current_turning_point == None and not wheels_pararell:
-        request = Request.from_ROS_PlatformStatus(platform_status)
-        request.duration = compute_max_turning_duration(delta_servo_angles)
-        request.servo1 = Servo(angle=round(delta_servo_angles[0], 3))
-        request.servo2 = Servo(angle=round(delta_servo_angles[1], 3))
-        request.servo3 = Servo(angle=round(delta_servo_angles[2], 3))
-        request.servo4 = Servo(angle=round(delta_servo_angles[3], 3))
-        request.motor1 = None
-        request.motor2 = None
-        request.motor3 = None
-        request.motor4 = None
-        return request
 
-    elif wheels_pararell:
-        request = Request.from_ROS_PlatformStatus(platform_status)
-        request.servo1 = None
-        request.servo2 = None
-        request.servo3 = None
-        request.servo4 = None
-        request.motor1 = Motor(velocity = round(velocity, 3))
-        request.motor2 = Motor(velocity = round(velocity, 3))
-        request.motor3 = Motor(velocity = round(velocity, 3))
-        request.motor4 = Motor(velocity = round(velocity, 3))
-
-    else:
+    request = Request.from_ROS_PlatformStatus(platform_status)
+    if current_turning_point != None:
         limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
         motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
-        request = Request.from_ROS_PlatformStatus(platform_status)
         request.duration = duration
         request.servo1 = Servo(angle=round(motor_servo_angle_deltas[0], 3))
         request.servo2 = Servo(angle=round(motor_servo_angle_deltas[1], 3))
@@ -312,10 +291,40 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
             individual_turn_radiuses.append(math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2))
         max_individual_turn_radius = max(individual_turn_radiuses)
-        velocity_coefficients = [1.0 * itr/max_individual_turn_radius for itr in individual_turn_radiuses]
+        
+        velocity_coefficients = []
+        for itr, reversed in zip(individual_turn_radiuses, reversed_servo_angles):
+            c = -1.0 if reversed else 1.0
+            velocity_coefficients.append(c * itr / max_individual_turn_radius)
         
         request.motor1 = Motor(velocity = round(velocity_coefficients[0] * velocity, 3))
         request.motor2 = Motor(velocity = round(velocity_coefficients[1] * velocity, 3))
         request.motor3 = Motor(velocity = round(velocity_coefficients[2] * velocity, 3))
         request.motor4 = Motor(velocity = round(velocity_coefficients[3] * velocity, 3))
-        return request
+        
+
+    elif wheels_pararell:
+        request = Request.from_ROS_PlatformStatus(platform_status)
+        request.servo1 = None
+        request.servo2 = None
+        request.servo3 = None
+        request.servo4 = None
+        request.motor1 = Motor(velocity = round(velocity, 3))
+        request.motor2 = Motor(velocity = round(velocity, 3))
+        request.motor3 = Motor(velocity = round(velocity, 3))
+        request.motor4 = Motor(velocity = round(velocity, 3))
+
+    else:
+        request = Request.from_ROS_PlatformStatus(platform_status)
+        request.duration = compute_max_turning_duration(delta_servo_angles)
+        request.servo1 = Servo(angle=round(delta_servo_angles[0], 3))
+        request.servo2 = Servo(angle=round(delta_servo_angles[1], 3))
+        request.servo3 = Servo(angle=round(delta_servo_angles[2], 3))
+        request.servo4 = Servo(angle=round(delta_servo_angles[3], 3))
+        request.motor1 = None
+        request.motor2 = None
+        request.motor3 = None
+        request.motor4 = None
+
+    return request
+
