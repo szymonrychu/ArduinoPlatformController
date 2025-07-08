@@ -144,7 +144,7 @@ class WheelController(SafeSerialWrapper):
         report_odom = True
         with self._last_cmd_vel_lock:
             if self._last_cmd_vel:
-                abs_move_velocity = PlatformStatics.SLOW_SPEED # min(max(abs(self._last_cmd_vel.linear.x), PlatformStatics.SLOW_SPEED), PlatformStatics.MAX_SPEED)
+                abs_move_velocity = min(max(abs(self._last_cmd_vel.linear.x), PlatformStatics.SLOW_SPEED), PlatformStatics.MAX_SPEED)
                 move_velocity = abs_move_velocity if self._last_cmd_vel.linear.x > 0 else -abs_move_velocity
                 angle = self._last_cmd_vel.angular.z
 
