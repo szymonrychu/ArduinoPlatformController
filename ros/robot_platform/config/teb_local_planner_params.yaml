@@ -22,7 +22,7 @@ TebLocalPlannerROS:
   max_vel_x: 1.0
   max_vel_x_backwards: 1.0
   max_vel_y: 0.0
-  max_vel_theta: 0.5
+  max_vel_theta: 1.0
   acc_lim_x: 0.5
   acc_lim_theta: 0.5
   min_turning_radius: 0.0
@@ -62,14 +62,14 @@ TebLocalPlannerROS:
   penalty_epsilon: 0.1
   obstacle_cost_exponent: 4
   weight_max_vel_x: 2
-  weight_max_vel_theta: 2
+  weight_max_vel_theta: 1
   weight_acc_lim_x: 1
   weight_acc_lim_theta: 1
   weight_kinematics_nh: 10
-  weight_kinematics_forward_drive: 0
-  weight_kinematics_turning_radius: 0.0
-  weight_optimaltime: 10
-  weight_shortest_path: 1
+  weight_kinematics_forward_drive: 1
+  weight_kinematics_turning_radius: 1
+  weight_optimaltime: 2 # must be > 0
+  weight_shortest_path: 0
   weight_obstacle: 100
   weight_inflation: 0.2
   weight_dynamic_obstacle: 10
