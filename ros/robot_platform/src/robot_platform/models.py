@@ -151,7 +151,8 @@ class Motor(Message):
         if translation:
             t.transform.translation = translation
         if wheel_diameter > 0:
-            t.transform.rotation = get_quaterion_from_rpy(0, 0, limit_angle(self.distance / wheel_diameter))
+            angle, _ = limit_angle(self.distance / wheel_diameter)
+            t.transform.rotation = get_quaterion_from_rpy(0, 0, angle)
         return t
 
 class GPS(BaseModel):
