@@ -272,7 +272,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     wheels_pararell = check_if_wheels_are_pararell(servos)
 
     request = Request.from_ROS_PlatformStatus(platform_status)
-    if current_turning_point != None:
+    if current_turning_point != None and not wheels_pararell:
         limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
         motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
         request.duration = duration
