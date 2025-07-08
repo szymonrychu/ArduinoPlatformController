@@ -195,6 +195,21 @@ def limit_delta_servo_velocity_angles(delta_servo_angles:List[float], duration:f
     delta_angle_coefficient = max_possible_servo_angle / max_abs_delta_servo_angle
     return [ delta_angle_coefficient * delta_servo_angle for delta_servo_angle in delta_servo_angles]
 
+def compute_max_turning_duration(delta_servo_angles:List[float], turn_velocity:float = PlatformStatics.TURN_VELOCITY) -> float:
+    """
+    Compute how long it will take to turn all wheels completely towards defined angles
+
+    Args:
+        delta_servo_angles (List[float]): List of delta angles
+        turn_velocity (float, optional): turn_velocity to limit the turn angles around. Defaults to PlatformStatics.TURN_VELOCITY.
+
+    Returns:
+        float: Time in seconds to fully turn the wheels
+    """
+    max_abs_delta_servo_angle = max([abs(a) for a in delta_servo_angles])
+    max_turning_time = max_abs_delta_servo_angle/turn_velocity
+    return max_turning_time
+
 def compute_new_angle_updates(delta_servo_angles:List[float], servos:List[Servo]) -> List[float]:
     """
     Takes delta angles and computes absolute requests for the platform for the next request
@@ -235,11 +250,12 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     motor_turn_time = turn_duration or duration
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, servos)
+    max_turn_time = compute_max_turning_duration(delta_servo_angles)
     limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
     motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
 
     current_turning_point = compute_relative_turning_point(servos)
-    if current_turning_point == None:
+    if current_turning_point == None and max_turn_time > 0.5 * duration:
         turn_request = Request.from_ROS_PlatformStatus(platform_status)
         turn_request.duration = motor_turn_time
         turn_request.servo1 = Servo(angle=round(motor_servo_angle_deltas[0], 3))
