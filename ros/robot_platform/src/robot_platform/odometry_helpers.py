@@ -269,9 +269,10 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, servos)
 
     current_turning_point = compute_relative_turning_point(servos)
+    max_turning_duration = compute_max_turning_duration(delta_servo_angles)
 
     request = Request.from_ROS_PlatformStatus(platform_status)
-    if current_turning_point != None :
+    if current_turning_point != None or max_turning_duration > duration:
         limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
         motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
         request.duration = duration
@@ -313,7 +314,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
 
     else:
         request = Request.from_ROS_PlatformStatus(platform_status)
-        request.duration = compute_max_turning_duration(delta_servo_angles)
+        request.duration = max_turning_duration
         request.servo1 = Servo(angle=round(delta_servo_angles[0], 3))
         request.servo2 = Servo(angle=round(delta_servo_angles[1], 3))
         request.servo3 = Servo(angle=round(delta_servo_angles[2], 3))
