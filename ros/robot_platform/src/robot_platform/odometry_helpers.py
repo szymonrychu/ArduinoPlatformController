@@ -258,10 +258,10 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     if current_turning_point == None and max_turn_time > 0.5 * duration:
         turn_request = Request.from_ROS_PlatformStatus(platform_status)
         turn_request.duration = motor_turn_time
-        turn_request.servo1 = Servo(angle=round(motor_servo_angle_deltas[0], 3))
-        turn_request.servo2 = Servo(angle=round(motor_servo_angle_deltas[1], 3))
-        turn_request.servo3 = Servo(angle=round(motor_servo_angle_deltas[2], 3))
-        turn_request.servo4 = Servo(angle=round(motor_servo_angle_deltas[3], 3))
+        turn_request.servo1 = Servo(angle=round(delta_servo_angles[0], 3))
+        turn_request.servo2 = Servo(angle=round(delta_servo_angles[1], 3))
+        turn_request.servo3 = Servo(angle=round(delta_servo_angles[2], 3))
+        turn_request.servo4 = Servo(angle=round(delta_servo_angles[3], 3))
         turn_request.motor1 = None
         turn_request.motor2 = None
         turn_request.motor3 = None
