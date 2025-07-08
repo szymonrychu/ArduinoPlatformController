@@ -31,7 +31,7 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
         return None
 
     p = Point()
-    # p.x = -(tg90mA * ma_x - tg90mB * mb_x - ma_y - mb_y) / (tg90mA + tg90mB)
+    p.x = -(tg90mA * ma_x - tg90mB * mb_x - ma_y - mb_y) / (tg90mA + tg90mB)
     p.y = -(tg90mA * ma_x - ma_y)
     return p
 
