@@ -147,7 +147,7 @@ def check_if_wheels_are_pararell(servos:List[Servo]) -> bool:
     """
     max_angle = max([s.angle for s in servos])
     min_angle = min([s.angle for s in servos])
-    return abs(max_angle - min_angle) < PlatformStatics.MIN_ANGLE_DIFF
+    return abs(max_angle - min_angle) < 0.00000000001
 
 def compute_target_servo_angles(turning_point:Optional[Point]=None) -> Tuple[List[float], List[bool]]:
     """
