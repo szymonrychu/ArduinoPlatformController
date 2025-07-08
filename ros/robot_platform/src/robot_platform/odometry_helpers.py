@@ -135,6 +135,20 @@ def compute_relative_turning_point(servos:List[Servo], turning_radius_scalling_f
             return turning_point
     return None
 
+def check_if_wheels_are_pararell(servos:List[Servo]) -> bool:
+    """
+    Checks if wheels are pararell and it's possible to move forward without steering
+
+    Args:
+        servos (List[Servo]): List of Servo objects
+
+    Returns:
+        bool: returns true if wheels are pararell enough
+    """
+    max_angle = max([s.angle for s in servos])
+    min_angle = min([s.angle for s in servos])
+    return max_angle - min_angle < PlatformStatics.MIN_ANGLE_DIFF
+
 def compute_target_servo_angles(turning_point:Optional[Point]=None) -> List[float]:
     """
     Function takes turning point and computes list of angles that each servo of the platform should reach.
@@ -250,25 +264,37 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     motor_turn_time = turn_duration or duration
     target_servo_angles = compute_target_servo_angles(turning_point)
     delta_servo_angles = compute_delta_servo_angles(target_servo_angles, servos)
-    max_turn_time = compute_max_turning_duration(delta_servo_angles)
-    limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
-    motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
 
     current_turning_point = compute_relative_turning_point(servos)
-    if current_turning_point == None or max_turn_time > 0.5 * duration:
-        turn_request = Request.from_ROS_PlatformStatus(platform_status)
-        turn_request.duration = max_turn_time
-        turn_request.servo1 = Servo(angle=round(delta_servo_angles[0], 3))
-        turn_request.servo2 = Servo(angle=round(delta_servo_angles[1], 3))
-        turn_request.servo3 = Servo(angle=round(delta_servo_angles[2], 3))
-        turn_request.servo4 = Servo(angle=round(delta_servo_angles[3], 3))
-        turn_request.motor1 = None
-        turn_request.motor2 = None
-        turn_request.motor3 = None
-        turn_request.motor4 = None
-        return turn_request
+    wheels_pararell = check_if_wheels_are_pararell(servos)
+    
+    if current_turning_point == None and not wheels_pararell:
+        request = Request.from_ROS_PlatformStatus(platform_status)
+        request.duration = compute_max_turning_duration(delta_servo_angles)
+        request.servo1 = Servo(angle=round(delta_servo_angles[0], 3))
+        request.servo2 = Servo(angle=round(delta_servo_angles[1], 3))
+        request.servo3 = Servo(angle=round(delta_servo_angles[2], 3))
+        request.servo4 = Servo(angle=round(delta_servo_angles[3], 3))
+        request.motor1 = None
+        request.motor2 = None
+        request.motor3 = None
+        request.motor4 = None
+        return request
+
+    elif wheels_pararell:
+        request = Request.from_ROS_PlatformStatus(platform_status)
+        request.servo1 = None
+        request.servo2 = None
+        request.servo3 = None
+        request.servo4 = None
+        request.motor1 = Motor(velocity = round(velocity, 3))
+        request.motor2 = Motor(velocity = round(velocity, 3))
+        request.motor3 = Motor(velocity = round(velocity, 3))
+        request.motor4 = Motor(velocity = round(velocity, 3))
 
     else:
+        limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
+        motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
         request = Request.from_ROS_PlatformStatus(platform_status)
         request.duration = duration
         request.servo1 = Servo(angle=round(motor_servo_angle_deltas[0], 3))
