@@ -205,10 +205,8 @@ class WheelController(SafeSerialWrapper):
             if self._last_cmd_vel:
                 abs_move_velocity = min(max(abs(self._last_cmd_vel.linear.x), PlatformStatics.SLOW_SPEED), PlatformStatics.MAX_SPEED)
                 move_velocity = abs_move_velocity if self._last_cmd_vel.linear.x > 0 else -abs_move_velocity
-                if abs_move_velocity > 0:
-                    angle = self._last_cmd_vel.angular.z/move_velocity
-                else:
-                    angle = self._last_cmd_vel.angular.z
+                
+                angle = 2.0 * self._last_cmd_vel.angular.z
 
                 turning_point = None
                 if angle != 0:
