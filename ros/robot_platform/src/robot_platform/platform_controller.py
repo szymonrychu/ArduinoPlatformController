@@ -131,6 +131,14 @@ class WheelController(SafeSerialWrapper):
         with self._last_cmd_vel_lock:
             self._last_cmd_vel = ros_data
 
+    def _motors_defined(self, request:Optional[Request]):
+        if not request:
+            return True
+        for m in [request.motor1, request.motor2, request.motor3, request.motor4]:
+            if m and m.velocity != 0:
+                return True
+        return False
+
     def _handle_serial(self, *_args, **_kwargs):
         raw_data = self.read_data()
         if not raw_data:
@@ -157,7 +165,7 @@ class WheelController(SafeSerialWrapper):
                 
                 if self._last_platform_status:
                     request = create_request(PlatformStatics.DURATION_OVERLAP_STATIC/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point)
-                    report_odom = not all([request.motor1 == None, request.motor2 == None, request.motor3 == None, request.motor4 == None])
+                    report_odom = self._motors_defined(request)
                     self.write_requests(request)
                 self._last_cmd_vel = None
 
