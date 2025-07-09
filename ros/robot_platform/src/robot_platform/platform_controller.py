@@ -206,12 +206,12 @@ class WheelController(SafeSerialWrapper):
                 abs_move_velocity = min(max(abs(self._last_cmd_vel.linear.x), PlatformStatics.SLOW_SPEED), PlatformStatics.MAX_SPEED)
                 move_velocity = abs_move_velocity if self._last_cmd_vel.linear.x > 0 else -abs_move_velocity
                 
-                angle = 2.0 * self._last_cmd_vel.angular.z
+                angle = self._last_cmd_vel.angular.z
 
                 turning_point = None
                 if angle != 0:
                     turning_point = Point()
-                    abs_turn_radius = move_velocity / (abs(angle)* self._controller_frequency)
+                    abs_turn_radius = move_velocity / (abs(angle) * self._controller_frequency * 2.0)
                     turn_radius = abs_turn_radius if self._last_cmd_vel.angular.z > 0 else -abs_turn_radius
                     turning_point.y = turn_radius
                 
