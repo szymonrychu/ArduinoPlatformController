@@ -72,6 +72,7 @@ class WheelController(SafeSerialWrapper):
         self._primed = False
         self._waiting_count = 0
         self._prime_after = 0
+        self._report_odometry = True
         
         rospy.Subscriber(wheel_positions_input_topic, PlatformRequest, self._handle_wheel_inputs)
         rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
@@ -148,29 +149,6 @@ class WheelController(SafeSerialWrapper):
         if not response:
             rospy.logerr(f"Couldn't parse data '{raw_data}'")
             return
-        
-        report_odom = True
-        with self._last_cmd_vel_lock:
-            if self._last_cmd_vel:
-                abs_move_velocity = min(max(abs(self._last_cmd_vel.linear.x), PlatformStatics.SLOW_SPEED), PlatformStatics.MAX_SPEED)
-                move_velocity = abs_move_velocity if self._last_cmd_vel.linear.x > 0 else -abs_move_velocity
-                if abs_move_velocity > 0:
-                    angle = self._last_cmd_vel.angular.z/move_velocity
-                else:
-                    angle = self._last_cmd_vel.angular.z
-
-                turning_point = None
-                if angle != 0:
-                    turning_point = Point()
-                    abs_turn_radius = move_velocity / abs(angle)* self._controller_frequency
-                    turn_radius = abs_turn_radius if self._last_cmd_vel.angular.z > 0 else -abs_turn_radius
-                    turning_point.y = turn_radius
-                
-                if self._last_platform_status:
-                    request = create_request(PlatformStatics.DURATION_OVERLAP_STATIC/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point)
-                    report_odom = self._motors_defined(request)
-                    self.write_requests(request)
-                self._last_cmd_vel = None
 
         rospy_time_now = rospy.Time.now()
         timestamp = time.time()
@@ -198,7 +176,7 @@ class WheelController(SafeSerialWrapper):
         else:
             self._waiting_count = 0
 
-        if report_odom:
+        if self._report_odometry:
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
@@ -223,6 +201,29 @@ class WheelController(SafeSerialWrapper):
             pose_stamped.header = odometry.header
             pose_stamped.pose = odometry.pose.pose
             self._pose_publisher.publish(pose_stamped)
+
+        self._report_odometry = True
+        with self._last_cmd_vel_lock:
+            if self._last_cmd_vel:
+                abs_move_velocity = min(max(abs(self._last_cmd_vel.linear.x), PlatformStatics.SLOW_SPEED), PlatformStatics.MAX_SPEED)
+                move_velocity = abs_move_velocity if self._last_cmd_vel.linear.x > 0 else -abs_move_velocity
+                if abs_move_velocity > 0:
+                    angle = self._last_cmd_vel.angular.z/move_velocity
+                else:
+                    angle = self._last_cmd_vel.angular.z
+
+                turning_point = None
+                if angle != 0:
+                    turning_point = Point()
+                    abs_turn_radius = move_velocity / abs(angle)* self._controller_frequency
+                    turn_radius = abs_turn_radius if self._last_cmd_vel.angular.z > 0 else -abs_turn_radius
+                    turning_point.y = turn_radius
+                
+                if self._last_platform_status:
+                    request = create_request(PlatformStatics.DURATION_OVERLAP_STATIC/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point)
+                    self._report_odometry = self._motors_defined(request)
+                    self.write_requests(request)
+                self._last_cmd_vel = None
         
         transforms = [
             create_static_transform(self._base_frame_id, self._laser_frame_id, 0.13, 0.0, 0.30, 0, 0, math.pi, rospy_time_now),
