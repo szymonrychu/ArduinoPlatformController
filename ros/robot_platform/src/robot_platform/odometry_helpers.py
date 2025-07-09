@@ -314,7 +314,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
 
     else:
         request = Request.from_ROS_PlatformStatus(platform_status)
-        request.duration = max_turning_duration
+        request.duration = max(max_turning_duration, duration)
         request.servo1 = Servo(angle=round(delta_servo_angles[0], 3))
         request.servo2 = Servo(angle=round(delta_servo_angles[1], 3))
         request.servo3 = Servo(angle=round(delta_servo_angles[2], 3))
