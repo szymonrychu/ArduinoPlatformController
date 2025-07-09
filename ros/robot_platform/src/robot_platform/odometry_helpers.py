@@ -129,7 +129,7 @@ def compute_relative_turning_point(servos:List[Servo]) -> Optional[Point]:
     turning_point = compute_mean_turning_point(partial_turning_points)
 
     if turning_point:
-        abs_turning_radius_scalled = math.sqrt(turning_point.x**2 + turning_point.y**2)
+        abs_turning_radius_scalled = 0.5 * math.sqrt(turning_point.x**2 + turning_point.y**2)
         tolerance_scalled = max(abs_turning_radius_scalled, 1.0)
         if check_if_points_are_close(partial_turning_points, tolerance_scalled):
             return turning_point
@@ -272,6 +272,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     max_turning_duration = compute_max_turning_duration(delta_servo_angles)
 
     request = Request.from_ROS_PlatformStatus(platform_status)
+    rospy.loginfo(str(current_turning_point))
     if current_turning_point:
         rospy.loginfo(f"Driving while steering V:{velocity} AV:{current_turning_point.y}")
         limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
