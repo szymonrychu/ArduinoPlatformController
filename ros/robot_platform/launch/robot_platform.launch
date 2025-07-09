@@ -24,7 +24,7 @@
   <arg name="shutdown_command_input_topic" default="/robot_platform/shutdown"/>
   <arg name="platform_status_output_topic" default="/robot_platform/status"/>
 
-  <arg name="controller_frequency" default="1.0"/>
+  <arg name="controller_frequency" default="5.0"/>
 
   <!-- <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 /map /odom 100"/> -->
 
