@@ -303,17 +303,6 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         request.motor3 = Motor(velocity = round(velocity_coefficients[2] * velocity, 3))
         request.motor4 = Motor(velocity = round(velocity_coefficients[3] * velocity, 3))
 
-    elif check_if_wheels_are_pararell(servos):
-        rospy.loginfo(f"Driving forward V:{velocity}")
-        request.servo1 = None
-        request.servo2 = None
-        request.servo3 = None
-        request.servo4 = None
-        request.motor1 = Motor(velocity = round(velocity, 3))
-        request.motor2 = Motor(velocity = round(velocity, 3))
-        request.motor3 = Motor(velocity = round(velocity, 3))
-        request.motor4 = Motor(velocity = round(velocity, 3))
-
     elif turning_point:
         rospy.loginfo(f"Rotating with AV:{turning_point.y}")
         request = Request.from_ROS_PlatformStatus(platform_status)
