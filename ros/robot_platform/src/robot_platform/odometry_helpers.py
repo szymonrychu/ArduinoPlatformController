@@ -31,7 +31,7 @@ def compute_turning_point(m_a:float, ma_x:float, ma_y:float, m_b:float, mb_x:flo
         return None
 
     p = Point()
-    p.x = -(tg90mA * ma_x - tg90mB * mb_x - ma_y - mb_y) / (tg90mA + tg90mB)
+    # p.x = -(tg90mA * ma_x - tg90mB * mb_x - ma_y - mb_y) / (tg90mA + tg90mB)
     p.y = -(tg90mA * ma_x - ma_y)
     return p
 
@@ -272,7 +272,6 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     max_turning_duration = compute_max_turning_duration(delta_servo_angles)
 
     request = Request.from_ROS_PlatformStatus(platform_status)
-    rospy.loginfo(str(current_turning_point))
     if current_turning_point:
         rospy.loginfo(f"Driving while steering V:{velocity} AV:{current_turning_point.y}")
         limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
