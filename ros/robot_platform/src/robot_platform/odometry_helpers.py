@@ -282,7 +282,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         request.servo4 = Servo(angle=round(motor_servo_angle_deltas[3], 3))
         
         velocity_coefficients = []
-        if check_if_wheels_are_pararell:
+        if current_turning_point:
             individual_turn_radiuses = []
             for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
                 individual_turn_radiuses.append(math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2))
