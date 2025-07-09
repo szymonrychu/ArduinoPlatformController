@@ -272,7 +272,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     max_turning_duration = compute_max_turning_duration(delta_servo_angles)
 
     request = Request.from_ROS_PlatformStatus(platform_status)
-    if current_turning_point != None and max([abs(a) for a in delta_servo_angles]) < PlatformStatics.MIN_ANGLE_DIFF:
+    if current_turning_point != None:
         limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
         motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
         request.duration = duration
@@ -302,15 +302,15 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         request.motor3 = Motor(velocity = round(velocity_coefficients[2] * velocity, 3))
         request.motor4 = Motor(velocity = round(velocity_coefficients[3] * velocity, 3))
 
-    # elif check_if_wheels_are_pararell(servos):
-    #     request.servo1 = None
-    #     request.servo2 = None
-    #     request.servo3 = None
-    #     request.servo4 = None
-    #     request.motor1 = Motor(velocity = round(velocity, 3))
-    #     request.motor2 = Motor(velocity = round(velocity, 3))
-    #     request.motor3 = Motor(velocity = round(velocity, 3))
-    #     request.motor4 = Motor(velocity = round(velocity, 3))
+    elif check_if_wheels_are_pararell(servos):
+        request.servo1 = None
+        request.servo2 = None
+        request.servo3 = None
+        request.servo4 = None
+        request.motor1 = Motor(velocity = round(velocity, 3))
+        request.motor2 = Motor(velocity = round(velocity, 3))
+        request.motor3 = Motor(velocity = round(velocity, 3))
+        request.motor4 = Motor(velocity = round(velocity, 3))
 
     else:
         request = Request.from_ROS_PlatformStatus(platform_status)
