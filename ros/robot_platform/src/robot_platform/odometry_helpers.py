@@ -243,7 +243,7 @@ def compute_new_angle_updates(delta_servo_angles:List[float], servos:List[Servo]
         target_angles.append(delta_angle + servo.angle)
     return target_angles
 
-def create_request(duration:float, platform_status:PlatformStatus, velocity:float = PlatformStatics.MOVE_VELOCITY, turn_duration:Optional[float] = None, turning_point:Optional[Point]=None, tilt:float=0.0, pan:float=0.0, in_place:bool = False) -> Request:
+def create_request(duration:float, platform_status:PlatformStatus, velocity:float = PlatformStatics.MOVE_VELOCITY, turn_duration:Optional[float] = None, turning_point:Optional[Point]=None, tilt:float=0.0, pan:float=0.0) -> Request:
     """_summary_
 
     Args:
@@ -272,7 +272,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     max_turning_duration = compute_max_turning_duration(delta_servo_angles)
 
     request = Request.from_ROS_PlatformStatus(platform_status)
-    if (current_turning_point != None and max_turning_duration < duration) or not in_place:
+    if current_turning_point != None and min(delta_servo_angles) > PlatformStatics.MIN_ANGLE_DIFF:
         limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
         motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
         request.duration = duration
