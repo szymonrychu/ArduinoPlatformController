@@ -135,7 +135,7 @@ class WheelController(SafeSerialWrapper):
         if not request:
             return True
         for m in [request.motor1, request.motor2, request.motor3, request.motor4]:
-            if m and m.velocity != 0:
+            if m and abs(m.velocity) < 0.000001:
                 return True
         return False
 

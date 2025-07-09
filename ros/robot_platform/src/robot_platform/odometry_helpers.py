@@ -105,7 +105,7 @@ def compute_turning_radius_yaw_delta(relative_turning_point:Point, motors:List[M
     yaw_delta = mean_distance_delta / turning_radius
     return (turning_radius, yaw_delta)
 
-def compute_relative_turning_point(servos:List[Servo], turning_radius_scalling_factor:float = 0.5) -> Optional[Point]: 
+def compute_relative_turning_point(servos:List[Servo]) -> Optional[Point]: 
     """
     Takes list of ServoStatus objects and tries to find relative turning point out of the lists
 
@@ -129,7 +129,7 @@ def compute_relative_turning_point(servos:List[Servo], turning_radius_scalling_f
     turning_point = compute_mean_turning_point(partial_turning_points)
 
     if turning_point:
-        abs_turning_radius_scalled = turning_radius_scalling_factor * math.sqrt(turning_point.x**2 + turning_point.y**2)
+        abs_turning_radius_scalled = math.sqrt(turning_point.x**2 + turning_point.y**2)
         tolerance_scalled = max(abs_turning_radius_scalled, 1.0)
         if check_if_points_are_close(partial_turning_points, tolerance_scalled):
             return turning_point
