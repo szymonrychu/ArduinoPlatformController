@@ -272,7 +272,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     max_turning_duration = compute_max_turning_duration(delta_servo_angles)
 
     request = Request.from_ROS_PlatformStatus(platform_status)
-    if current_turning_point:
+    if current_turning_point or check_if_wheels_are_pararell(servos):
         rospy.loginfo(f"Driving while steering V:{velocity} AV:{current_turning_point.y}")
         limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
         motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
@@ -281,22 +281,20 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         request.servo2 = Servo(angle=round(motor_servo_angle_deltas[1], 3))
         request.servo3 = Servo(angle=round(motor_servo_angle_deltas[2], 3))
         request.servo4 = Servo(angle=round(motor_servo_angle_deltas[3], 3))
-        # turning_point_under_robot = False
-
-        # turning_point_within_platform_length = -PlatformStatics.ROBOT_LENGTH/2 < current_turning_point.y < PlatformStatics.ROBOT_LENGTH/2
-        # turning_point_within_platform_width = -PlatformStatics.ROBOT_WIDTH/2 < current_turning_point.x < PlatformStatics.ROBOT_WIDTH/2
-        # turning_point_under_robot = turning_point_within_platform_length and turning_point_within_platform_width
-        
-        # if not turning_point_under_robot:
-        individual_turn_radiuses = []
-        for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
-            individual_turn_radiuses.append(math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2))
-        max_individual_turn_radius = max(individual_turn_radiuses)
         
         velocity_coefficients = []
-        for itr, reversed in zip(individual_turn_radiuses, reversed_servo_angles):
-            c = -1.0 if reversed else 1.0
-            velocity_coefficients.append(c * itr / max_individual_turn_radius)
+        if check_if_wheels_are_pararell:
+            individual_turn_radiuses = []
+            for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
+                individual_turn_radiuses.append(math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2))
+            max_individual_turn_radius = max(individual_turn_radiuses)
+            
+            velocity_coefficients = []
+            for itr, reversed in zip(individual_turn_radiuses, reversed_servo_angles):
+                c = -1.0 if reversed else 1.0
+                velocity_coefficients.append(c * itr / max_individual_turn_radius)
+        else:
+            velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
         
         request.motor1 = Motor(velocity = round(velocity_coefficients[0] * velocity, 3))
         request.motor2 = Motor(velocity = round(velocity_coefficients[1] * velocity, 3))
