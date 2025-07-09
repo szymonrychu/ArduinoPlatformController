@@ -272,7 +272,8 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
     max_turning_duration = compute_max_turning_duration(delta_servo_angles)
 
     request = Request.from_ROS_PlatformStatus(platform_status)
-    if current_turning_point != None:
+    if current_turning_point:
+        rospy.loginfo(f"Driving while steering V:{velocity} AV:{current_turning_point.y}")
         limited_deltas = limit_delta_servo_velocity_angles(delta_servo_angles, motor_turn_time)
         motor_servo_angle_deltas = compute_new_angle_updates(limited_deltas, servos)
         request.duration = duration
@@ -303,6 +304,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         request.motor4 = Motor(velocity = round(velocity_coefficients[3] * velocity, 3))
 
     elif check_if_wheels_are_pararell(servos):
+        rospy.loginfo(f"Driving forward V:{velocity}")
         request.servo1 = None
         request.servo2 = None
         request.servo3 = None
@@ -312,7 +314,8 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         request.motor3 = Motor(velocity = round(velocity, 3))
         request.motor4 = Motor(velocity = round(velocity, 3))
 
-    else:
+    elif turning_point:
+        rospy.loginfo(f"Rotating with AV:{turning_point.y}")
         request = Request.from_ROS_PlatformStatus(platform_status)
         request.duration = max(max_turning_duration, duration)
         request.servo1 = Servo(angle=round(delta_servo_angles[0], 3))
