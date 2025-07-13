@@ -66,6 +66,30 @@ public:
         this->highLimit = data.highLimit;
     }
 
+    float getKP(){
+        return this->kP;
+    }
+
+    void setKP(float kP){
+        this->kP = kP;
+    }
+
+    float getKI(){
+        return this->kI;
+    }
+
+    void setKI(float kI){
+        this->kI = kI;
+    }
+
+    float getKD(){
+        return this->kD;
+    }
+    
+    void setKD(float kD){
+        this->kD = kD;
+    }
+
     float computeNewSteering(float timeDiff, float input){
         if(this->kP == 0.0f && this->kI == 0.0f && this->kD == 0.0f){
             return 1.0f;

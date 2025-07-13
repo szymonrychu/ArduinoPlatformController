@@ -58,7 +58,7 @@ public:
  
 #define BNO055_SAMPLERATE_DELAY_MS (10)
 
-#define MEM_LEN 256
+#define MEM_LEN 1024
 char buffer[MEM_LEN];
 long loopCounter = 0;
 double batteryVoltage = 0;
@@ -73,6 +73,7 @@ Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x28);
 Adafruit_GPS gps(&GPSSerial);
 bool gpsReceiving = false;
 bool gpsParsing = false;
+bool showPIDs = true;
 
 ServoController servoPan(SERV_PAN);
 ServoController servoTilt(SERV_TILT);
@@ -91,7 +92,7 @@ uint64_t moveTimeout = 0;
 char* moveUuid = "";
 
 void commandHandler(char* input){
-  DynamicJsonDocument doc(512);
+  DynamicJsonDocument doc(1024);
   deserializeJson(doc, input);
   JsonObject obj = doc.as<JsonObject>();
 
@@ -116,6 +117,18 @@ void commandHandler(char* input){
       motor1.drive(obj["motor1"]["velocity"]);
       resetMotorsControllers = false;
     }
+    if(!obj["motor1"]["kP"].isNull()){
+      motor1.setKP(obj["motor1"]["kP"]);
+      showPIDs = true;
+    }
+    if(!obj["motor1"]["kI"].isNull()){
+      motor1.setKI(obj["motor1"]["kI"]);
+      showPIDs = true;
+    }
+    if(!obj["motor1"]["kD"].isNull()){
+      motor1.setKD(obj["motor1"]["kD"]);
+      showPIDs = true;
+    }
   }
   if(!obj["servo1"].isNull()){
     if(!obj["servo1"]["angle"].isNull()){
@@ -126,6 +139,18 @@ void commandHandler(char* input){
     if(!obj["motor2"]["velocity"].isNull()){
       motor2.drive(obj["motor2"]["velocity"]);
       resetMotorsControllers = false;
+    }
+    if(!obj["motor2"]["kP"].isNull()){
+      motor2.setKP(obj["motor2"]["kP"]);
+      showPIDs = true;
+    }
+    if(!obj["motor2"]["kI"].isNull()){
+      motor2.setKI(obj["motor2"]["kI"]);
+      showPIDs = true;
+    }
+    if(!obj["motor2"]["kD"].isNull()){
+      motor2.setKD(obj["motor2"]["kD"]);
+      showPIDs = true;
     }
   }
   if(!obj["servo2"].isNull()){
@@ -138,6 +163,18 @@ void commandHandler(char* input){
       motor3.drive(obj["motor3"]["velocity"]);
       resetMotorsControllers = false;
     }
+    if(!obj["motor3"]["kP"].isNull()){
+      motor3.setKP(obj["motor3"]["kP"]);
+      showPIDs = true;
+    }
+    if(!obj["motor3"]["kI"].isNull()){
+      motor3.setKI(obj["motor3"]["kI"]);
+      showPIDs = true;
+    }
+    if(!obj["motor3"]["kD"].isNull()){
+      motor3.setKD(obj["motor3"]["kD"]);
+      showPIDs = true;
+    }
   }
   if(!obj["servo3"].isNull()){
     if(!obj["servo3"]["angle"].isNull()){
@@ -148,6 +185,18 @@ void commandHandler(char* input){
     if(!obj["motor4"]["velocity"].isNull()){
       motor4.drive(obj["motor4"]["velocity"]);
       resetMotorsControllers = false;
+    }
+    if(!obj["motor4"]["kP"].isNull()){
+      motor4.setKP(obj["motor4"]["kP"]);
+      showPIDs = true;
+    }
+    if(!obj["motor4"]["kI"].isNull()){
+      motor4.setKI(obj["motor4"]["kI"]);
+      showPIDs = true;
+    }
+    if(!obj["motor4"]["kD"].isNull()){
+      motor4.setKD(obj["motor4"]["kD"]);
+      showPIDs = true;
     }
   }
   if(!obj["servo4"].isNull()){
@@ -299,24 +348,48 @@ void loop(void){
     JsonObject m1 = doc.createNestedObject("motor1");
     m1["velocity"] = motor1.currentVelocity();
     m1["distance"] = motor1.currentDistanceDelta();
+    if(showPIDs){
+      JsonObject pid1 = m1.createNestedObject("PID");
+      pid1["kP"] = motor1.getKP();
+      pid1["kI"] = motor1.getKI();
+      pid1["kD"] = motor1.getKD();
+    }
     JsonObject s1 = doc.createNestedObject("servo1");
     s1["angle"] = motor1.readServo();
 
     JsonObject m2 = doc.createNestedObject("motor2");
     m2["velocity"] = motor2.currentVelocity();
     m2["distance"] = motor2.currentDistanceDelta();
+    if(showPIDs){
+      JsonObject pid2 = m2.createNestedObject("PID");
+      pid2["kP"] = motor2.getKP();
+      pid2["kI"] = motor2.getKI();
+      pid2["kD"] = motor2.getKD();
+    }
     JsonObject s2 = doc.createNestedObject("servo2");
     s2["angle"] = motor2.readServo();
 
     JsonObject m3 = doc.createNestedObject("motor3");
     m3["velocity"] = motor3.currentVelocity();
     m3["distance"] = motor3.currentDistanceDelta();
+    if(showPIDs){
+      JsonObject pid3 = m3.createNestedObject("PID");
+      pid3["kP"] = motor3.getKP();
+      pid3["kI"] = motor3.getKI();
+      pid3["kD"] = motor3.getKD();
+    }
     JsonObject s3 = doc.createNestedObject("servo3");
     s3["angle"] = motor3.readServo();
 
     JsonObject m4 = doc.createNestedObject("motor4");
     m4["velocity"] = motor4.currentVelocity();
     m4["distance"] = motor4.currentDistanceDelta();
+    if(showPIDs){
+      JsonObject pid4 = m4.createNestedObject("PID");
+      pid4["kP"] = motor4.getKP();
+      pid4["kI"] = motor4.getKI();
+      pid4["kD"] = motor4.getKD();
+    }
     JsonObject s4 = doc.createNestedObject("servo4");
     s4["angle"] = motor4.readServo();
 
@@ -329,6 +402,7 @@ void loop(void){
     serializeJson(doc, Serial);
     Serial.println("");
 
+    if(showPIDs) showPIDs = false;
     if(!moveEnded) redLed.toggle();
   }
   delay(BNO055_SAMPLERATE_DELAY_MS);

@@ -3,7 +3,7 @@
 #include <string.h>
 
 #ifndef MEM_LEN
-#define MEM_LEN 256
+#define MEM_LEN 1024
 #endif
 #define MAXSERIALCOMMANDS	10
 #define MAXDELIMETER 2

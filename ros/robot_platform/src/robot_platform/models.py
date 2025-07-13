@@ -37,6 +37,11 @@ class Battery(BaseModel):
         battery.power_supply_technology = BatteryState.POWER_SUPPLY_TECHNOLOGY_LION
         return battery
 
+class PID(BaseModel):
+    k_p: float
+    k_i: float
+    k_d: float
+
 class Quaternion(BaseModel):
     w: float
     x: float
@@ -135,6 +140,7 @@ class Servo(Message):
 class Motor(Message):
     velocity: float
     distance: float = 0.0
+    pid: Optional[PID] = None
 
     @staticmethod
     def from_ROS_MotorStatus(status: MotorStatus) -> 'Motor':
@@ -199,7 +205,7 @@ class Status(Message):
     pan: Servo
     tilt: Servo
     temp: int
-    move_uuid: Optional[str] = None
+    move_uuid: Optional[UUID] = None
 
     @property
     def motor_list(self) -> List[Motor]:
@@ -325,13 +331,13 @@ class Request(Message):
         request.duration = platform_request.duration.data.to_sec()
 
         if platform_request.motor1.defined:
-            request.motor1 = Motor(velocity=platform_request.motor1.velocity, distance=platform_request.motor1.distance)
+            request.motor1 = Motor(velocity=platform_request.motor1.velocity)
         if platform_request.motor2.defined:
-            request.motor2 = Motor(velocity=platform_request.motor2.velocity, distance=platform_request.motor2.distance)
+            request.motor2 = Motor(velocity=platform_request.motor2.velocity)
         if platform_request.motor3.defined:
-            request.motor3 = Motor(velocity=platform_request.motor3.velocity, distance=platform_request.motor3.distance)
+            request.motor3 = Motor(velocity=platform_request.motor3.velocity)
         if platform_request.motor4.defined:
-            request.motor4 = Motor(velocity=platform_request.motor4.velocity, distance=platform_request.motor4.distance)
+            request.motor4 = Motor(velocity=platform_request.motor4.velocity)
         
         if platform_request.servo1.defined:
             request.servo1 = Servo(angle=platform_request.servo1.angle)

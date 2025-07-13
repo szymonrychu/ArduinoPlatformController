@@ -229,6 +229,29 @@ public:
     }
   }
 
+  float getKP(){
+      return this->velocityPID.getKP();
+  }
+
+  void setKP(float kP){
+      this->velocityPID.setKP(kP);
+  }
+
+  float getKI(){
+      return this->velocityPID.getkI();
+  }
+
+  void setKI(float kI){
+      this->velocityPID.setKI(kI);
+  }
+
+  float getKD(){
+      return this->velocityPID.getkD();
+  }
+  
+  void setKD(float kD){
+      this->velocityPID.setKD(kD);
+  }
 };
 
 #endif

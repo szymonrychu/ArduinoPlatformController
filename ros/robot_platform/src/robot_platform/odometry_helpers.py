@@ -1,5 +1,5 @@
 
-from .models import Motor, Servo, Request, Status
+from .models import Motor, Servo, Request, PID
 from .tf_helpers import *
 from .platform_statics import PlatformStatics
 
@@ -243,7 +243,7 @@ def compute_new_angle_updates(delta_servo_angles:List[float], servos:List[Servo]
         target_angles.append(delta_angle + servo.angle)
     return target_angles
 
-def create_request(duration:float, platform_status:PlatformStatus, velocity:float = PlatformStatics.MOVE_VELOCITY, turn_duration:Optional[float] = None, turning_point:Optional[Point]=None, tilt:float=0.0, pan:float=0.0) -> Request:
+def create_request(duration:float, platform_status:PlatformStatus, velocity:float = PlatformStatics.MOVE_VELOCITY, turn_duration:Optional[float] = None, turning_point:Optional[Point]=None, tilt:float=0.0, pan:float=0.0, pid:Optional[PID]=None) -> Request:
     """_summary_
 
     Args:
@@ -254,9 +254,10 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         turning_point (Optional[Point], optional): _description_. Defaults to None.
         tilt (float, optional): _description_. Defaults to 0.0.
         pan (float, optional): _description_. Defaults to 0.0.
+        pid (PID, optional): _description_. Defaults to None.
 
     Returns:
-        List[Request]: _description_
+        Request: _description_
     """
     servos = [
         Servo.from_ROS_ServoStatus(platform_status.servo1),
@@ -295,10 +296,10 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         else:
             velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
         
-        request.motor1 = Motor(velocity = round(velocity_coefficients[0] * velocity, 3))
-        request.motor2 = Motor(velocity = round(velocity_coefficients[1] * velocity, 3))
-        request.motor3 = Motor(velocity = round(velocity_coefficients[2] * velocity, 3))
-        request.motor4 = Motor(velocity = round(velocity_coefficients[3] * velocity, 3))
+        request.motor1 = Motor(velocity = round(velocity_coefficients[0] * velocity, 3), pid=pid)
+        request.motor2 = Motor(velocity = round(velocity_coefficients[1] * velocity, 3), pid=pid)
+        request.motor3 = Motor(velocity = round(velocity_coefficients[2] * velocity, 3), pid=pid)
+        request.motor4 = Motor(velocity = round(velocity_coefficients[3] * velocity, 3), pid=pid)
 
     elif turning_point:
         request = Request.from_ROS_PlatformStatus(platform_status)
@@ -307,10 +308,10 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         request.servo2 = Servo(angle=round(delta_servo_angles[1], 3))
         request.servo3 = Servo(angle=round(delta_servo_angles[2], 3))
         request.servo4 = Servo(angle=round(delta_servo_angles[3], 3))
-        request.motor1 = Motor(velocity=0)
-        request.motor2 = Motor(velocity=0)
-        request.motor3 = Motor(velocity=0)
-        request.motor4 = Motor(velocity=0)
+        request.motor1 = Motor(velocity=0, pid=pid)
+        request.motor2 = Motor(velocity=0, pid=pid)
+        request.motor3 = Motor(velocity=0, pid=pid)
+        request.motor4 = Motor(velocity=0, pid=pid)
 
     return request
 

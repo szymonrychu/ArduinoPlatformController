@@ -15,13 +15,13 @@ from threading import Lock
 
 from robot_platform.msg import PlatformStatus, PlatformRequest
 from std_msgs.msg import String, Duration
-from geometry_msgs.msg import Twist, PoseStamped, Pose, TransformStamped, Point, PointStamped
+from geometry_msgs.msg import Twist, PoseStamped, Pose, TransformStamped, Point, Vector3
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import BatteryState, NavSatFix, NavSatStatus, Imu
 
 from .ros_helpers import ROSNode
 from .log_utils import env2log
-from .models import parse_response, Request, Motor, Servo
+from .models import parse_response, Request, Motor, Servo, PID
 from .serial_utils import SafeSerialWrapper
 from .tf_helpers import *
 
@@ -46,7 +46,9 @@ class WheelController(SafeSerialWrapper):
 
         # input topics
         cmd_vel_input_topic = rospy.get_param('~cmd_vel_input_topic')
+        pid_update_input_topic = rospy.get_param('~cmd_vel_input_topic')
         wheel_positions_input_topic = rospy.get_param('~wheel_positions_input_topic')
+
         # shutdown_command_input_topic = rospy.get_param('~shutdown_command_input_topic')
         # rospy.Subscriber(shutdown_command_input_topic, String, self._handle_shutdown_command)
 
@@ -73,9 +75,14 @@ class WheelController(SafeSerialWrapper):
         self._waiting_count = 0
         self._prime_after = 0
         self._report_odometry = True
+        self._static_commands = []
+        self._pids = [ PID ] * PlatformStatics.MOTOR_NUM
+        self._pid_update_lock = Lock()
+        self._pid_update = None
         
         rospy.Subscriber(wheel_positions_input_topic, PlatformRequest, self._handle_wheel_inputs)
         rospy.Subscriber(cmd_vel_input_topic, Twist, self._handle_cmdvel)
+        rospy.Subscriber(pid_update_input_topic, Vector3, self._handle_pid_update)
         self._platform_status_publisher = rospy.Publisher(platform_status_output_topic, PlatformStatus, queue_size=10)
         self._battery_state_publisher = rospy.Publisher(battery_state_output_topic, BatteryState, queue_size=10)
         self._gps_state_publisher = rospy.Publisher(gps_state_output_topic, NavSatFix, queue_size=10)
@@ -89,6 +96,23 @@ class WheelController(SafeSerialWrapper):
         rospy.Timer(rospy.Duration.from_sec(0.001), self._handle_serial)
         rospy.Timer(rospy.Duration.from_sec(1), self._prime_motors, oneshot=True)
         rospy.spin()
+
+    def _handle_pid_update(self, raw_data:Vector3):
+        with self._pid_update_lock:
+            self._pid_update = PID(k_p=raw_data.x, k_i=raw_data.y, k_d=raw_data.z)
+
+    def add_to_static_commands(self, uuid:UUID, limit:int = 10):
+        self._static_commands.append(uuid)
+        if len(self._static_commands) > limit:
+            self._static_commands.pop(0)
+    
+    def check_if_command_on_statics(self, uuid:Optional[UUID] = None) -> bool:
+        if not uuid:
+            return False
+        for sc in self._static_commands:
+            if sc == uuid:
+                return True
+        return False
 
     def _prime_motors(self, *_args, **_kwargs):
         result = self.write_requests(
@@ -158,6 +182,10 @@ class WheelController(SafeSerialWrapper):
         if self._last_platform_status.gps:
             self._gps_state_publisher.publish(self._last_platform_status.gps)
 
+        _new_pids = any([m.pid != None for m in response.motor_list])
+        if _new_pids:
+            self._pids = [m.pid or pid for m, pid in zip(response.motor_list, self._pids)]
+
         mean_distance_delta = sum([m.distance for m in response.motor_list]) / len(response.motor_list)
         computed_turning_point = compute_relative_turning_point(response.servo_list)
         yaw_delta = 0
@@ -174,7 +202,7 @@ class WheelController(SafeSerialWrapper):
         else:
             self._waiting_count = 0
 
-        if self._report_odometry:
+        if not self.check_if_command_on_statics(response.move_uuid):
             odometry = Odometry()
             odometry.header.stamp = rospy_time_now
             odometry.header.frame_id = self._base_frame_id
@@ -216,8 +244,14 @@ class WheelController(SafeSerialWrapper):
                     turning_point.y = turn_radius
                 
                 if self._last_platform_status:
-                    request = create_request(PlatformStatics.DURATION_OVERLAP_STATIC/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point)
-                    self._report_odometry = self._motors_defined(request)
+                    _pid = None
+                    with self._pid_update_lock:
+                        _pid = self._pid_update
+                        self._pid_update = None
+                    request = create_request(PlatformStatics.DURATION_OVERLAP_STATIC/self._controller_frequency, self._last_platform_status, velocity=move_velocity, turning_point=turning_point, pid=_pid)
+                    motors_defined = self._motors_defined(request)
+                    if not motors_defined:
+                        self.add_to_static_commands(request.move_uuid)
                     self.write_requests(request)
                 self._last_cmd_vel = None
         
