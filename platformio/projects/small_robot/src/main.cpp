@@ -281,6 +281,7 @@ void loop(void){
     motor2.resetDistanceVelocity();
     motor3.resetDistanceVelocity();
     motor4.resetDistanceVelocity();
+    moveUuid = "";
   }
 
   motor1.loop(currentTimeMicros);
