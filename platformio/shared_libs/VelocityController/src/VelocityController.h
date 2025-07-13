@@ -238,7 +238,7 @@ public:
   }
 
   float getKI(){
-      return this->velocityPID.getkI();
+      return this->velocityPID.getKI();
   }
 
   void setKI(float kI){
@@ -246,7 +246,7 @@ public:
   }
 
   float getKD(){
-      return this->velocityPID.getkD();
+      return this->velocityPID.getKD();
   }
   
   void setKD(float kD){

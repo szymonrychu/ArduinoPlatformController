@@ -303,7 +303,8 @@ void loop(void){
     StaticJsonDocument<1024> doc;
     doc["micros"] = currentTimeMicros;
     doc["temp"] = temp;
-    if(moveUuid != "") {
+    
+    if(strcmp(moveUuid, "") != 0) {
       doc["moveUuid"] = moveUuid;
     }
 
