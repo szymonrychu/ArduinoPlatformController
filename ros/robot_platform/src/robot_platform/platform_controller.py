@@ -46,7 +46,7 @@ class WheelController(SafeSerialWrapper):
 
         # input topics
         cmd_vel_input_topic = rospy.get_param('~cmd_vel_input_topic')
-        pid_update_input_topic = rospy.get_param('~cmd_vel_input_topic')
+        pid_update_input_topic = rospy.get_param('~pid_update_input_topic')
         wheel_positions_input_topic = rospy.get_param('~wheel_positions_input_topic')
 
         # shutdown_command_input_topic = rospy.get_param('~shutdown_command_input_topic')

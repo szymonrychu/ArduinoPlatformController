@@ -9,6 +9,7 @@
   <arg name="camera_frame_id" default="camera_link" />
   <arg name="controller_frequency" default="1" />
 
+  <arg name="pid_update_input_topic" default="/pid_update" />
   <arg name="cmd_vel_input_topic" default="/cmd_vel" />
   <arg name="battery_state_output_topic" default="/robot_platform/battery" />
   <arg name="gps_state_output_topic" default="/robot_platform/gps"/>
@@ -36,6 +37,7 @@
     <param name="wheel_positions_input_topic" type="string" value="$(arg wheel_positions_input_topic)" />
     
     <param name="cmd_vel_input_topic" type="string" value="$(arg cmd_vel_input_topic)" />
+    <param name="pid_update_input_topic" type="string" value="$(arg pid_update_input_topic)" />
     <!-- <param name="shutdown_command_input_topic" type="string" value="$(arg shutdown_command_input_topic)" /> -->
     
     <param name="battery_state_output_topic" type="string" value="$(arg battery_state_output_topic)" />
