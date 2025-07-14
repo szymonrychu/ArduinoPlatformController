@@ -71,6 +71,8 @@ class WheelController(SafeSerialWrapper):
         self._total_Y = 0.0
         self._last_cmd_vel_lock = Lock()
         self._last_cmd_vel = None
+        self._last_odom_lock = Lock()
+        self._last_odom = None
         self._primed = False
         self._waiting_count = 0
         self._prime_after = 0
@@ -94,6 +96,7 @@ class WheelController(SafeSerialWrapper):
         self._tf2_broadcaster = tf2_ros.TransformBroadcaster()
 
         rospy.Timer(rospy.Duration.from_sec(0.001), self._handle_serial)
+        rospy.Timer(rospy.Duration.from_sec(0.1), self._handle_odom)
         rospy.Timer(rospy.Duration.from_sec(1), self._prime_motors, oneshot=True)
         rospy.spin()
 
@@ -142,6 +145,12 @@ class WheelController(SafeSerialWrapper):
         json_r = r.model_dump_json(exclude_none=True, exclude_unset=True)
         if not self.write_data(json_r):
             self.stop()
+
+    def _handle_odom(self, *_args, **_kwargs):
+        with self._last_odom_lock:
+            if self._last_odom:
+                self._odometry_publisher.publish(self._last_odom)
+                self._last_odom = None
 
     def write_requests(self, request:Request) -> bool:
         self._primed = False
@@ -221,7 +230,8 @@ class WheelController(SafeSerialWrapper):
                 odometry.twist.covariance[0] = 0.01                     # type: ignore
                 odometry.twist.covariance[7] = 0.01                     # type: ignore
                 odometry.twist.covariance[35] = 0.01                    # type: ignore
-            self._odometry_publisher.publish(odometry)
+            with self._last_cmd_vel_lock:
+                self._last_odom = odometry
 
             pose_stamped = PoseStamped()
             pose_stamped.header = odometry.header
