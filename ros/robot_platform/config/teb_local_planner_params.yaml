@@ -16,6 +16,7 @@ TebLocalPlannerROS:
   exact_arc_length: False
   feasibility_check_no_poses: 10
   publish_feedback: False
+  via_points_ordered: True
       
   # Robot
           
@@ -82,7 +83,7 @@ TebLocalPlannerROS:
   enable_homotopy_class_planning: True
   enable_multithreading: True
   max_number_classes: 4
-  selection_cost_hysteresis: 1.0
+  selection_cost_hysteresis: 5.0
   selection_prefer_initial_plan: 0.9
   selection_obst_cost_scale: 100.0
   selection_alternative_time_cost: False
@@ -111,3 +112,6 @@ TebLocalPlannerROS:
   oscillation_omega_eps: 0.1
   oscillation_recovery_min_duration: 10
   oscillation_filter_duration: 10
+
+  divergence_detectio: True
+  divergence_detection_max_chi_squared: 100
