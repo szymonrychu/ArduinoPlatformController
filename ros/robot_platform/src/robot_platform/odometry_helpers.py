@@ -292,22 +292,22 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
             if is_within_width and is_within_length:
                 if velocity > 0:
                     if current_turning_point.y > 0:
-                        velocity_coefficients = [ 1.0, -1.0, -1.0, 1.0 ]
-                    else:
                         velocity_coefficients = [ -1.0, 1.0, 1.0, -1.0 ]
+                    else:
+                        velocity_coefficients = [ 1.0, -1.0, -1.0, 1.0 ]
                 else:
                     if current_turning_point.y > 0:
-                        velocity_coefficients = [ -1.0, 1.0, 1.0, -1.0 ]
-                    else:
                         velocity_coefficients = [ 1.0, -1.0, -1.0, 1.0 ]
+                    else:
+                        velocity_coefficients = [ -1.0, 1.0, 1.0, -1.0 ]
             else:
                 individual_turn_radiuses = []
                 for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
                     individual_turn_radiuses.append(math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2))
                 max_individual_turn_radius = max(individual_turn_radiuses)
                 
-                for itr, c in zip(individual_turn_radiuses, velocity_coefficients):
-                    velocity_coefficients.append(c * itr / max_individual_turn_radius)
+                for itr in individual_turn_radiuses:
+                    velocity_coefficients.append(itr / max_individual_turn_radius)
         else:
             velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
 
