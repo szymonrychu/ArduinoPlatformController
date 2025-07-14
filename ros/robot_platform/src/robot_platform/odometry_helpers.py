@@ -291,7 +291,7 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
             
             velocity_coefficients = []
             for itr, reversed in zip(individual_turn_radiuses, reversed_servo_angles):
-                c = 1.0 #-1.0 if reversed else 1.0
+                c = -1.0 if reversed else 1.0
                 velocity_coefficients.append(c * itr / max_individual_turn_radius)
         else:
             velocity_coefficients = [1.0] * PlatformStatics.MOTOR_NUM
