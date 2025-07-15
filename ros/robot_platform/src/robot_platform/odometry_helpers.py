@@ -305,10 +305,10 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
                             velocity_coefficients.append(c * abs(itr / max_individual_turn_radius))
                 else:
                     if current_turning_point.y > 0:
-                        for c, itr in zip([ 1.0, -1.0, -1.0, 1.0 ], individual_turn_radiuses):
+                        for c, itr in zip([ -1.0, 1.0, 1.0, -1.0 ], individual_turn_radiuses):
                             velocity_coefficients.append(c * abs(itr / max_individual_turn_radius))
                     else:
-                        for c, itr in zip([ -1.0, 1.0, 1.0, -1.0 ], individual_turn_radiuses):
+                        for c, itr in zip([ 1.0, -1.0, -1.0, 1.0 ], individual_turn_radiuses):
                             velocity_coefficients.append(c * abs(itr / max_individual_turn_radius))
             else:
                 for itr in individual_turn_radiuses:
