@@ -289,23 +289,28 @@ def create_request(duration:float, platform_status:PlatformStatus, velocity:floa
         if current_turning_point:
             is_within_length = -PlatformStatics.ROBOT_LENGTH/2 < current_turning_point.x < PlatformStatics.ROBOT_LENGTH/2
             is_within_width = -PlatformStatics.ROBOT_WIDTH/2 < current_turning_point.y < PlatformStatics.ROBOT_WIDTH/2
+
+            individual_turn_radiuses = []
+            for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
+                individual_turn_radiuses.append(math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2))
+            max_individual_turn_radius = max(individual_turn_radiuses)
+
             if is_within_width and is_within_length:
                 if velocity > 0:
                     if current_turning_point.y > 0:
-                        velocity_coefficients = [ -1.0, 1.0, 1.0, -1.0 ]
+                        for c, itr in zip([ -1.0, 1.0, 1.0, -1.0 ], individual_turn_radiuses):
+                            velocity_coefficients.append(c * abs(itr / max_individual_turn_radius))
                     else:
-                        velocity_coefficients = [ 1.0, -1.0, -1.0, 1.0 ]
+                        for c, itr in zip([ 1.0, -1.0, -1.0, 1.0 ], individual_turn_radiuses):
+                            velocity_coefficients.append(c * abs(itr / max_individual_turn_radius))
                 else:
                     if current_turning_point.y > 0:
-                        velocity_coefficients = [ 1.0, -1.0, -1.0, 1.0 ]
+                        for c, itr in zip([ 1.0, -1.0, -1.0, 1.0 ], individual_turn_radiuses):
+                            velocity_coefficients.append(c * abs(itr / max_individual_turn_radius))
                     else:
-                        velocity_coefficients = [ -1.0, 1.0, 1.0, -1.0 ]
+                        for c, itr in zip([ -1.0, 1.0, 1.0, -1.0 ], individual_turn_radiuses):
+                            velocity_coefficients.append(c * abs(itr / max_individual_turn_radius))
             else:
-                individual_turn_radiuses = []
-                for (m_x, m_y) in PlatformStatics.ROBOT_MOTORS_DIMENSIONS:
-                    individual_turn_radiuses.append(math.sqrt((m_y - current_turning_point.y)**2 + (m_x + current_turning_point.x)**2))
-                max_individual_turn_radius = max(individual_turn_radiuses)
-                
                 for itr in individual_turn_radiuses:
                     velocity_coefficients.append(itr / max_individual_turn_radius)
         else:
